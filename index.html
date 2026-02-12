@@ -1,0 +1,444 @@
+<!DOCTYPE html><html lang="es"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadena de Montaje — CEO Media</title>
+<style>    * { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+background: #0f1419;
+min-height: 100vh;
+padding: 24px 20px;
+color: #e8e8e8;
+overflow-x: auto;
+}
+.header { margin-bottom: 24px; text-align: center; }
+.header h1 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+.legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+.legend-label { font-size: 11px; color: #888; }
+.chain { display: flex; gap: 0; align-items: flex-start; min-width: fit-content; overflow-x: auto; padding-bottom: 20px; }
+.phase-group { display: flex; align-items: stretch; }
+.phase {
+min-width: 190px; max-width: 210px; min-height: 200px;
+background: #111518; border-radius: 14px;
+overflow: visible; display: flex; flex-direction: column;
+}
+.phase.construction { min-width: 140px; max-width: 160px; }
+.phase-header {
+padding: 8px 12px; text-align: center;
+border-bottom-width: 2px; border-bottom-style: solid;
+}
+.phase-emoji { font-size: 16px; }
+.phase-title { font-size: 12px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+.phase-steps { padding: 10px 8px; flex: 1; display: flex; flex-direction: column; gap: 0; }
+.construction-placeholder {
+flex: 1; display: flex; flex-direction: column;
+align-items: center; justify-content: center; gap: 6px; opacity: 0.4;
+}
+.construction-placeholder span:first-child { font-size: 24px; }
+.construction-placeholder span:last-child {
+font-size: 10px; font-weight: 700; color: #666;
+text-transform: uppercase; letter-spacing: 1px;
+}
+.step {
+border-radius: 8px; padding: 7px 10px;
+position: relative; transition: all 0.2s; cursor: pointer;
+border-width: 2px; border-style: solid;
+}
+.step:hover { transform: scale(1.03); }
+.step-badge {
+position: absolute; top: -7px; right: 6px;
+color: #fff; font-size: 8px; font-weight: 900;
+letter-spacing: 0.5px; padding: 1px 6px; border-radius: 8px;
+}
+.step-name { font-size: 11px; font-weight: 700; color: #fff; line-height: 1.3; margin-top: 2px; }
+.step-connector { display: flex; justify-content: center; padding: 4px 0; }
+.step-connector-line { width: 2px; height: 16px; }
+.chain-connector { display: flex; align-items: center; padding: 0 2px; align-self: center; }
+/* Overlay */    .overlay {
+position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+background: rgba(0,0,0,0.75); z-index: 1000;
+display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.overlay.active { display: flex; }
+.popup {
+background: #1a1f25; border-radius: 16px;
+max-width: 860px; width: 100%; max-height: 90vh; overflow-y: auto;
+}
+.popup-header {
+padding: 16px 24px; border-radius: 16px 16px 0 0;
+display: flex; justify-content: space-between; align-items: center;
+}
+.popup-header-title { font-size: 16px; font-weight: 800; color: #fff; }
+.popup-header-sub { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+.popup-close {
+cursor: pointer; color: #fff; font-size: 20px;
+font-weight: 700; opacity: 0.7; padding: 0 4px;
+background: none; border: none;
+}
+.popup-body { padding: 20px; }
+.section-label { font-size: 11px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px; }
+.section-block { margin-bottom: 16px; }
+.section-item {
+border-radius: 8px; padding: 8px 12px;
+display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;
+}
+.section-item-emoji { font-size: 14px; }
+.section-item-text { font-size: 12px; color: #ccc; line-height: 1.5; }
+.section-item-text a { color: #bb86fc; font-size: 11px; text-decoration: underline; font-weight: 600; }
+/* Execute button */    .execute-btn {
+display: flex; align-items: center; justify-content: center; gap: 10px;
+width: 100%; padding: 14px 24px; margin-top: 20px;
+border: 2px solid #27ae60; border-radius: 12px;
+background: linear-gradient(135deg, #0a2e1a, #1a4a2e);
+color: #27ae60; font-size: 14px; font-weight: 800;
+cursor: pointer; transition: all 0.3s; letter-spacing: 0.5px;
+}
+.execute-btn:hover {
+background: linear-gradient(135deg, #27ae60, #2ecc71);
+color: #fff; transform: scale(1.02);
+box-shadow: 0 0 20px #27ae6044;
+}
+.execute-btn:active { transform: scale(0.98); }
+.execute-btn.loading {
+pointer-events: none; opacity: 0.7;
+border-color: #f39c12; color: #f39c12;
+background: linear-gradient(135deg, #2e1a0a, #4a2e1a);
+}
+.execute-btn.success {
+border-color: #27ae60; color: #fff;
+background: linear-gradient(135deg, #27ae60, #2ecc71);
+}
+.execute-btn.error {
+border-color: #e74c3c; color: #e74c3c;
+background: linear-gradient(135deg, #2e0a0a, #4a1a1a);
+}
+/* Table */    .grid-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.grid-table th {
+padding: 8px 10px; text-align: left; color: #888;
+font-weight: 700; font-size: 10px; text-transform: uppercase;
+letter-spacing: 0.5px; border-bottom: 2px solid #333;
+}
+.grid-table td { padding: 10px; }
+.grid-table tr { border-bottom: 1px solid #222; }
+.grid-table tr:nth-child(even) { background: #0f141933; }
+.badge {
+display: inline-block; padding: 2px 8px;
+border-radius: 6px; font-size: 11px; font-weight: 600;
+}
+.stat-cards { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+.stat-card { border-radius: 8px; padding: 8px 12px; flex: 1 1 140px; }
+.stat-card-label { font-size: 10px; color: #888; font-weight: 600; }
+.stat-card-value { font-size: 16px; font-weight: 800; margin-top: 2px; }
+.stat-card-note { font-size: 9px; color: #666; margin-top: 2px; }
+</style></head><body>
+<div class="header">
+<h1>⛓️ CADENA DE MONTAJE — CEO MEDIA</h1>
+<div class="legend">
+<div class="legend-item">
+<div class="legend-dot" style="background:#27ae60;border:1px solid #1e8449"></div>
+<span class="legend-label">🥁 Drum (IA)</span>
+</div>
+<div class="legend-item">
+<div class="legend-dot" style="background:#2980b9;border:1px solid #2471a3"></div>
+<span class="legend-label">📦 Buffer (Revision)</span>
+</div>
+<div class="legend-item">
+<div class="legend-dot" style="background:#8e44ad;border:1px solid #7d3c98"></div>
+<span class="legend-label">🟣 Reunion</span>
+</div>
+<div class="legend-item">
+<div class="legend-dot" style="background:#555;border:1px solid #444"></div>
+<span class="legend-label">🚧 En construccion</span>
+</div>
+</div>
+</div>
+<div class="chain" id="chain"></div>
+<!-- Overlay for popups -->
+<div class="overlay" id="overlay" onclick="closePopup()">
+<div class="popup" id="popup-content" onclick="event.stopPropagation()"></div>
+</div>  <script>    // Data
+const phases = [      {
+id: "idea", emoji: "💡", title: "IDEA", color: "#1B4F72",
+steps: [          { name: "Crea Idea", type: "drum", popupId: "crea-idea" },
+{ name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa" },
+{ name: "Reu Validacion Ideas", type: "reu", popupId: "reu-validacion" },
+{ name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica" },
+]
+},
+{
+id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
+steps: [          { name: "Guion IA", type: "drum", popupId: "guion-ia" },
+{ name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones" },
+{ name: "Reu Validacion Guiones", type: "reu", popupId: "reu-validacion-guiones" },
+{ name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones" },
+]
+},
+{
+id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400",
+steps: [          { name: "Visual IA", type: "drum", popupId: "visual-ia" },
+{ name: "Revisa Visuales", type: "buffer", popupId: "revisa-visuales" },
+{ name: "Reu Validacion Visuales", type: "reu", popupId: "reu-validacion-visuales" },
+{ name: "Aplica Cambios", type: "buffer", popupId: "aplica-visuales" },
+]
+},
+{ id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
+{ id: "editing", emoji: "✂️", title: "EDICION", color: "#8E44AD", construction: true, steps: [] },
+{ id: "publishing", emoji: "🚀", title: "PUBLICACION", color: "#2C3E50", construction: true, steps: [] },
+];
+const typeStyles = {
+drum:   { bg: "#0a2e1a", border: "#27ae60", accent: "#27ae60", icon: "🥁", label: "DRUM" },
+buffer: { bg: "#0f1f2e", border: "#2980b9", accent: "#2980b9", icon: "📦", label: "BUFFER" },
+reu:    { bg: "#1a0f2e", border: "#8e44ad", accent: "#8e44ad", icon: "🟣", label: "REU" },
+};
+// Render chain
+const chain = document.getElementById('chain');
+phases.forEach((phase, pi) => {
+const group = document.createElement('div');
+group.className = 'phase-group';
+const phaseDiv = document.createElement('div');
+phaseDiv.className = 'phase' + (phase.construction ? ' construction' : '');
+phaseDiv.style.border = `2px solid ${phase.color}55`;
+// Header
+const header = document.createElement('div');
+header.className = 'phase-header';
+header.style.background = `linear-gradient(135deg, ${phase.color}, ${phase.color}cc)`;
+header.style.borderBottomColor = `${phase.color}88`;
+header.innerHTML = `<div class="phase-emoji">${phase.emoji}</div><div class="phase-title">${phase.title}</div>`;
+phaseDiv.appendChild(header);
+// Steps
+const stepsDiv = document.createElement('div');
+stepsDiv.className = 'phase-steps';
+if (phase.construction) {
+stepsDiv.innerHTML = '<div class="construction-placeholder"><span>🚧</span><span>Proximamente</span></div>';
+} else {
+phase.steps.forEach((step, si) => {
+const st = typeStyles[step.type];
+const stepEl = document.createElement('div');
+stepEl.className = 'step';
+stepEl.style.background = st.bg;
+stepEl.style.borderColor = st.border;
+stepEl.style.boxShadow = `0 0 8px ${st.accent}11`;
+stepEl.onclick = () => openPopup(step.popupId);
+stepEl.onmouseenter = () => {
+stepEl.style.borderColor = '#fff';
+stepEl.style.boxShadow = `0 0 16px ${st.accent}44`;
+stepEl.style.transform = 'scale(1.03)';
+};
+stepEl.onmouseleave = () => {
+stepEl.style.borderColor = st.border;
+stepEl.style.boxShadow = `0 0 8px ${st.accent}11`;
+stepEl.style.transform = 'scale(1)';
+};
+stepEl.innerHTML = `            <div class="step-badge" style="background:${st.accent}">${st.label}</div>            <div class="step-name">${st.icon} ${step.name}</div>          `;
+stepsDiv.appendChild(stepEl);
+if (si < phase.steps.length - 1) {
+const conn = document.createElement('div');
+conn.className = 'step-connector';
+conn.innerHTML = `<div class="step-connector-line" style="background:${st.accent}44"></div>`;
+stepsDiv.appendChild(conn);
+}
+});
+}
+phaseDiv.appendChild(stepsDiv);
+group.appendChild(phaseDiv);
+// Chain connector between phases
+if (pi < phases.length - 1) {
+const nextColor = phases[pi + 1].color;
+const connDiv = document.createElement('div');
+connDiv.className = 'chain-connector';
+connDiv.innerHTML = `          <svg width="36" height="24" viewBox="0 0 36 24">            <defs>              <linearGradient id="chain-${pi}" x1="0%" y1="0%" x2="100%" y2="0%">                <stop offset="0%" stop-color="${phase.color}" stop-opacity="0.7"/>                <stop offset="100%" stop-color="${nextColor}" stop-opacity="0.7"/>              </linearGradient>            </defs>            <rect x="4" y="8" width="20" height="8" rx="4" fill="none" stroke="url(#chain-${pi})" stroke-width="2"/>            <polygon points="26,6 36,12 26,18" fill="${nextColor}" opacity="0.7"/>          </svg>        `;
+group.appendChild(connDiv);
+}
+chain.appendChild(group);
+});
+// Popup content generators
+function sectionHTML(section, color, items) {
+return `        <div class="section-block">          <div class="section-label" style="color:${color}">${section}</div>          ${items.map(item => `            <div class="section-item" style="background:${color}12;border:1px solid ${color}33">              <span class="section-item-emoji">${item.emoji}</span>              <span class="section-item-text">${item.text}${item.link ? ` <a href="${item.link}" target="_blank">(Notion Prompt)</a>` : ''}</span>            </div>          `).join('')}
+</div>      `;
+}
+function executeButtonHTML(apiEndpoint, label) {
+return `        <button class="execute-btn" id="btn-${apiEndpoint}" onclick="executeProcess('${apiEndpoint}', this)">          🚀 EJECUTAR: ${label}
+</button>      `;
+}
+const popups = {
+"crea-idea": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">          <div>            <div class="popup-header-title">✅ CREA IDEA — CEO MEDIA</div>            <div class="popup-header-sub">40+ piezas/semana · TikTok 28 nativos · Instagram 12 nativos + resubidas top</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📅", text: "Parrilla Semanal — distribucion de formatos, frecuencias y plataformas (ver tabla abajo)" },
+{ emoji: "🎙️", text: "Embeddings BBDD Historico — videos propios publicados" },
+{ emoji: "🔍", text: "Embeddings BBDD Creadores Referentes — busqueda semantica en 20K+ escenas" },
+{ emoji: "📊", text: "Excel Moneyball por Creador — patrones ganadores con % exito" },
+{ emoji: "🎯", text: "Estrategia — objetivo de cada tipo de video y posicionamiento de marca" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🤖", text: "Notion Prompt → Runni por Telegram", link: "https://www.notion.so/Idea-IA-CEO-Media-2f0a67fd29b28038b00ad84e6a309a8f" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📝", text: "Por cada hueco de la parrilla, la IA genera una primera idea de contenido con hook, semantica, probabilidad de exito y un comentario de por que es ganadora." },
+])}
+${executeButtonHTML("crea-idea", "CREA IDEA")}
+</div>      `,
+"lucia-revisa": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2980b9,#3498db)">          <div>            <div class="popup-header-title">👤 REVISA IDEAS</div>            <div class="popup-header-sub">Revision previa a la reunion · Prepara comentarios y propuestas</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🤖", text: "Ideas generadas por Runni en el Calendario Social Media de Notion" },
+{ emoji: "📅", text: "Calendario de la semana con los huecos ya asignados" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "👀", text: "Lucia revisa cada idea generada por la IA" },
+{ emoji: "✍️", text: "Anade comentarios en Notion sobre cada idea" },
+{ emoji: "💡", text: "Apunta ideas propias que se le ocurran al revisar" },
+{ emoji: "⚠️", text: "Marca las ideas que ve mas flojas" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📋", text: "Calendario con comentarios de Lucia — listo para la reu de validacion" },
+{ emoji: "💡", text: "Lista de ideas propias como alternativas o complementos" },
+])}
+</div>      `,
+"reu-validacion": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)">          <div>            <div class="popup-header-title">🟣 REU VALIDACION IDEAS</div>            <div class="popup-header-sub">Maximo 30 minutos · Decisiones concretas sobre cada idea</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🤖", text: "Ideas de Runni ya escritas en el Calendario" },
+{ emoji: "✍️", text: "Comentarios de Lucia en cada idea" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🗣️", text: "Reu de maximo 30 minutos" },
+{ emoji: "✅", text: "Por cada idea: aprobar, modificar o descartar con razon concreta" },
+{ emoji: "📝", text: "Se apuntan cambios directos y contexto especifico" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "🎙️", text: "Reunion transcrita automaticamente" },
+{ emoji: "📋", text: "Lista de cambios concisos sobre cada idea" },
+])}
+</div>      `,
+"lucia-aplica": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2980b9,#3498db)">          <div>            <div class="popup-header-title">👤 APLICA CAMBIOS</div>            <div class="popup-header-sub">Transcripcion de reu → IA aplica → Lucia revisa → activa guiones</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎙️", text: "Transcripcion de la reunion de validacion" },
+{ emoji: "📅", text: "Calendario Social Media actual" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🤖", text: "Notion Prompt recibe la transcripcion + calendario → aplica cambios" },
+{ emoji: "👀", text: "Lucia revisa los cambios aplicados por la IA" },
+{ emoji: "✏️", text: "Ajustes finales manuales si algo no cuadra" },
+{ emoji: "🚀", text: "Activar Notion Prompt para fase CREACION", link: "https://www.notion.so/Guion-IA-CEO-Media-303a67fd29b280188115cd8bd2fb4c87" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📅", text: "Calendario de la semana cerrado con ideas finales" },
+{ emoji: "🤖", text: "Runni empieza a rodar — genera automaticamente Guion IA" },
+{ emoji: "🔒", text: "Ciclo IDEA cerrado → las ideas pasan a CREACION" },
+])}
+</div>      `,
+"guion-ia": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">          <div>            <div class="popup-header-title">✅ GUION IA</div>            <div class="popup-header-sub">6 inputs → Runni genera guion completo en cada pagina de Notion</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📅", text: "Parrilla Semanal — distribucion de formatos, frecuencias y plataformas" },
+{ emoji: "🎙️", text: "Embeddings BBDD Historico — videos propios publicados" },
+{ emoji: "🔍", text: "Embeddings BBDD Creadores Referentes — busqueda semantica en 20K+ escenas" },
+{ emoji: "📊", text: "Excel Moneyball por Creador — patrones ganadores" },
+{ emoji: "🎯", text: "Estrategia — objetivo de cada tipo de video" },
+{ emoji: "💡", text: "Ideas y Comentarios del Calendario Notion — ideas validadas en reu" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🤖", text: "Notion Prompt → Runni por Telegram", link: "https://www.notion.so/Guion-IA-CEO-Media-303a67fd29b280188115cd8bd2fb4c87" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📝", text: "En cada pagina de Notion de cada post: guion completo del video con hook detallado + guion narrativo" },
+{ emoji: "📋", text: "Descripcion de la publicacion" },
+])}
+${executeButtonHTML("guion-ia", "GUION IA")}
+</div>      `,
+"lucia-revisa-guiones": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)">          <div>            <div class="popup-header-title">👤 REVISA GUIONES</div>            <div class="popup-header-sub">Revision de cada guion generado por Runni</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📝", text: "Guiones de Runni escritos en cada pagina de Notion" },
+{ emoji: "📅", text: "Calendario semanal con las ideas validadas" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "👁️", text: "Lucia lee cada guion y compara con la idea original" },
+{ emoji: "💬", text: "Anade comentarios en Notion" },
+{ emoji: "⚠️", text: "Marca los guiones que necesitan cambios fuertes" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📋", text: "Guiones con comentarios listos para la reu de validacion" },
+])}
+</div>      `,
+"reu-validacion-guiones": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)">          <div>            <div class="popup-header-title">🟣 REU VALIDACION GUIONES</div>            <div class="popup-header-sub">Maximo 30 minutos · Decisiones concretas sobre cada guion</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📝", text: "Guiones generados por Runni con comentarios de revision" },
+{ emoji: "💬", text: "Comentarios de Lucia en cada guion" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🗣️", text: "Reu de maximo 30 minutos" },
+{ emoji: "✅", text: "Por cada guion: aprobar, modificar o descartar" },
+{ emoji: "📝", text: "Se apuntan cambios directos" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "🎙️", text: "Reunion transcrita automaticamente" },
+{ emoji: "📋", text: "Lista de cambios concisos sobre cada guion" },
+])}
+</div>      `,
+"lucia-aplica-guiones": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)">          <div>            <div class="popup-header-title">👤 APLICA CAMBIOS</div>            <div class="popup-header-sub">Aplica los cambios de la reu en los guiones de Notion</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎙️", text: "Transcripcion de la reu de validacion de guiones" },
+{ emoji: "📝", text: "Guiones actuales en Notion" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🤖", text: "Notion Prompt recibe transcripcion + guiones → aplica cambios" },
+{ emoji: "👁️", text: "Lucia revisa los cambios aplicados" },
+{ emoji: "✏️", text: "Ajustes manuales si es necesario" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "✅", text: "Guiones cerrados y listos para crear Visual IA" },
+{ emoji: "🤖", text: "Runni empieza a rodar — genera automaticamente Visual IA" },
+])}
+</div>      `,
+"visual-ia": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">          <div>            <div class="popup-header-title">✅ VISUAL IA</div>            <div class="popup-header-sub">Guion cerrado → embeddings buscan escenas similares → Gemini genera storyboard → PDF</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📅", text: "Parrilla Semanal" },
+{ emoji: "🎙️", text: "Embeddings BBDD Historico" },
+{ emoji: "🔍", text: "Embeddings BBDD Creadores Referentes — 20K+ escenas" },
+{ emoji: "📊", text: "Excel Moneyball por Creador" },
+{ emoji: "📝", text: "Guion de cada video (viene de CREACION GUION)" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🤖", text: "Notion Prompt → Runni por Telegram", link: "https://www.notion.so/Visual-IA-304a67fd29b280e9bc08dc1ceecae362" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "🎬", text: "PDF con Visual y Storyboard subido a Drive, linkeado en Notion" },
+])}
+${executeButtonHTML("visual-ia", "VISUAL IA")}
+</div>      `,
+"revisa-visuales": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)">          <div>            <div class="popup-header-title">👤 REVISA VISUALES</div>            <div class="popup-header-sub">Revision de cada storyboard visual generado</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎬", text: "Storyboards visuales PDF generados por Visual IA" },
+{ emoji: "📝", text: "Guiones cerrados de Notion como referencia" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "👁️", text: "Revisa cada storyboard y compara con el guion cerrado" },
+{ emoji: "💬", text: "Anade comentarios: que ajustar en planos, transiciones, overlays" },
+{ emoji: "⚠️", text: "Marca los que necesitan cambios fuertes" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📋", text: "Storyboards con comentarios listos para la reu" },
+])}
+</div>      `,
+"reu-validacion-visuales": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)">          <div>            <div class="popup-header-title">🟣 REU VALIDACION VISUALES</div>            <div class="popup-header-sub">Maximo 30 minutos · Decisiones concretas sobre cada storyboard</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎬", text: "Storyboards visuales con comentarios de la revision" },
+{ emoji: "💬", text: "Notas y ajustes propuestos" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🗣️", text: "Reu de maximo 30 minutos" },
+{ emoji: "✅", text: "Por cada visual: aprobar, modificar o descartar" },
+{ emoji: "📝", text: "Se apuntan cambios directos" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "🎙️", text: "Reunion transcrita automaticamente" },
+{ emoji: "📋", text: "Lista de cambios concisos sobre cada storyboard" },
+])}
+</div>      `,
+"aplica-visuales": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)">          <div>            <div class="popup-header-title">👤 APLICA CAMBIOS</div>            <div class="popup-header-sub">Aplica los cambios de la reu en los storyboards</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎙️", text: "Transcripcion de la reu de validacion visual" },
+{ emoji: "🎬", text: "Storyboards actuales con los comentarios previos" },
+])}
+${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "✏️", text: "Aplica cambios manuales en los storyboards segun la reu" },
+{ emoji: "👁️", text: "Revision final de coherencia guion ↔ visual" },
+])}
+${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "✅", text: "Storyboards cerrados y listos para grabar" },
+{ emoji: "🔒", text: "Ciclo CREACION cerrado → pasan a GRABACION" },
+])}
+</div>      `,
+};
+// Popup functions
+function openPopup(popupId) {
+if (popups[popupId]) {
+document.getElementById('popup-content').innerHTML = popups[popupId]();
+document.getElementById('overlay').classList.add('active');
+}
+}
+function closePopup() {
+document.getElementById('overlay').classList.remove('active');
+}
+// Execute process
+async function executeProcess(endpoint, btn) {
+btn.className = 'execute-btn loading';
+btn.innerHTML = '⏳ Ejecutando...';
+try {
+const res = await fetch('/api/' + endpoint, { method: 'POST' });
+const data = await res.json();
+if (data.success) {
+btn.className = 'execute-btn success';
+btn.innerHTML = '✅ ' + (data.message || 'Proceso ejecutado correctamente');
+setTimeout(() => {
+btn.className = 'execute-btn';
+btn.innerHTML = '🚀 EJECUTAR: ' + endpoint.replace(/-/g, ' ').toUpperCase();
+}, 3000);
+} else {
+throw new Error(data.error || 'Error desconocido');
+}
+} catch (err) {
+btn.className = 'execute-btn error';
+btn.innerHTML = '❌ Error: ' + err.message;
+setTimeout(() => {
+btn.className = 'execute-btn';
+btn.innerHTML = '🚀 EJECUTAR: ' + endpoint.replace(/-/g, ' ').toUpperCase();
+}, 3000);
+}
+}
+// Close popup on Escape
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Escape') closePopup();
+});
+</script></body></html>
