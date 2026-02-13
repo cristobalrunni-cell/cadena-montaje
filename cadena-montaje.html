@@ -206,6 +206,33 @@ border-radius: 6px; font-size: 11px; font-weight: 600;
 }
 .context-box textarea::placeholder { color: #555; font-style: italic; }
 .context-box .context-hint { font-size: 10px; color: #666; margin-top: 4px; }
+/* Nueva idea form */
+.idea-form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.idea-form-field { flex: 1; min-width: 180px; }
+.idea-form-field label { display: block; font-size: 10px; font-weight: 700; color: #bb86fc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.idea-form-field input, .idea-form-field select, .idea-form-field textarea {
+  width: 100%; background: #1a1f25; color: #e8e8e8; border: 1px solid #bb86fc44; border-radius: 6px;
+  padding: 8px 10px; font-size: 12px; font-family: inherit;
+}
+.idea-form-field textarea { min-height: 60px; resize: vertical; }
+.idea-form-field select { cursor: pointer; }
+.idea-form-field input::placeholder, .idea-form-field textarea::placeholder { color: #555; font-style: italic; }
+.idea-submit-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px; margin-top: 8px;
+  border: 2px solid #27ae60; border-radius: 10px;
+  background: linear-gradient(135deg, #0a2e1a, #1a4a2e);
+  color: #27ae60; font-size: 13px; font-weight: 800;
+  cursor: pointer; transition: all 0.3s;
+}
+.idea-submit-btn:hover { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; transform: scale(1.02); }
+.idea-submit-btn:disabled { opacity: 0.5; pointer-events: none; }
+.idea-submit-btn.success { border-color: #27ae60; background: #27ae60; color: #fff; }
+.idea-submit-btn.error { border-color: #e74c3c; color: #e74c3c; background: linear-gradient(135deg, #2e0a0a, #4a1a1a); }
+.idea-result { margin-top: 8px; padding: 10px; border-radius: 8px; font-size: 12px; display: none; }
+.idea-result.show { display: block; }
+.idea-result.success { background: #27ae6022; border: 1px solid #27ae6044; color: #27ae60; }
+.idea-result.error { background: #e74c3c22; border: 1px solid #e74c3c44; color: #e74c3c; }
 </style></head><body>
 <div class="header">
 <h1>⛓️ CADENA DE MONTAJE — CEO MEDIA</h1>
@@ -228,6 +255,7 @@ border-radius: 6px; font-size: 11px; font-weight: 600;
 </div>
 </div>
 <button class="parrilla-btn" onclick="openParrilla()">📅 VER PARRILLA DE CONTENIDO</button>
+<button class="parrilla-btn" onclick="openNuevaIdea()" style="border-color:#27ae60;color:#27ae60;margin-left:8px">➕ NUEVA IDEA DE VIDEO</button>
 </div>
 <div class="chain" id="chain"></div>
 <!-- Overlay for popups -->
@@ -716,6 +744,215 @@ function openParrilla() {
   `;
   document.getElementById('popup-content').innerHTML = html;
   document.getElementById('overlay').classList.add('active');
+}
+
+// Nueva Idea de Video
+// Notion config - token se guarda en localStorage para no exponer en el repo
+const CALENDARIO_DB = '13da67fd-29b2-801f-bac3-c72d4fb45bf2';
+function getNotionKey() {
+  let key = localStorage.getItem('notion_key');
+  if (!key) {
+    key = prompt('🔑 Introduce tu Notion API Key (se guarda en tu navegador):');
+    if (key) localStorage.setItem('notion_key', key);
+  }
+  return key;
+}
+
+function openNuevaIdea() {
+  const html = `
+    <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">
+      <div>
+        <div class="popup-header-title">➕ NUEVA IDEA DE VIDEO</div>
+        <div class="popup-header-sub">Crea una entrada directamente en el Calendario Social Media de Notion</div>
+      </div>
+      <button class="popup-close" onclick="closePopup()">✕</button>
+    </div>
+    <div class="popup-body">
+      <div class="idea-form-row">
+        <div class="idea-form-field" style="flex:2">
+          <label>📝 Nombre / Idea del video</label>
+          <input type="text" id="idea-nombre" placeholder="ej: Tutorial plan de entreno 10K para principiantes">
+        </div>
+      </div>
+      <div class="idea-form-row">
+        <div class="idea-form-field">
+          <label>👤 Perfil / Referente</label>
+          <select id="idea-perfil">
+            <option value="RunnerPro">RunnerPro</option>
+            <option value="cristobal running">Cristobal Running</option>
+            <option value="cristobal redondo">Cristobal Redondo</option>
+            <option value="Runclub">Runclub</option>
+            <option value="Lucia IA">Lucia IA</option>
+            <option value="Mono Blanco">Mono Blanco</option>
+          </select>
+        </div>
+        <div class="idea-form-field">
+          <label>📱 Red Social</label>
+          <select id="idea-red" multiple style="min-height:80px">
+            <option value="TikTok" selected>TikTok</option>
+            <option value="Instagram" selected>Instagram</option>
+            <option value="YouTube">YouTube</option>
+            <option value="Stories">Stories</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Podcast">Podcast</option>
+          </select>
+        </div>
+        <div class="idea-form-field">
+          <label>🎬 Tipo de contenido</label>
+          <select id="idea-tipo" multiple style="min-height:80px">
+            <option value="Vídeo" selected>Video</option>
+            <option value="Guion">Guion</option>
+            <option value="Historia">Historia</option>
+            <option value="Carrusel">Carrusel</option>
+            <option value="Cortos">Cortos</option>
+            <option value="Script">Script</option>
+          </select>
+        </div>
+      </div>
+      <div class="idea-form-row">
+        <div class="idea-form-field">
+          <label>🟣 Pilar de contenido</label>
+          <select id="idea-pilar">
+            <option value="🏃🏻 Educación">🏃 Educacion</option>
+            <option value="❤️‍🔥 Community">❤️‍🔥 Community</option>
+            <option value="📱⚡ Producto">📱 Producto</option>
+            <option value="⚡branding">⚡ Branding</option>
+            <option value="🗓️ Lifestyle (Sport+Work)">🗓️ Lifestyle</option>
+            <option value="🏟️ Comunidad">🏟️ Comunidad</option>
+            <option value="📣 Educar">📣 Educar</option>
+            <option value="trendyyy">Trend</option>
+          </select>
+        </div>
+        <div class="idea-form-field">
+          <label>🟣 Tipo de Guion</label>
+          <select id="idea-guion-tipo">
+            <option value="">Sin definir</option>
+            <option value="PAS">PAS</option>
+            <option value="Guion Viral 4P">Guion Viral 4P</option>
+            <option value="Storytelling">Storytelling</option>
+            <option value="Básico">Basico</option>
+            <option value="Sin guión">Sin guion</option>
+          </select>
+        </div>
+        <div class="idea-form-field">
+          <label>📅 Fecha publicacion</label>
+          <input type="date" id="idea-fecha">
+        </div>
+      </div>
+      <div class="idea-form-row">
+        <div class="idea-form-field" style="flex:2">
+          <label>🟣 Hook / Gancho</label>
+          <input type="text" id="idea-hook" placeholder="ej: No hagas esto si quieres correr mas rapido...">
+        </div>
+        <div class="idea-form-field">
+          <label>🟣 CTA</label>
+          <select id="idea-cta">
+            <option value="">Sin CTA</option>
+            <option value="Comentar Palabra Clave">Comentar Palabra Clave</option>
+            <option value="Seguirnos para más">Seguirnos para mas</option>
+            <option value="Link a web">Link a web</option>
+          </select>
+        </div>
+      </div>
+      <div class="idea-form-row">
+        <div class="idea-form-field" style="flex:1">
+          <label>🔴 Descripcion / Contexto</label>
+          <textarea id="idea-descripcion" placeholder="Describe la idea, referencia, contexto..."></textarea>
+        </div>
+      </div>
+
+      <button class="idea-submit-btn" id="idea-submit-btn" onclick="submitIdea()">
+        🚀 CREAR EN NOTION
+      </button>
+      <div class="idea-result" id="idea-result"></div>
+    </div>
+  `;
+  document.getElementById('popup-content').innerHTML = html;
+  document.getElementById('overlay').classList.add('active');
+}
+
+async function submitIdea() {
+  const btn = document.getElementById('idea-submit-btn');
+  const result = document.getElementById('idea-result');
+  const nombre = document.getElementById('idea-nombre').value.trim();
+
+  if (!nombre) {
+    result.className = 'idea-result show error';
+    result.textContent = '❌ Pon un nombre o idea para el video';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Creando en Notion...';
+  result.className = 'idea-result';
+
+  // Collect selected multi-selects
+  const redes = Array.from(document.getElementById('idea-red').selectedOptions).map(o => ({name: o.value}));
+  const tipos = Array.from(document.getElementById('idea-tipo').selectedOptions).map(o => ({name: o.value}));
+  const perfil = document.getElementById('idea-perfil').value;
+  const pilar = document.getElementById('idea-pilar').value;
+  const guionTipo = document.getElementById('idea-guion-tipo').value;
+  const fecha = document.getElementById('idea-fecha').value;
+  const hook = document.getElementById('idea-hook').value.trim();
+  const cta = document.getElementById('idea-cta').value;
+  const descripcion = document.getElementById('idea-descripcion').value.trim();
+
+  // Build properties
+  const props = {
+    "Nombre": { title: [{ text: { content: nombre } }] },
+    "⚫Perfil (vacío = RunnerPro)": { multi_select: [{ name: perfil }] },
+    "⚫Red Social": { multi_select: redes },
+    "🟣Tipo de contenido": { multi_select: tipos },
+    "🟣Pilar de contenido": { select: { name: pilar } },
+    "⚫Estado": { status: { name: "Idea" } },
+  };
+
+  if (guionTipo) props["🔴Tipo de Guion"] = { select: { name: guionTipo } };
+  if (fecha) props["⚫Publicación"] = { date: { start: fecha } };
+  if (hook) props["🟣Hook"] = { rich_text: [{ text: { content: hook } }] };
+  if (cta) props["🟣CTA"] = { select: { name: cta } };
+  if (descripcion) props["🔴Descripción"] = { rich_text: [{ text: { content: descripcion } }] };
+
+  try {
+    const res = await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + getNotionKey(),
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        parent: { database_id: CALENDARIO_DB },
+        properties: props
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      btn.className = 'idea-submit-btn success';
+      btn.innerHTML = '✅ Creado en Notion!';
+      result.className = 'idea-result show success';
+      result.innerHTML = '✅ Idea creada: <strong>' + nombre + '</strong> — <a href="' + data.url + '" target="_blank" style="color:#27ae60">Abrir en Notion</a>';
+      setTimeout(() => {
+        btn.className = 'idea-submit-btn';
+        btn.innerHTML = '🚀 CREAR EN NOTION';
+        btn.disabled = false;
+      }, 3000);
+    } else {
+      throw new Error(data.message || 'Error de Notion');
+    }
+  } catch (err) {
+    btn.className = 'idea-submit-btn error';
+    btn.innerHTML = '❌ Error';
+    result.className = 'idea-result show error';
+    result.textContent = '❌ ' + err.message;
+    setTimeout(() => {
+      btn.className = 'idea-submit-btn';
+      btn.innerHTML = '🚀 CREAR EN NOTION';
+      btn.disabled = false;
+    }, 3000);
+  }
 }
 
 // Close popup on Escape
