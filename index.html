@@ -16,6 +16,15 @@ align-items: center;
 }
 .header { margin-bottom: 24px; text-align: center; }
 .header h1 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+/* Brand selector */
+.brand-selector { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+.brand-pill {
+  padding: 8px 20px; border-radius: 24px; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.3s; user-select: none;
+  border: 2px solid #333; background: #1a1f25; color: #888; letter-spacing: 0.3px;
+}
+.brand-pill:hover { border-color: #bb86fc66; color: #ccc; transform: scale(1.03); }
+.brand-pill.active { border-color: var(--brand-color, #bb86fc); background: var(--brand-bg, #bb86fc18); color: var(--brand-color, #bb86fc); font-weight: 800; box-shadow: 0 0 16px var(--brand-glow, #bb86fc22); }
 .legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
 .legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
@@ -257,7 +266,12 @@ border-radius: 6px; font-size: 11px; font-weight: 600;
 .idea-result.error { background: #e74c3c22; border: 1px solid #e74c3c44; color: #e74c3c; }
 </style></head><body>
 <div class="header">
-<h1>⛓️ CADENA DE MONTAJE — CEO MEDIA</h1>
+<h1 id="main-title">⛓️ CADENA DE MONTAJE — CEO MEDIA</h1>
+<div class="brand-selector">
+  <span class="brand-pill active" data-brand="ceomedia" style="--brand-color:#bb86fc;--brand-bg:#bb86fc18;--brand-glow:#bb86fc22" onclick="switchBrand('ceomedia')">⛓️ CEO Media</span>
+  <span class="brand-pill" data-brand="runclub" style="--brand-color:#00f2ea;--brand-bg:#00f2ea18;--brand-glow:#00f2ea22" onclick="switchBrand('runclub')">🏃 Runclub</span>
+  <span class="brand-pill" data-brand="runnerpro" style="--brand-color:#f39c12;--brand-bg:#f39c1218;--brand-glow:#f39c1222" onclick="switchBrand('runnerpro')">⚡ RunnerPro</span>
+</div>
 <div class="legend">
 <div class="legend-item">
 <div class="legend-dot" style="background:#27ae60;border:1px solid #1e8449"></div>
@@ -283,45 +297,132 @@ border-radius: 6px; font-size: 11px; font-weight: 600;
 <!-- Overlay for popups -->
 <div class="overlay" id="overlay" onclick="closePopup()">
 <div class="popup" id="popup-content" onclick="event.stopPropagation()"></div>
-</div>  <script>    // Data
-const phases = [      {
-id: "idea", emoji: "💡", title: "IDEA", color: "#1B4F72",
-steps: [
-  { name: "Crea Idea", type: "drum", popupId: "crea-idea", owner: "👩 Lucia · 🤖 Runni" },
-  { name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa", owner: "👩 Lucia" },
-  { name: "Reu Validacion Ideas", type: "reu", popupId: "reu-validacion", owner: "👩 Lucia · 👩‍💼 Carmen · 👨 Cristobal" },
-  { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica", owner: "👩 Lucia" },
-]
-},
-{
-id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
-steps: [
-  { name: "Guion IA", type: "drum", popupId: "guion-ia", owner: "👩 Lucia · 🤖 Runni" },
-  { name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones", owner: "👩 Lucia" },
-  { name: "Reu Validacion Guiones", type: "reu", popupId: "reu-validacion-guiones", owner: "👩 Lucia · 👩‍💼 Carmen" },
-  { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones", owner: "👩 Lucia" },
-]
-},
-{
-id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400",
-steps: [
-  { name: "Visual IA", type: "drum", popupId: "visual-ia", owner: "👩 Lucia · 🤖 Runni" },
-  { name: "Revisa Visuales", type: "buffer", popupId: "revisa-visuales", owner: "👩 Lucia" },
-  { name: "Reu Validacion Visuales", type: "reu", popupId: "reu-validacion-visuales", owner: "👩 Lucia · 👩‍💼 Carmen" },
-  { name: "Aplica Cambios", type: "buffer", popupId: "aplica-visuales", owner: "👩 Lucia" },
-]
-},
-{ id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
-{ id: "editing", emoji: "✂️", title: "EDICION", color: "#8E44AD", construction: true, steps: [] },
-{ id: "publishing", emoji: "🚀", title: "PUBLICACION", color: "#2C3E50", construction: true, steps: [] },
-];
+</div>  <script>    // Current brand state
+let currentBrand = 'ceomedia';
+
+const brandConfig = {
+  ceomedia: {
+    title: "⛓️ CADENA DE MONTAJE — CEO MEDIA",
+    profile: "cristobal running",
+    defaultPilar: "🏃🏻 Educación",
+    defaultRedes: ["Instagram", "TikTok"],
+  },
+  runclub: {
+    title: "⛓️ CADENA DE MONTAJE — RUNCLUB",
+    profile: "Runclub",
+    defaultPilar: "🏟️ Comunidad",
+    defaultRedes: ["Instagram"],
+  },
+  runnerpro: {
+    title: "⛓️ CADENA DE MONTAJE — RUNNERPRO",
+    profile: "RunnerPro",
+    defaultPilar: "🏃🏻 Educación",
+    defaultRedes: ["Instagram", "TikTok", "YouTube"],
+  },
+};
+
+// Phase data per brand
+const brandPhases = {
+  ceomedia: [
+    {
+      id: "idea", emoji: "💡", title: "IDEA", color: "#1B4F72",
+      steps: [
+        { name: "Crea Idea", type: "drum", popupId: "crea-idea", owner: "👩 Lucia · 🤖 Runni" },
+        { name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa", owner: "👩 Lucia" },
+        { name: "Reu Validacion Ideas", type: "reu", popupId: "reu-validacion", owner: "👩 Lucia · 👩‍💼 Carmen · 👨 Cristobal" },
+        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica", owner: "👩 Lucia" },
+      ]
+    },
+    {
+      id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
+      steps: [
+        { name: "Guion IA", type: "drum", popupId: "guion-ia", owner: "👩 Lucia · 🤖 Runni" },
+        { name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones", owner: "👩 Lucia" },
+        { name: "Reu Validacion Guiones", type: "reu", popupId: "reu-validacion-guiones", owner: "👩 Lucia · 👩‍💼 Carmen" },
+        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones", owner: "👩 Lucia" },
+      ]
+    },
+    {
+      id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400",
+      steps: [
+        { name: "Visual IA", type: "drum", popupId: "visual-ia", owner: "👩 Lucia · 🤖 Runni" },
+        { name: "Revisa Visuales", type: "buffer", popupId: "revisa-visuales", owner: "👩 Lucia" },
+        { name: "Reu Validacion Visuales", type: "reu", popupId: "reu-validacion-visuales", owner: "👩 Lucia · 👩‍💼 Carmen" },
+        { name: "Aplica Cambios", type: "buffer", popupId: "aplica-visuales", owner: "👩 Lucia" },
+      ]
+    },
+    { id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
+    { id: "editing", emoji: "✂️", title: "EDICION", color: "#8E44AD", construction: true, steps: [] },
+    { id: "publishing", emoji: "🚀", title: "PUBLICACION", color: "#2C3E50", construction: true, steps: [] },
+  ],
+  runclub: [
+    {
+      id: "idea", emoji: "💡", title: "IDEA", color: "#006D6F",
+      steps: [
+        { name: "Crea Idea", type: "drum", popupId: "crea-idea", owner: "🤖 Runni" },
+        { name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa", owner: "👩 Lucia" },
+        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica", owner: "👩 Lucia" },
+      ]
+    },
+    {
+      id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
+      steps: [
+        { name: "Guion IA", type: "drum", popupId: "guion-ia", owner: "🤖 Runni" },
+        { name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones", owner: "👩 Lucia" },
+        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones", owner: "👩 Lucia" },
+      ]
+    },
+    { id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400", construction: true, steps: [] },
+    { id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
+    { id: "editing", emoji: "✂️", title: "EDICION", color: "#8E44AD", construction: true, steps: [] },
+    { id: "publishing", emoji: "🚀", title: "PUBLICACION", color: "#2C3E50", construction: true, steps: [] },
+  ],
+  runnerpro: [
+    {
+      id: "idea", emoji: "💡", title: "IDEA", color: "#7D5A00",
+      steps: [
+        { name: "Crea Idea", type: "drum", popupId: "crea-idea", owner: "🤖 Runni" },
+        { name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa", owner: "👩 Lucia" },
+        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica", owner: "👩 Lucia" },
+      ]
+    },
+    {
+      id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
+      steps: [
+        { name: "Guion IA", type: "drum", popupId: "guion-ia", owner: "🤖 Runni" },
+        { name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones", owner: "👩 Lucia" },
+        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones", owner: "👩 Lucia" },
+      ]
+    },
+    { id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400", construction: true, steps: [] },
+    { id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
+    { id: "editing", emoji: "✂️", title: "EDICION", color: "#8E44AD", construction: true, steps: [] },
+    { id: "publishing", emoji: "🚀", title: "PUBLICACION", color: "#2C3E50", construction: true, steps: [] },
+  ],
+};
 const typeStyles = {
 drum:   { bg: "#0a2e1a", border: "#27ae60", accent: "#27ae60", icon: "🥁", label: "DRUM" },
 buffer: { bg: "#0f1f2e", border: "#2980b9", accent: "#2980b9", icon: "📦", label: "BUFFER" },
 reu:    { bg: "#1a0f2e", border: "#8e44ad", accent: "#8e44ad", icon: "🟣", label: "REU" },
 };
+
+// Brand switch function
+function switchBrand(brand) {
+  currentBrand = brand;
+  // Update pills
+  document.querySelectorAll('.brand-pill').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.brand-pill[data-brand="${brand}"]`).classList.add('active');
+  // Update title
+  document.getElementById('main-title').textContent = brandConfig[brand].title;
+  // Re-render chain
+  renderChain();
+}
+
 // Render chain
+function renderChain() {
 const chain = document.getElementById('chain');
+chain.innerHTML = '';
+const phases = brandPhases[currentBrand];
 phases.forEach((phase, pi) => {
 const group = document.createElement('div');
 group.className = 'phase-group';
@@ -381,6 +482,9 @@ group.appendChild(connDiv);
 }
 chain.appendChild(group);
 });
+}
+// Initial render
+renderChain();
 // Popup content generators
 function sectionHTML(section, color, items) {
 return `        <div class="section-block">          <div class="section-label" style="color:${color}">${section}</div>          ${items.map(item => `            <div class="section-item" style="background:${color}12;border:1px solid ${color}33">              <span class="section-item-emoji">${item.emoji}</span>              <span class="section-item-text">${item.text}${item.link ? ` <a href="${item.link}" target="_blank">(Notion Prompt)</a>` : ''}</span>            </div>          `).join('')}
@@ -677,22 +781,69 @@ async function cancelProcess(endpoint) {
   } catch (e) {}
 }
 
-// Parrilla de contenido
+// Parrilla de contenido per brand
+const brandParrillas = {
+  ceomedia: {
+    title: "📅 PARRILLA SEMANAL DE CONTENIDO — CEO MEDIA",
+    sub: "40+ piezas/semana · Distribucion por referente, red social e intencion",
+    gradient: "linear-gradient(90deg,#6c3483,#bb86fc)",
+    rows: [
+      { ref: "🐍 Veneno", qty: "15", tiktok: "7 nativos", ig: "5 reels + 3 resubidas", yt: "—", intencion: "🎯 Alcance + Viralizacion + Entretenimiento" },
+      { ref: "🎯 Victor Heras", qty: "14", tiktok: "5 nativos", ig: "3 reels + 2 resubidas", yt: "3 shorts + 1 long", intencion: "🧠 Autoridad + Educacion + SEO" },
+      { ref: "🎬 Andrea", qty: "7", tiktok: "4 nativos", ig: "2 reels + 1 resubida", yt: "—", intencion: "💜 Lifestyle + Conexion + Comunidad" },
+      { ref: "📸 Post Personal", qty: "2", tiktok: "—", ig: "1 carrusel + 1 estatico", yt: "—", intencion: "📚 Educacion + Guardados + Engagement" },
+      { ref: "📖 Stories", qty: "5-7", tiktok: "—", ig: "5-7 stories diarias", yt: "—", intencion: "🤝 Cercania + Dia a dia" },
+    ],
+    total: { qty: "40+", tiktok: "~16", ig: "~18-20", yt: "~4" },
+  },
+  runclub: {
+    title: "📅 PARRILLA SEMANAL DE CONTENIDO — RUNCLUB",
+    sub: "Parrilla por definir · Estructura base de ejemplo",
+    gradient: "linear-gradient(90deg,#006D6F,#00f2ea)",
+    rows: [
+      { ref: "🏟️ Comunidad", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "🤝 Comunidad + Engagement" },
+      { ref: "🏃 Entrenos", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "📚 Educacion + Valor" },
+      { ref: "🎉 Eventos", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "📣 Difusion + Captacion" },
+    ],
+    total: { qty: "Por definir", tiktok: "—", ig: "—", yt: "—" },
+  },
+  runnerpro: {
+    title: "📅 PARRILLA SEMANAL DE CONTENIDO — RUNNERPRO",
+    sub: "Parrilla por definir · Estructura base de ejemplo",
+    gradient: "linear-gradient(90deg,#7D5A00,#f39c12)",
+    rows: [
+      { ref: "🏃🏻 Educacion", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "📚 Educacion + SEO" },
+      { ref: "📱 Producto", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "⚡ Conversion + Features" },
+      { ref: "❤️‍🔥 Comunidad", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "🤝 Community + Engagement" },
+    ],
+    total: { qty: "Por definir", tiktok: "—", ig: "—", yt: "—" },
+  },
+};
+
 function openParrilla() {
+  const p = brandParrillas[currentBrand];
   const tiktok = '<span class="red-badge" style="background:#00f2ea22;color:#00f2ea">';
   const ig = '<span class="red-badge" style="background:#E1306C22;color:#E1306C">';
   const yt = '<span class="red-badge" style="background:#FF000022;color:#FF4444">';
   const end = '</span>';
+  const rowsHTML = p.rows.map(r => `
+        <tr>
+          <td style="font-weight:700">${r.ref}</td>
+          <td style="text-align:center;font-weight:700">${r.qty}</td>
+          <td style="text-align:center${r.tiktok === '—' ? ';color:#555' : ''}">${r.tiktok}</td>
+          <td style="text-align:center${r.ig === '—' ? ';color:#555' : ''}">${r.ig}</td>
+          <td style="text-align:center${r.yt === '—' ? ';color:#555' : ''}">${r.yt}</td>
+          <td>${r.intencion}</td>
+        </tr>`).join('');
   const html = `
-    <div class="popup-header" style="background:linear-gradient(90deg,#6c3483,#bb86fc)">
+    <div class="popup-header" style="background:${p.gradient}">
       <div>
-        <div class="popup-header-title">📅 PARRILLA SEMANAL DE CONTENIDO — CEO MEDIA</div>
-        <div class="popup-header-sub">40+ piezas/semana · Distribucion por referente, red social e intencion</div>
+        <div class="popup-header-title">${p.title}</div>
+        <div class="popup-header-sub">${p.sub}</div>
       </div>
       <button class="popup-close" onclick="closePopup()">✕</button>
     </div>
     <div class="popup-body" style="overflow-x:auto">
-
       <table class="parrilla-table">
         <tr>
           <th>Referente</th>
@@ -702,66 +853,26 @@ function openParrilla() {
           <th style="text-align:center">${yt}YouTube${end}</th>
           <th>Intencion</th>
         </tr>
-        <tr>
-          <td style="font-weight:700">🐍 Veneno</td>
-          <td style="text-align:center;font-weight:700">15</td>
-          <td style="text-align:center">7 nativos</td>
-          <td style="text-align:center">5 reels + 3 resubidas</td>
-          <td style="text-align:center;color:#555">—</td>
-          <td>🎯 Alcance + Viralizacion + Entretenimiento</td>
-        </tr>
-        <tr>
-          <td style="font-weight:700">🎯 Victor Heras</td>
-          <td style="text-align:center;font-weight:700">14</td>
-          <td style="text-align:center">5 nativos</td>
-          <td style="text-align:center">3 reels + 2 resubidas</td>
-          <td style="text-align:center">3 shorts + 1 long</td>
-          <td>🧠 Autoridad + Educacion + SEO</td>
-        </tr>
-        <tr>
-          <td style="font-weight:700">🎬 Andrea</td>
-          <td style="text-align:center;font-weight:700">7</td>
-          <td style="text-align:center">4 nativos</td>
-          <td style="text-align:center">2 reels + 1 resubida</td>
-          <td style="text-align:center;color:#555">—</td>
-          <td>💜 Lifestyle + Conexion + Comunidad</td>
-        </tr>
-        <tr>
-          <td style="font-weight:700">📸 Post Personal</td>
-          <td style="text-align:center;font-weight:700">2</td>
-          <td style="text-align:center;color:#555">—</td>
-          <td style="text-align:center">1 carrusel + 1 estatico</td>
-          <td style="text-align:center;color:#555">—</td>
-          <td>📚 Educacion + Guardados + Engagement</td>
-        </tr>
-        <tr>
-          <td style="font-weight:700">📖 Stories</td>
-          <td style="text-align:center;font-weight:700">5-7</td>
-          <td style="text-align:center;color:#555">—</td>
-          <td style="text-align:center">5-7 stories diarias</td>
-          <td style="text-align:center;color:#555">—</td>
-          <td>🤝 Cercania + Dia a dia</td>
-        </tr>
+        ${rowsHTML}
         <tr class="parrilla-total">
           <td>TOTAL</td>
-          <td style="text-align:center">40+</td>
-          <td style="text-align:center">~16</td>
-          <td style="text-align:center">~18-20</td>
-          <td style="text-align:center">~4</td>
+          <td style="text-align:center">${p.total.qty}</td>
+          <td style="text-align:center">${p.total.tiktok}</td>
+          <td style="text-align:center">${p.total.ig}</td>
+          <td style="text-align:center">${p.total.yt}</td>
           <td></td>
         </tr>
       </table>
 
       <div style="margin-top:20px;padding:16px;background:#bb86fc12;border:2px solid #bb86fc44;border-radius:12px;text-align:center">
         <div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:1px">Total semanal</div>
-        <div style="font-size:28px;font-weight:900;color:#bb86fc;margin-top:4px">40+ piezas</div>
+        <div style="font-size:28px;font-weight:900;color:#bb86fc;margin-top:4px">${p.total.qty} piezas</div>
         <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;flex-wrap:wrap">
-          <span class="red-badge" style="background:#00f2ea22;color:#00f2ea;padding:4px 12px;font-size:12px">TikTok ~16</span>
-          <span class="red-badge" style="background:#E1306C22;color:#E1306C;padding:4px 12px;font-size:12px">Instagram ~18-20</span>
-          <span class="red-badge" style="background:#FF000022;color:#FF4444;padding:4px 12px;font-size:12px">YouTube ~4</span>
+          <span class="red-badge" style="background:#00f2ea22;color:#00f2ea;padding:4px 12px;font-size:12px">TikTok ${p.total.tiktok}</span>
+          <span class="red-badge" style="background:#E1306C22;color:#E1306C;padding:4px 12px;font-size:12px">Instagram ${p.total.ig}</span>
+          <span class="red-badge" style="background:#FF000022;color:#FF4444;padding:4px 12px;font-size:12px">YouTube ${p.total.yt}</span>
         </div>
       </div>
-
     </div>
   `;
   document.getElementById('popup-content').innerHTML = html;
@@ -802,16 +913,19 @@ function getTagValues(group) {
 }
 
 function openNuevaIdea() {
+  const bc = brandConfig[currentBrand];
   const pilares = ['🏃🏻 Educación','❤️‍🔥 Community','📱⚡ Producto','⚡branding','trendyyy','Mario Mola','🗓️ Lifestyle (Sport+Work)','🏟️ Comunidad','📣 Educar','🟠 WHY','❤️‍🔥 Inspiracion','📹 VLOG','🎬 Andrea','⚡ Beltrán','📝 Script','🎯 Víctor Heras','🐍 Veneno','📸 Post Personal','📖 Stories','❤️🔥 Community'];
   const perfiles = ['cristobal running','RunnerPro','cristobal redondo','Runclub','Meta ADS','Mono Blanco','Raul IA','Lucia IA'];
   const redes = ['Instagram','TikTok','YouTube','LinkedIn','X','Threads','Cristóbal','Podcast','Strava','Stories','Meta ADS'];
   const tipos = ['Guion','Script','Vídeo','Historia','Carrusel','LinkedIn Post','Texto','Cortos'];
 
+  const brandLabels = { ceomedia: '⛓️ CEO Media', runclub: '🏃 Runclub', runnerpro: '⚡ RunnerPro' };
+
   const html = `
     <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">
       <div>
-        <div class="popup-header-title">➕ NUEVA IDEA DE VIDEO</div>
-        <div class="popup-header-sub">Crea una entrada en el Calendario Social Media de Notion</div>
+        <div class="popup-header-title">➕ NUEVA IDEA DE VIDEO — ${brandLabels[currentBrand]}</div>
+        <div class="popup-header-sub">Crea una entrada en el Calendario Social Media de Notion · Perfil: ${bc.profile}</div>
       </div>
       <button class="popup-close" onclick="closePopup()">✕</button>
     </div>
@@ -824,17 +938,17 @@ function openNuevaIdea() {
 
       <div class="idea-form-field" style="margin-bottom:14px">
         <label>🟣 Pilar de contenido (Referente)</label>
-        <div class="tag-group">${tagHTML('pilar', pilares, '#bb86fc', '#bb86fc18', false, ['🏃🏻 Educación'])}</div>
+        <div class="tag-group">${tagHTML('pilar', pilares, '#bb86fc', '#bb86fc18', false, [bc.defaultPilar])}</div>
       </div>
 
       <div class="idea-form-field" style="margin-bottom:14px">
         <label>👤 Perfil (donde se publica)</label>
-        <div class="tag-group">${tagHTML('perfil', perfiles, '#f39c12', '#f39c1218', false, ['cristobal running'])}</div>
+        <div class="tag-group">${tagHTML('perfil', perfiles, '#f39c12', '#f39c1218', false, [bc.profile])}</div>
       </div>
 
       <div class="idea-form-field" style="margin-bottom:14px">
         <label>📱 Red Social</label>
-        <div class="tag-group">${tagHTML('red', redes, '#00f2ea', '#00f2ea18', true, ['Instagram','TikTok'])}</div>
+        <div class="tag-group">${tagHTML('red', redes, '#00f2ea', '#00f2ea18', true, bc.defaultRedes)}</div>
       </div>
 
       <div class="idea-form-field" style="margin-bottom:14px">
