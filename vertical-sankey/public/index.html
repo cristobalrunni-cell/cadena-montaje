@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RunnerPro Marketing Funnel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    svg text { user-select: none; }
+    .nav-item { transition: all 0.15s; }
+    .nav-item:hover { background: #F3F4F6; }
+    .nav-item.active { background: #F3F4F6; font-weight: 600; }
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .refresh-spin { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Overlay container for modals -->
+<div id="modal-overlay"></div>
+
+<div id="app" class="flex min-h-screen">
+
+  <!-- SIDEBAR — Notion style -->
+  <aside id="sidebar" class="w-56 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
+    <!-- Logo -->
+    <div class="px-4 py-4 border-b border-gray-100">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">🏃</span>
+        <span class="font-bold text-gray-800 text-sm">RunnerPro</span>
+      </div>
+      <p class="text-[10px] text-gray-400 mt-0.5">Marketing Funnel</p>
+    </div>
+
+    <!-- Nav items -->
+    <nav class="flex-1 px-2 py-3">
+      <p class="px-2 pb-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Embudos</p>
+      <div id="nav-container" class="space-y-0.5"></div>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 min-w-0">
+    <!-- Top bar: title + filters + refresh -->
+    <div class="sticky top-0 z-10 bg-slate-50 border-b border-gray-200">
+      <div class="flex items-center justify-between px-6 py-3">
+        <!-- Title -->
+        <div>
+          <h1 id="main-title" class="text-lg font-bold text-gray-800"></h1>
+          <p id="main-subtitle" class="text-gray-400 text-xs"></p>
+        </div>
+        <!-- Filters + Refresh -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <input type="date" id="date-from" class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <span class="text-gray-300 text-xs">→</span>
+            <input type="date" id="date-to" class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="flex gap-1" id="quick-filters"></div>
+          <button id="refresh-btn" onclick="refreshData()" class="p-2 rounded-lg hover:bg-gray-100 transition-colors group" title="Refrescar datos">
+            <svg class="w-4 h-4 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Funnel content -->
+    <div class="p-6">
+      <div id="funnel-content" class="bg-white rounded-2xl shadow-sm p-6 overflow-x-auto"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  activeView: 'general',
+  dateRange: { from: '', to: '' },
+  activeFilter: 30,
+  // CEO Media CSV
+  rawCsvData: null,
+  rawCrmData: null,
+  uploadStatus: { content: null, crm: null },
+  processedData: null,
+  // Social Media CSV
+  rawSocialCsvData: null,
+  rawSocialCrmData: null,
+  socialUploadStatus: { content: null, crm: null },
+  processedSocialData: null,
+};
+
+// Init dates
+const today = new Date().toISOString().split('T')[0];
+const thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+state.dateRange = { from: thirtyDaysAgo, to: today };
+
+// ============================================================
+// COLORS
+// ============================================================
+const colors = {
+  ceoTiktok: '#FF4757',
+  ceoInstagram: '#FF6B81',
+  socialTiktok: '#2ED573',
+  socialInstagram: '#7BED9F',
+  email: '#A55EEA',
+  runClub: '#FF9F43',
+  metaAds: '#3742FA',
+  googleAds: '#FECA57',
+  noAttr: '#95A5A6',
+};
+
+// ============================================================
+// SOURCES & DATA
+// ============================================================
+const sources = {
+  organic: [
+    { key: 'ceoTiktok', label: 'CEO TikTok', group: 'ceoMedia', impressions: 7000000, color: colors.ceoTiktok, pct: 70.0 },
+    { key: 'ceoInstagram', label: 'CEO Instagram', group: 'ceoMedia', impressions: 1500000, color: colors.ceoInstagram, pct: 15.0 },
+    { key: 'socialTiktok', label: 'TikTok', group: 'socialMedia', impressions: 500000, color: colors.socialTiktok, pct: 5.0 },
+    { key: 'socialInstagram', label: 'Instagram', group: 'socialMedia', impressions: 800000, color: colors.socialInstagram, pct: 8.0 },
+    { key: 'email', label: 'Email', group: 'email', impressions: 150000, color: colors.email, pct: 1.5 },
+    { key: 'runClub', label: 'Run Club', group: 'runClub', impressions: 50000, color: colors.runClub, pct: 0.5 },
+  ],
+  paid: [
+    { key: 'metaAds', label: 'Meta Ads', group: 'metaAds', impressions: 2000000, color: colors.metaAds, pct: 80.0, spend: 9000, cpm: 4.50 },
+    { key: 'googleAds', label: 'Google Ads', group: 'googleAds', impressions: 500000, color: colors.googleAds, pct: 20.0, spend: 3100, cpm: 6.20 },
+  ]
+};
+
+const allSources = [...sources.organic, ...sources.paid];
+const totalOrganic = sources.organic.reduce((s, x) => s + x.impressions, 0);
+const totalPaid = sources.paid.reduce((s, x) => s + x.impressions, 0);
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function formatNum(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toString();
+}
+function formatMoney(n) {
+  if (n >= 1000) return '€' + (n / 1000).toFixed(1) + 'K';
+  return '€' + n.toFixed(0);
+}
+
+function vPath(x1, y1, x2, y2, w1, w2) {
+  const cp = (y2 - y1) * 0.5;
+  return `M ${x1 - w1/2},${y1} C ${x1 - w1/2},${y1 + cp} ${x2 - w2/2},${y2 - cp} ${x2 - w2/2},${y2} L ${x2 + w2/2},${y2} C ${x2 + w2/2},${y2 - cp} ${x1 + w1/2},${y1 + cp} ${x1 + w1/2},${y1} Z`;
+}
+
+// Horizontal Sankey path: from (x1, cy1) to (x2, cy2) with heights h1 and h2
+function hPath(x1, cy1, x2, cy2, h1, h2) {
+  const cp = (x2 - x1) * 0.5;
+  const t1 = cy1 - h1/2, b1 = cy1 + h1/2;
+  const t2 = cy2 - h2/2, b2 = cy2 + h2/2;
+  return `M ${x1},${t1} C ${x1+cp},${t1} ${x2-cp},${t2} ${x2},${t2} L ${x2},${b2} C ${x2-cp},${b2} ${x1+cp},${b1} ${x1},${b1} Z`;
+}
+
+function esc(s) { // simple HTML escape
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ============================================================
+// CSV PROCESSING
+// ============================================================
+function filterByDate(data, from, to) {
+  if (!data) return [];
+  return data.filter(row => {
+    const d = row.fecha;
+    if (!d) return true;
+    return d >= from && d <= to;
+  });
+}
+
+function processContentData(rawData) {
+  const filtered = filterByDate(rawData, state.dateRange.from, state.dateRange.to);
+  const agg = {
+    platforms: { TikTok: { posts:0, views:0, likes:0, followers:0 }, Instagram: { posts:0, views:0, likes:0, followers:0, reach:0 } },
+    etapas: { Volumen: { posts:0, views:0 }, Valor: { posts:0, views:0 }, 'Sin Atribución': { posts:0, views:0 } },
+    formatos: {},
+    totalPosts: 0, totalViews: 0, totalFollowers: 0,
+    rawData: filtered
+  };
+  filtered.forEach(row => {
+    const platform = row.red_social;
+    const etapa = row.etapa || 'Sin Atribución';
+    const formato = row.formato || 'Sin Atribución';
+    const views = parseInt(row.visualizaciones) || 0;
+    const reach = parseInt(row.alcance) || 0;
+    const likes = parseInt(row.likes) || 0;
+    const followers = parseInt(row.seguidores_nuevos) || 0;
+    if (agg.platforms[platform]) {
+      agg.platforms[platform].posts++;
+      agg.platforms[platform].views += views;
+      agg.platforms[platform].likes += likes;
+      if (platform === 'Instagram') { agg.platforms[platform].followers += followers; agg.platforms[platform].reach += reach; }
+    }
+    if (!agg.etapas[etapa]) agg.etapas[etapa] = { posts:0, views:0 };
+    agg.etapas[etapa].posts++;
+    agg.etapas[etapa].views += views;
+    if (!agg.formatos[formato]) agg.formatos[formato] = { posts:0, views:0, platforms:{}, etapa };
+    agg.formatos[formato].posts++;
+    agg.formatos[formato].views += views;
+    if (!agg.formatos[formato].platforms[platform]) agg.formatos[formato].platforms[platform] = { posts:0, views:0 };
+    agg.formatos[formato].platforms[platform].posts++;
+    agg.formatos[formato].platforms[platform].views += views;
+    agg.totalPosts++;
+    agg.totalViews += views;
+    agg.totalFollowers += followers;
+  });
+  return agg;
+}
+
+function reprocessData() {
+  state.processedData = state.rawCsvData ? processContentData(state.rawCsvData) : null;
+  state.processedSocialData = state.rawSocialCsvData ? processContentData(state.rawSocialCsvData) : null;
+}
+
+function handleFileUpload(file, type, isSocial) {
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: (results) => {
+      if (isSocial) {
+        if (type === 'content') {
+          const data = results.data.filter(r => r.id_publicacion && r.red_social);
+          state.rawSocialCsvData = data;
+          state.socialUploadStatus.content = `✅ ${data.length} publicaciones cargadas`;
+        } else {
+          const data = results.data.filter(r => r.id || r.lead_id);
+          state.rawSocialCrmData = data;
+          state.socialUploadStatus.crm = `✅ ${data.length} registros CRM cargados`;
+        }
+      } else {
+        if (type === 'content') {
+          const data = results.data.filter(r => r.id_publicacion && r.red_social);
+          state.rawCsvData = data;
+          state.uploadStatus.content = `✅ ${data.length} publicaciones cargadas`;
+        } else {
+          const data = results.data.filter(r => r.id || r.lead_id);
+          state.rawCrmData = data;
+          state.uploadStatus.crm = `✅ ${data.length} registros CRM cargados`;
+        }
+      }
+      reprocessData();
+      render();
+    },
+    error: (err) => {
+      console.error('CSV Parse Error:', err);
+      if (isSocial) state.socialUploadStatus[type] = `❌ Error: ${err.message}`;
+      else state.uploadStatus[type] = `❌ Error: ${err.message}`;
+      render();
+    }
+  });
+}
+
+// ============================================================
+// STAGE DATA (General Funnel)
+// ============================================================
+function getStageData() {
+  return {
+    'impressions-organic': {
+      title: 'Impresiones ORGANIC', total: totalOrganic,
+      items: sources.organic.map(s => ({ ...s, value: s.impressions, pct: ((s.impressions / totalOrganic)*100).toFixed(1) }))
+    },
+    'impressions-paid': {
+      title: 'Impresiones PAID', total: totalPaid, totalSpend: 12100,
+      items: sources.paid.map(s => ({ ...s, value: s.impressions, pct: ((s.impressions / totalPaid)*100).toFixed(1), extra: `CPM: €${s.cpm} · Gasto: ${formatMoney(s.spend)}` }))
+    },
+    'reach-organic': {
+      title: 'Alcance ORGANIC', total: Math.round(totalOrganic*0.285),
+      items: sources.organic.map(s => ({ ...s, value: Math.round(s.impressions*0.285), pct: ((s.impressions / totalOrganic)*100).toFixed(1) }))
+    },
+    'reach-paid': {
+      title: 'Alcance PAID', total: Math.round(totalPaid*0.285), totalSpend: 12100,
+      items: sources.paid.map(s => ({ ...s, value: Math.round(s.impressions*0.285), pct: ((s.impressions / totalPaid)*100).toFixed(1), extra: `Gasto: ${formatMoney(s.spend)}` }))
+    },
+    'leads-organic': {
+      title: 'Leads ORGANIC', total: 95000,
+      items: sources.organic.map(s => ({ ...s, value: Math.round(95000*(s.impressions/totalOrganic)), pct: ((s.impressions/totalOrganic)*100).toFixed(1) }))
+    },
+    'leads-paid': {
+      title: 'Leads PAID', total: 24000, totalSpend: 12100,
+      items: sources.paid.map(s => ({ ...s, value: Math.round(24000*(s.impressions/totalPaid)), pct: ((s.impressions/totalPaid)*100).toFixed(1), extra: `Gasto: ${formatMoney(s.spend)}` }))
+    },
+    'dest-appstore': {
+      title: 'App Store', total: 920,
+      items: [
+        { key:'ceoTiktok', label:'CEO TikTok', value:350, color:colors.ceoTiktok, pct:'38.0' },
+        { key:'ceoInstagram', label:'CEO Instagram', value:70, color:colors.ceoInstagram, pct:'7.6' },
+        { key:'socialTiktok', label:'TikTok', value:45, color:colors.socialTiktok, pct:'4.9' },
+        { key:'socialInstagram', label:'Instagram', value:50, color:colors.socialInstagram, pct:'5.4' },
+        { key:'email', label:'Email', value:15, color:colors.email, pct:'1.6' },
+        { key:'runClub', label:'Run Club', value:5, color:colors.runClub, pct:'0.5' },
+        { key:'metaAds', label:'Meta Ads', value:220, color:colors.metaAds, pct:'23.9' },
+        { key:'googleAds', label:'Google Ads', value:85, color:colors.googleAds, pct:'9.2' },
+        { key:'noAttr', label:'No Atribución', value:80, color:colors.noAttr, pct:'8.7' },
+      ]
+    },
+    'dest-playstore': {
+      title: 'Play Store', total: 1382,
+      items: [
+        { key:'ceoTiktok', label:'CEO TikTok', value:480, color:colors.ceoTiktok, pct:'34.7' },
+        { key:'ceoInstagram', label:'CEO Instagram', value:120, color:colors.ceoInstagram, pct:'8.7' },
+        { key:'socialTiktok', label:'TikTok', value:60, color:colors.socialTiktok, pct:'4.3' },
+        { key:'socialInstagram', label:'Instagram', value:80, color:colors.socialInstagram, pct:'5.8' },
+        { key:'email', label:'Email', value:20, color:colors.email, pct:'1.4' },
+        { key:'runClub', label:'Run Club', value:7, color:colors.runClub, pct:'0.5' },
+        { key:'metaAds', label:'Meta Ads', value:350, color:colors.metaAds, pct:'25.3' },
+        { key:'googleAds', label:'Google Ads', value:125, color:colors.googleAds, pct:'9.0' },
+        { key:'noAttr', label:'No Atribución', value:140, color:colors.noAttr, pct:'10.1' },
+      ]
+    },
+    'dest-web': {
+      title: 'Web (Visitas)', total: 45000,
+      items: [
+        { key:'ceoTiktok', label:'CEO TikTok', value:15300, color:colors.ceoTiktok, pct:'34.0' },
+        { key:'ceoInstagram', label:'CEO Instagram', value:4500, color:colors.ceoInstagram, pct:'10.0' },
+        { key:'socialTiktok', label:'TikTok', value:1800, color:colors.socialTiktok, pct:'4.0' },
+        { key:'socialInstagram', label:'Instagram', value:2700, color:colors.socialInstagram, pct:'6.0' },
+        { key:'email', label:'Email', value:900, color:colors.email, pct:'2.0' },
+        { key:'runClub', label:'Run Club', value:300, color:colors.runClub, pct:'0.7' },
+        { key:'metaAds', label:'Meta Ads', value:11250, color:colors.metaAds, pct:'25.0' },
+        { key:'googleAds', label:'Google Ads', value:3750, color:colors.googleAds, pct:'8.3' },
+        { key:'noAttr', label:'No Atribución', value:4500, color:colors.noAttr, pct:'10.0' },
+      ]
+    },
+    'clients': {
+      title: 'Nuevos Clientes (Periodo)', total: 47, totalSpend: 1225, cacGeneral: 26.06,
+      items: [
+        { key:'ceoTiktok', label:'CEO TikTok', value:14, color:colors.ceoTiktok, pct:'29.8', cac:0 },
+        { key:'ceoInstagram', label:'CEO Instagram', value:6, color:colors.ceoInstagram, pct:'12.8', cac:0 },
+        { key:'socialTiktok', label:'TikTok', value:2, color:colors.socialTiktok, pct:'4.3', cac:0 },
+        { key:'socialInstagram', label:'Instagram', value:3, color:colors.socialInstagram, pct:'6.4', cac:0 },
+        { key:'email', label:'Email', value:1, color:colors.email, pct:'2.1', cac:0 },
+        { key:'runClub', label:'Run Club', value:1, color:colors.runClub, pct:'2.1', cac:15, spend:15 },
+        { key:'metaAds', label:'Meta Ads', value:8, color:colors.metaAds, pct:'17.0', cac:112.50, spend:900 },
+        { key:'googleAds', label:'Google Ads', value:5, color:colors.googleAds, pct:'10.6', cac:62, spend:310 },
+        { key:'noAttr', label:'No Atribución', value:7, color:colors.noAttr, pct:'14.9', cac:null },
+      ]
+    }
+  };
+}
+
+// ============================================================
+// FLOW DATA (General Funnel)
+// ============================================================
+function getFlowData() {
+  return {
+    'flow-imp-reach-organic': {
+      title: 'Impresiones → Alcance (ORGANIC)', conversionRate: 28.5, metric: 'Tasa de Alcance',
+      items: sources.organic.map(s => ({ ...s, from: s.impressions, to: Math.round(s.impressions*0.285), rate: 28.5, cost: '€0' }))
+    },
+    'flow-imp-reach-paid': {
+      title: 'Impresiones → Alcance (PAID)', conversionRate: 28.5, metric: 'Tasa de Alcance', totalSpend: 12100,
+      items: sources.paid.map(s => ({ ...s, from: s.impressions, to: Math.round(s.impressions*0.285), rate: 28.5, cost: `€${(s.spend / (s.impressions*0.285)).toFixed(4)}`, spend: s.spend }))
+    },
+    'flow-reach-leads-organic': {
+      title: 'Alcance → Leads (ORGANIC)', conversionRate: 3.4, metric: 'Conversión a Lead',
+      items: sources.organic.map(s => ({ ...s, from: Math.round(s.impressions*0.285), to: Math.round(s.impressions*0.285*0.034), rate: 3.4, cost: '€0' }))
+    },
+    'flow-reach-leads-paid': {
+      title: 'Alcance → Leads (PAID)', conversionRate: 3.4, metric: 'Conversión a Lead · CPL', totalSpend: 12100,
+      items: sources.paid.map(s => { const leads = Math.round(s.impressions*0.285*0.034); return { ...s, from: Math.round(s.impressions*0.285), to: leads, rate: 3.4, cost: `€${(s.spend/leads).toFixed(2)}`, spend: s.spend }; })
+    },
+    'flow-dest-clients': {
+      title: 'Destino → Clientes', conversionRate: 18.5, metric: 'Trial → Pago · CAC',
+      items: [
+        { label:'CEO TikTok', color:colors.ceoTiktok, from:380, to:14, rate:3.7, cost:'€0', spend:0 },
+        { label:'CEO Instagram', color:colors.ceoInstagram, from:120, to:6, rate:5.0, cost:'€0', spend:0 },
+        { label:'TikTok', color:colors.socialTiktok, from:50, to:2, rate:4.0, cost:'€0', spend:0 },
+        { label:'Instagram', color:colors.socialInstagram, from:70, to:3, rate:4.3, cost:'€0', spend:0 },
+        { label:'Email', color:colors.email, from:35, to:1, rate:2.9, cost:'€0', spend:0 },
+        { label:'Run Club', color:colors.runClub, from:15, to:1, rate:6.7, cost:'€15', spend:15 },
+        { label:'Meta Ads', color:colors.metaAds, from:380, to:8, rate:2.1, cost:'€112.50', spend:900 },
+        { label:'Google Ads', color:colors.googleAds, from:160, to:5, rate:3.1, cost:'€62', spend:310 },
+      ]
+    }
+  };
+}
+
+// ============================================================
+// GROUP PANEL DATA
+// ============================================================
+function getGroupConfig() {
+  return {
+    ceoMedia: { title:'CEO Media', subtitle:'Contenido de Cristóbal Redondo', color:colors.ceoTiktok, channels:['ceoTiktok','ceoInstagram'], metrics:{ impressions:8500000, reach:2422500, leads:82365, appStore:420, playStore:600, web:19800, clients:20 } },
+    socialMedia: { title:'Social Media', subtitle:'Contenido de RunnerPro', color:colors.socialTiktok, channels:['socialTiktok','socialInstagram'], metrics:{ impressions:1300000, reach:370500, leads:12597, appStore:95, playStore:140, web:4500, clients:5 } },
+    email: { title:'Email Marketing', subtitle:'Newsletter y automatizaciones', color:colors.email, channels:['email'], metrics:{ impressions:150000, reach:42750, leads:1454, appStore:15, playStore:20, web:900, clients:1 } },
+    runClub: { title:'Run Club Valencia', subtitle:'Eventos presenciales', color:colors.runClub, channels:['runClub'], metrics:{ impressions:50000, reach:14250, leads:485, appStore:5, playStore:7, web:300, clients:1 } },
+    metaAds: { title:'Meta Ads', subtitle:'Facebook + Instagram Ads', color:colors.metaAds, channels:['metaAds'], spend:9000, metrics:{ impressions:2000000, reach:570000, leads:19380, appStore:220, playStore:350, web:11250, clients:8, cac:112.50 } },
+    googleAds: { title:'Google Ads', subtitle:'Search + Display + YouTube', color:colors.googleAds, channels:['googleAds'], spend:3100, metrics:{ impressions:500000, reach:142500, leads:4845, appStore:85, playStore:125, web:3750, clients:5, cac:62 } },
+  };
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function closeModal() {
+  document.getElementById('modal-overlay').innerHTML = '';
+}
+
+function showBlockModal(blockKey) {
+  const stageData = getStageData();
+  const data = stageData[blockKey];
+  if (!data) return;
+  const isClients = blockKey === 'clients';
+  let html = `<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick="closeModal()">
+    <div class="bg-white rounded-2xl p-5 max-w-lg w-full shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-lg font-bold text-gray-800">${esc(data.title)}</h3>
+          <p class="text-gray-500 text-sm">Total: ${formatNum(data.total)}</p>
+          ${data.totalSpend ? `<p class="text-blue-600 text-xs mt-1">💰 Gasto: ${formatMoney(data.totalSpend)}</p>` : ''}
+        </div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>`;
+  if (isClients && data.cacGeneral) {
+    html += `<div class="mb-4 p-3 bg-emerald-50 rounded-lg flex justify-between items-center">
+      <span class="text-emerald-800 font-medium">CAC General</span>
+      <span class="text-emerald-600 text-xl font-bold">€${data.cacGeneral.toFixed(2)}</span>
+    </div>`;
+  }
+  html += `<div class="h-6 rounded-full overflow-hidden flex mb-4 shadow-inner">`;
+  data.items.forEach(item => {
+    html += `<div style="width:${item.pct}%;background-color:${item.color}" class="h-full"></div>`;
+  });
+  html += `</div>`;
+  if (isClients) {
+    html += `<div class="space-y-1">
+      <div class="grid grid-cols-5 gap-2 text-xs font-medium text-gray-500 px-2 pb-2 border-b">
+        <span>Canal</span><span class="text-right">Nuevos</span><span class="text-right">%</span><span class="text-right">CAC</span><span class="text-right">Gasto</span>
+      </div>`;
+    data.items.forEach(item => {
+      const cacColor = item.cac === 0 ? '#16A34A' : item.cac === null ? '#9CA3AF' : '#2563EB';
+      html += `<div class="grid grid-cols-5 gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 items-center">
+        <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded" style="background-color:${item.color}"></div><span class="text-xs font-medium text-gray-700 truncate">${esc(item.label)}</span></div>
+        <span class="text-sm font-bold text-gray-800 text-right">${item.value}</span>
+        <span class="text-xs text-gray-600 text-right">${item.pct}%</span>
+        <span class="text-xs text-right font-medium" style="color:${cacColor}">${item.cac === 0 ? '€0' : item.cac === null ? 'N/A' : '€'+item.cac}</span>
+        <span class="text-xs text-right text-gray-500">${item.spend ? formatMoney(item.spend) : '-'}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div class="space-y-1">
+      <div class="grid grid-cols-3 gap-2 text-xs font-medium text-gray-500 px-2 pb-2 border-b">
+        <span>Canal</span><span class="text-right">Cantidad</span><span class="text-right">%</span>
+      </div>`;
+    data.items.forEach(item => {
+      html += `<div class="grid grid-cols-3 gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 items-center">
+        <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded" style="background-color:${item.color}"></div><span class="text-sm font-medium text-gray-700 truncate">${esc(item.label)}</span></div>
+        <span class="text-sm font-bold text-gray-800 text-right">${formatNum(item.value)}</span>
+        <span class="text-sm text-gray-600 text-right">${item.pct}%</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  html += `</div></div>`;
+  document.getElementById('modal-overlay').innerHTML = html;
+}
+
+function showFlowModal(flowKey) {
+  const flowData = getFlowData();
+  const data = flowData[flowKey];
+  if (!data) return;
+  const hasCost = data.items.some(i => i.spend > 0);
+  let html = `<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick="closeModal()">
+    <div class="bg-white rounded-2xl p-5 max-w-xl w-full shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-lg font-bold text-gray-800">${esc(data.title)}</h3>
+          <p class="text-gray-500 text-sm">${esc(data.metric)}</p>
+          ${data.totalSpend ? `<p class="text-blue-600 text-xs mt-1">💰 Gasto: ${formatMoney(data.totalSpend)}</p>` : ''}
+        </div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="mb-4 p-3 bg-blue-50 rounded-lg flex justify-between items-center">
+        <span class="text-blue-800 font-medium">Conversión</span>
+        <span class="text-blue-600 text-xl font-bold">${data.conversionRate}%</span>
+      </div>
+      <div class="space-y-1">
+        <div class="flex text-xs font-medium text-gray-500 px-2 pb-2 border-b">
+          <span class="flex-1 min-w-0">Canal</span>
+          <span class="w-14 text-right">Entrada</span>
+          <span class="w-14 text-right">Salida</span>
+          <span class="w-12 text-right">Conv.</span>
+          <span class="w-12 text-right">Coste</span>
+          ${hasCost ? '<span class="w-14 text-right">Gasto</span>' : ''}
+        </div>`;
+  data.items.forEach(item => {
+    html += `<div class="flex p-2 rounded-lg bg-gray-50 hover:bg-gray-100 items-center">
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        <div class="w-2.5 h-2.5 rounded flex-shrink-0" style="background-color:${item.color}"></div>
+        <span class="text-sm font-medium text-gray-700">${esc(item.label)}</span>
+      </div>
+      <span class="w-14 text-xs text-gray-600 text-right">${formatNum(item.from)}</span>
+      <span class="w-14 text-xs font-medium text-gray-800 text-right">${formatNum(item.to)}</span>
+      <span class="w-12 text-xs text-green-600 text-right">${item.rate}%</span>
+      <span class="w-12 text-xs text-blue-600 text-right font-medium">${item.cost}</span>
+      ${hasCost ? `<span class="w-14 text-xs text-gray-500 text-right">${item.spend ? formatMoney(item.spend) : '-'}</span>` : ''}
+    </div>`;
+  });
+  html += `</div></div></div>`;
+  document.getElementById('modal-overlay').innerHTML = html;
+}
+
+function showGroupPanel(groupKey) {
+  const configs = getGroupConfig();
+  const config = configs[groupKey];
+  if (!config) return;
+  const channelData = config.channels.map(k => allSources.find(s => s.key === k)).filter(Boolean);
+  const m = config.metrics;
+  const isPaid = !!config.spend;
+  let html = `<div class="fixed inset-0 bg-slate-900/90 z-50 overflow-y-auto">
+    <div class="min-h-screen p-4"><div class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-t-2xl px-6 py-4 flex items-center gap-4 sticky top-0 z-10 shadow-lg">
+        <button onclick="closeModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <div class="flex-1">
+          <div class="flex items-center gap-3"><div class="w-5 h-5 rounded" style="background-color:${config.color}"></div>
+            <h1 class="text-2xl font-bold text-gray-800">${esc(config.title)}</h1>
+          </div>
+          <p class="text-gray-500 text-sm ml-8">${esc(config.subtitle)}</p>
+        </div>
+        ${isPaid ? `<div class="text-right"><p class="text-xs text-gray-500">Gasto Total</p><p class="text-xl font-bold text-blue-600">${formatMoney(config.spend)}</p></div>` : ''}
+      </div>
+      <div class="bg-white px-6 py-3 border-b flex items-center justify-center gap-4">
+        <span class="text-gray-600 text-sm">📅</span>
+        <input type="date" value="${state.dateRange.from}" class="border rounded px-2 py-1 text-sm" readonly />
+        <span class="text-gray-400">→</span>
+        <input type="date" value="${state.dateRange.to}" class="border rounded px-2 py-1 text-sm" readonly />
+      </div>
+      <div class="bg-white rounded-b-2xl p-6">`;
+  if (channelData.length > 1) {
+    html += `<div class="mb-6"><p class="text-sm text-gray-500 mb-3">Canales incluidos:</p><div class="flex gap-3">`;
+    channelData.forEach(ch => {
+      html += `<div class="flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-2"><div class="w-3 h-3 rounded" style="background-color:${ch.color}"></div><span class="font-medium text-gray-700">${esc(ch.label)}</span><span class="text-gray-400 text-sm">${formatNum(ch.impressions)}</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+  // Mini funnel SVG
+  html += `<div class="bg-gradient-to-b from-gray-50 to-white rounded-xl p-4">
+    <svg viewBox="0 0 600 500" class="w-full max-w-xl mx-auto">
+      <text x="300" y="25" fill="#6B7280" font-size="10" font-weight="600" text-anchor="middle">IMPRESIONES</text>
+      <rect x="150" y="35" width="300" height="40" rx="8" fill="${config.color}" fill-opacity="0.9" />
+      <text x="300" y="60" fill="white" font-size="14" font-weight="700" text-anchor="middle">${formatNum(m.impressions)}</text>
+      <text x="300" y="115" fill="#6B7280" font-size="10" font-weight="600" text-anchor="middle">ALCANCE</text>
+      <text x="300" y="128" fill="#9CA3AF" font-size="8" text-anchor="middle">28.5%</text>
+      <rect x="175" y="135" width="250" height="35" rx="8" fill="${config.color}" fill-opacity="0.8" />
+      <text x="300" y="158" fill="white" font-size="13" font-weight="700" text-anchor="middle">${formatNum(m.reach)}</text>
+      <text x="250" y="215" fill="#6B7280" font-size="10" font-weight="600" text-anchor="middle">LEADS</text>
+      <text x="250" y="228" fill="#9CA3AF" font-size="8" text-anchor="middle">3.4%</text>
+      <rect x="150" y="235" width="200" height="30" rx="8" fill="${config.color}" fill-opacity="0.7" />
+      <text x="250" y="255" fill="white" font-size="12" font-weight="700" text-anchor="middle">${formatNum(m.leads)}</text>
+      <text x="300" y="305" fill="#6B7280" font-size="10" font-weight="600" text-anchor="middle">DESTINO</text>
+      <rect x="70" y="320" width="80" height="45" rx="6" fill="${config.color}" fill-opacity="0.85" />
+      <text x="110" y="340" fill="white" font-size="8" font-weight="600" text-anchor="middle">App Store</text>
+      <text x="110" y="355" fill="white" font-size="11" font-weight="700" text-anchor="middle">${m.appStore}</text>
+      <rect x="260" y="320" width="80" height="45" rx="6" fill="${config.color}" fill-opacity="0.85" />
+      <text x="300" y="340" fill="white" font-size="8" font-weight="600" text-anchor="middle">Play Store</text>
+      <text x="300" y="355" fill="white" font-size="11" font-weight="700" text-anchor="middle">${m.playStore}</text>
+      <rect x="450" y="320" width="80" height="45" rx="6" fill="${config.color}" fill-opacity="0.85" />
+      <text x="490" y="340" fill="white" font-size="8" font-weight="600" text-anchor="middle">Web</text>
+      <text x="490" y="355" fill="white" font-size="11" font-weight="700" text-anchor="middle">${formatNum(m.web)}</text>
+      <text x="300" y="410" fill="#6B7280" font-size="10" font-weight="600" text-anchor="middle">NUEVOS CLIENTES</text>
+      <rect x="200" y="420" width="200" height="50" rx="8" fill="#43A047" />
+      <text x="300" y="450" fill="white" font-size="18" font-weight="800" text-anchor="middle">${m.clients}</text>
+      ${m.cac ? `<text x="300" y="465" fill="white" font-size="9" fill-opacity="0.8" text-anchor="middle">CAC: €${m.cac}</text>` : ''}
+    </svg>
+  </div>
+  <div class="mt-6 grid grid-cols-4 gap-3">
+    <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xs text-gray-500">Impresiones</p><p class="text-lg font-bold" style="color:${config.color}">${formatNum(m.impressions)}</p></div>
+    <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xs text-gray-500">Leads</p><p class="text-lg font-bold" style="color:${config.color}">${formatNum(m.leads)}</p></div>
+    <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xs text-gray-500">Clientes</p><p class="text-lg font-bold text-green-600">${m.clients}</p></div>
+    <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xs text-gray-500">${isPaid ? 'CAC' : 'Coste'}</p><p class="text-lg font-bold" style="color:${isPaid ? '#3742FA' : '#22C55E'}">${m.cac ? '€'+m.cac : '€0'}</p></div>
+  </div></div></div></div></div>`;
+  document.getElementById('modal-overlay').innerHTML = html;
+}
+
+// ============================================================
+// CEO MEDIA BLOCK/FLOW MODALS
+// ============================================================
+function showCeoBlockModal(blockKey) {
+  const d = state.processedData || { platforms:{TikTok:{posts:0,views:0},Instagram:{posts:0,views:0,followers:0}}, etapas:{}, formatos:{}, totalPosts:0, totalViews:0, totalFollowers:0 };
+  const tiktokViews = d.platforms.TikTok?.views||0, tiktokPosts = d.platforms.TikTok?.posts||0;
+  const igViews = d.platforms.Instagram?.views||0, igPosts = d.platforms.Instagram?.posts||0;
+  const totalViews = d.totalViews||0, totalFollowers = d.totalFollowers||0;
+
+  let data = null;
+  const dynamicData = {
+    'ceo-tiktok': { title:'TikTok (@cristobal_running_)', total:tiktokViews, items:[{key:'posts',label:`${tiktokPosts} publicaciones`,value:tiktokViews,color:'#000000',pct:'100.0'}] },
+    'ceo-instagram': { title:'Instagram (@cristobal_running_)', total:igViews, items:[{key:'posts',label:`${igPosts} publicaciones`,value:igViews,color:'#E1306C',pct:'100.0'},{key:'followers',label:'Seguidores nuevos',value:d.platforms.Instagram?.followers||totalFollowers,color:'#22C55E',pct:'-'}] },
+    'ceo-leads-seguidores': { title:'Seguidores Nuevos', total:totalFollowers, items:[{key:'ig',label:'Desde Instagram',value:totalFollowers,color:'#22C55E',pct:'100.0'}] },
+  };
+  data = dynamicData[blockKey];
+  if (!data) data = { title:'Sin datos', total:0, items:[{key:'none',label:'Sin datos disponibles',value:0,color:'#9CA3AF',pct:'0'}] };
+
+  let html = `<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick="closeModal()">
+    <div class="bg-white rounded-2xl p-5 max-w-lg w-full shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start mb-4">
+        <div><h3 class="text-lg font-bold text-gray-800">${esc(data.title)}</h3><p class="text-gray-500 text-sm">Total: ${formatNum(data.total)}</p></div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="h-6 rounded-full overflow-hidden flex mb-4 shadow-inner">`;
+  data.items.forEach(it => { html += `<div style="width:${it.pct}%;background-color:${it.color}" class="h-full"></div>`; });
+  html += `</div><div class="space-y-1">`;
+  data.items.forEach(it => {
+    html += `<div class="grid grid-cols-3 gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 items-center">
+      <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded" style="background-color:${it.color}"></div><span class="text-sm font-medium text-gray-700">${esc(it.label)}</span></div>
+      <span class="text-sm font-bold text-gray-800 text-right">${formatNum(it.value)}</span>
+      <span class="text-sm text-gray-600 text-right">${it.pct}%</span>
+    </div>`;
+  });
+  html += `</div></div></div>`;
+  document.getElementById('modal-overlay').innerHTML = html;
+}
+
+function showCeoFlowModal(flowKey) {
+  const d = state.processedData || { platforms:{TikTok:{posts:0,views:0},Instagram:{posts:0,views:0}}, etapas:{}, formatos:{}, totalPosts:0, totalViews:0, totalFollowers:0 };
+  const totalViews = d.totalViews||0, totalFollowers = d.totalFollowers||0;
+  const tiktokViews = d.platforms.TikTok?.views||0, igViews = d.platforms.Instagram?.views||0;
+  const hasCrmData = state.rawCrmData && state.rawCrmData.length > 0;
+  const volumenViews = d.etapas['Volumen']?.views||0, valorViews = d.etapas['Valor']?.views||0;
+  const todoSinAtribucion = volumenViews === 0 && valorViews === 0;
+
+  const flows = {
+    'ceo-flow-plat-etapa': {
+      title:'Plataformas → Etapas', conversionRate:100, metric:'Distribución de contenido',
+      items: todoSinAtribucion
+        ? [{label:'TikTok → Sin Atribución',color:'#000000',from:tiktokViews,to:tiktokViews,rate:100},{label:'Instagram → Sin Atribución',color:'#E1306C',from:igViews,to:igViews,rate:100}]
+        : [{label:'TikTok → Volumen',color:'#000000',from:tiktokViews,to:totalViews?volumenViews*(tiktokViews/totalViews):0,rate:totalViews?((volumenViews/totalViews)*100).toFixed(1):0},{label:'Instagram → Valor',color:'#E1306C',from:igViews,to:totalViews?valorViews*(igViews/totalViews):0,rate:totalViews?((valorViews/totalViews)*100).toFixed(1):0}]
+    },
+    'ceo-flow-etapa-formato': {
+      title:'Etapas → Formatos', conversionRate:100, metric:'Distribución por formato',
+      items: Object.entries(d.formatos).map(([name,data])=>({label:`${data.etapa||'Sin Atrib.'} → ${name}`,color:data.etapa==='Volumen'?'#3B82F6':(data.etapa==='Valor'?'#F97316':'#6B7280'),from:(d.etapas[data.etapa]?.views||totalViews),to:data.views,rate:(d.etapas[data.etapa]?.views||totalViews)?((data.views/(d.etapas[data.etapa]?.views||totalViews))*100).toFixed(1):0})).filter(i=>i.to>0)
+    },
+    'ceo-flow-formato-leads': {
+      title:'Formatos → Leads', conversionRate:totalViews&&totalFollowers?((totalFollowers/totalViews)*100).toFixed(2):0, metric:'Conversión a Seguidores',
+      items: [{label:'Total → Seguidores nuevos',color:'#22C55E',from:totalViews,to:totalFollowers,rate:totalViews?((totalFollowers/totalViews)*100).toFixed(2):0}]
+    },
+    'ceo-flow-leads-conversaciones': { title:'Leads → Conversaciones', conversionRate:'Sin datos CRM', metric:'Sube CSV CRM para ver datos', items:[{label:'Sin datos CRM',color:'#9CA3AF',from:totalFollowers,to:0,rate:'-'}] },
+    'ceo-flow-conv-conversion': { title:'Conversaciones → Conversión', conversionRate:'Sin datos CRM', metric:'Sube CSV CRM', items:[{label:'Sin datos CRM',color:'#9CA3AF',from:0,to:0,rate:'-'}] },
+    'ceo-flow-conv-cliente': { title:'Conversión → Cliente', conversionRate:'Sin datos CRM', metric:'Sube CSV CRM', items:[{label:'Sin datos CRM',color:'#9CA3AF',from:0,to:0,rate:'-'}] },
+  };
+  const data = flows[flowKey];
+  if (!data) return;
+  let html = `<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick="closeModal()">
+    <div class="bg-white rounded-2xl p-5 max-w-xl w-full shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-start mb-4">
+        <div><h3 class="text-lg font-bold text-gray-800">${esc(data.title)}</h3><p class="text-gray-500 text-sm">${esc(data.metric)}</p></div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="mb-4 p-3 bg-blue-50 rounded-lg flex justify-between items-center">
+        <span class="text-blue-800 font-medium">Conversión General</span>
+        <span class="text-blue-600 text-xl font-bold">${typeof data.conversionRate==='number'?data.conversionRate+'%':data.conversionRate}</span>
+      </div>
+      <div class="space-y-1">
+        <div class="flex text-xs font-medium text-gray-500 px-2 pb-2 border-b"><span class="flex-1">Flujo</span><span class="w-16 text-right">Entrada</span><span class="w-16 text-right">Salida</span><span class="w-14 text-right">Conv.</span></div>`;
+  data.items.forEach(item => {
+    html += `<div class="flex p-2 rounded-lg bg-gray-50 hover:bg-gray-100 items-center">
+      <div class="flex items-center gap-2 flex-1"><div class="w-2.5 h-2.5 rounded" style="background-color:${item.color}"></div><span class="text-sm font-medium text-gray-700">${esc(item.label)}</span></div>
+      <span class="w-16 text-sm font-bold text-gray-800 text-right">${formatNum(item.from)}</span>
+      <span class="w-16 text-sm font-bold text-gray-800 text-right">${formatNum(item.to)}</span>
+      <span class="w-14 text-sm text-blue-600 text-right font-medium">${typeof item.rate==='number'?item.rate+'%':item.rate}</span>
+    </div>`;
+  });
+  html += `</div></div></div>`;
+  document.getElementById('modal-overlay').innerHTML = html;
+}
+
+// ============================================================
+// RENDER TABS
+// ============================================================
+function renderTabs() {
+  const navItems = [
+    { key:'general', label:'General', icon:'📊', color:null, action:"setActiveView('general')" },
+    { key:'ceoMedia', label:'CEO Media', icon:null, color:colors.ceoTiktok, action:"setActiveView('ceoMedia')" },
+    { key:'socialMedia', label:'Social Media', icon:null, color:colors.socialTiktok, action:"setActiveView('socialMedia')" },
+    { key:'email', label:'Email', icon:null, color:colors.email, action:"setActiveView('email')" },
+    { key:'runClub', label:'Run Club', icon:null, color:colors.runClub, action:"setActiveView('runClub')" },
+    { key:'metaAds', label:'Meta Ads', icon:null, color:colors.metaAds, action:"setActiveView('metaAds')" },
+    { key:'googleAds', label:'Google Ads', icon:null, color:colors.googleAds, action:"setActiveView('googleAds')" },
+  ];
+  const html = navItems.map(n => {
+    const isActive = state.activeView === n.key;
+    const dot = n.color ? `<div class="nav-dot" style="background:${n.color}"></div>` : `<span class="text-sm">${n.icon}</span>`;
+    return `<button onclick="${n.action}" class="nav-item w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-left text-sm text-gray-700 ${isActive?'active':''}">
+      ${dot}<span>${esc(n.label)}</span>
+    </button>`;
+  }).join('');
+  document.getElementById('nav-container').innerHTML = html;
+}
+
+function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  const svg = btn.querySelector('svg');
+  svg.classList.add('refresh-spin');
+  // Simulate DB refresh — will connect to real DB later
+  setTimeout(() => {
+    svg.classList.remove('refresh-spin');
+    render();
+  }, 800);
+}
+
+// ============================================================
+// RENDER DATE FILTERS
+// ============================================================
+function renderDateFilters() {
+  document.getElementById('date-from').value = state.dateRange.from;
+  document.getElementById('date-to').value = state.dateRange.to;
+  const quickBtns = [
+    { days:0, label:'Hoy' }, { days:7, label:'7 días' }, { days:30, label:'30 días' }, { days:90, label:'90 días' }
+  ];
+  document.getElementById('quick-filters').innerHTML = quickBtns.map(b =>
+    `<button onclick="setQuickFilter(${b.days})" class="px-3 py-2 text-xs rounded-lg transition-colors ${state.activeFilter===b.days?'bg-blue-500 hover:bg-blue-600 text-white':'bg-gray-100 hover:bg-gray-200 text-gray-700'}">${b.label}</button>`
+  ).join('');
+}
+
+// ============================================================
+// RENDER GENERAL FUNNEL SVG
+// ============================================================
+function renderGeneralFunnel() {
+  // ================================================================
+  // VERTICAL SANKEY — top-to-bottom, Apple financial chart style
+  // Thin horizontal bars, vertical curved flows, labels beside bars
+  // ================================================================
+  const W = 900;
+  const H = 580;
+  const totalAll = totalOrganic + totalPaid;
+
+  // Layout: labels at left, bars start at leftX
+  const labelX = 8;
+  const leftX = 120;
+  const maxBarW = W - leftX - 30;
+  const CX = leftX + maxBarW / 2;
+
+  const rowY = [44, 120, 200, 270, 360, 460];
+  const barH = 10;
+
+  const pw = (val) => Math.max(4, maxBarW * (val / totalAll));
+
+  // Source defs
+  const srcDefs = [
+    { key:'ceoTiktok', label:'CEO TikTok', val:7000000, color:colors.ceoTiktok, click:"setActiveView('ceoMedia')" },
+    { key:'ceoInstagram', label:'CEO Instagram', val:1500000, color:colors.ceoInstagram, click:"setActiveView('ceoMedia')" },
+    { key:'socialTiktok', label:'TikTok', val:500000, color:colors.socialTiktok, click:"setActiveView('socialMedia')" },
+    { key:'socialInstagram', label:'Instagram', val:800000, color:colors.socialInstagram, click:"setActiveView('socialMedia')" },
+    { key:'email', label:'Email', val:150000, color:colors.email, click:"setActiveView('email')" },
+    { key:'runClub', label:'Run Club', val:50000, color:colors.runClub, click:"setActiveView('runClub')" },
+    { key:'metaAds', label:'Meta Ads', val:2000000, color:colors.metaAds, click:"setActiveView('metaAds')" },
+    { key:'googleAds', label:'Google Ads', val:500000, color:colors.googleAds, click:"setActiveView('googleAds')" },
+  ];
+
+  // Build SVG
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full">
+  <style>
+    .s-flow { transition: fill-opacity 0.25s; cursor: pointer; }
+    .s-flow:hover { fill-opacity: 0.4 !important; }
+    .s-node { transition: filter 0.2s; cursor: pointer; }
+    .s-node:hover { filter: brightness(1.12); }
+    .s-lbl { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>`;
+
+  // ── ROW 0: Sources — individual thin bars stacked horizontally ──
+  svg += `<text x="${labelX}" y="${rowY[0]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" letter-spacing="1.5" class="s-lbl">FUENTES</text>`;
+
+  // Position sources as horizontal segments within maxBarW
+  let srcX = leftX;
+  const srcGap = 3;
+  const srcNodes = srcDefs.map(s => {
+    const w = pw(s.val);
+    const node = { ...s, x: srcX, w, cx: srcX + w/2 };
+    srcX += w + srcGap;
+    return node;
+  });
+
+  srcNodes.forEach(s => {
+    svg += `<g class="s-node" onclick="${s.click}">
+      <rect x="${s.x}" y="${rowY[0]}" width="${s.w}" height="${barH}" rx="3" fill="${s.color}" />
+    </g>`;
+    // Label below bar
+    svg += `<text x="${s.cx}" y="${rowY[0] + barH + 10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${esc(s.label)}</text>`;
+    svg += `<text x="${s.cx}" y="${rowY[0] + barH + 18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(s.val)}</text>`;
+  });
+
+  // Organic/Paid brackets
+  const orgSrcs = srcNodes.filter((_,i) => i < 6);
+  const paidSrcs = srcNodes.filter((_,i) => i >= 6);
+  svg += `<text x="${(orgSrcs[0].x + orgSrcs[orgSrcs.length-1].x + orgSrcs[orgSrcs.length-1].w)/2}" y="${rowY[0] - 6}" fill="#16A34A" font-size="8" font-weight="700" text-anchor="middle" class="s-lbl">ORGANIC</text>`;
+  svg += `<text x="${(paidSrcs[0].x + paidSrcs[paidSrcs.length-1].x + paidSrcs[paidSrcs.length-1].w)/2}" y="${rowY[0] - 6}" fill="#2563EB" font-size="8" font-weight="700" text-anchor="middle" class="s-lbl">PAID</text>`;
+
+  // ── FLOWS: Sources → Impressions ──
+  const impW = maxBarW;
+  const impLeft = leftX;
+  let impSliceX = impLeft;
+  srcNodes.forEach(s => {
+    const destW = impW * (s.val / totalAll);
+    const destCx = impSliceX + destW / 2;
+    svg += `<path class="s-flow" d="${vPath(s.cx, rowY[0] + barH, destCx, rowY[1], s.w, destW)}" fill="${s.color}" fill-opacity="0.16" />`;
+    impSliceX += destW;
+  });
+
+  // ── ROW 1: Impressions ──
+  svg += `<text x="${labelX}" y="${rowY[1] + barH/2 + 4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">IMPRESIONES</text>`;
+  const orgW = impW * (totalOrganic / totalAll);
+  const paidW = impW - orgW;
+  svg += `<g class="s-node" onclick="showBlockModal('impressions-organic')">
+    <rect x="${impLeft}" y="${rowY[1]}" width="${orgW}" height="${barH}" rx="3" fill="#6B7280" />
+    <rect x="${impLeft + orgW}" y="${rowY[1]}" width="${paidW}" height="${barH}" rx="3" fill="#94A3B8" />
+  </g>`;
+  svg += `<text x="${impLeft + impW + 10}" y="${rowY[1] + barH/2 + 4}" fill="#374151" font-size="10" font-weight="700" class="s-lbl">${formatNum(totalAll)}</text>`;
+
+  // ── FLOW: Impressions → Reach ──
+  const reachVal = Math.round(totalAll * 0.285);
+  const reachW = pw(reachVal);
+  svg += `<g class="s-flow" onclick="showFlowModal('flow-imp-reach-organic')">
+    <path d="${vPath(CX, rowY[1] + barH, CX, rowY[2], impW, reachW)}" fill="#94A3B8" fill-opacity="0.14" />
+  </g>`;
+  svg += `<text x="${CX + Math.max(impW, reachW)/2 + 20}" y="${(rowY[1] + barH + rowY[2])/2 + 4}" fill="#9CA3AF" font-size="10" font-weight="600" class="s-lbl">28.5%</text>`;
+
+  // ── ROW 2: Reach ──
+  svg += `<text x="${labelX}" y="${rowY[2] + barH/2 + 4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">ALCANCE</text>`;
+  const reachLeft = CX - reachW / 2;
+  const reachOrgVal = Math.round(totalOrganic * 0.285);
+  const reachPaidVal = Math.round(totalPaid * 0.285);
+  const reachOrgW = reachW * (reachOrgVal / reachVal);
+  const reachPaidW = reachW - reachOrgW;
+  svg += `<g class="s-node" onclick="showBlockModal('reach-organic')">
+    <rect x="${reachLeft}" y="${rowY[2]}" width="${reachOrgW}" height="${barH}" rx="3" fill="#6B7280" />
+    <rect x="${reachLeft + reachOrgW}" y="${rowY[2]}" width="${reachPaidW}" height="${barH}" rx="3" fill="#94A3B8" />
+  </g>`;
+  svg += `<text x="${reachLeft + reachW + 10}" y="${rowY[2] + barH/2 + 4}" fill="#374151" font-size="10" font-weight="700" class="s-lbl">${formatNum(reachVal)}</text>`;
+
+  // ── FLOW: Reach → Leads ──
+  const leadsVal = 119000;
+  const leadsW = pw(leadsVal);
+  svg += `<g class="s-flow" onclick="showFlowModal('flow-reach-leads-organic')">
+    <path d="${vPath(CX, rowY[2] + barH, CX, rowY[3], reachW, leadsW)}" fill="#94A3B8" fill-opacity="0.14" />
+  </g>`;
+  svg += `<text x="${CX + Math.max(reachW, leadsW)/2 + 20}" y="${(rowY[2] + barH + rowY[3])/2 + 4}" fill="#9CA3AF" font-size="10" font-weight="600" class="s-lbl">3.4%</text>`;
+
+  // ── ROW 3: Leads ──
+  svg += `<text x="${labelX}" y="${rowY[3] + barH/2 + 4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">LEADS</text>`;
+  const leadsLeft = CX - leadsW / 2;
+  const leadsOrgVal = 95000, leadsPaidVal = 24000;
+  const leadsOrgW = leadsW * (leadsOrgVal / leadsVal);
+  const leadsPaidW = leadsW - leadsOrgW;
+  svg += `<g class="s-node" onclick="showBlockModal('leads-organic')">
+    <rect x="${leadsLeft}" y="${rowY[3]}" width="${leadsOrgW}" height="${barH}" rx="3" fill="#6B7280" />
+    <rect x="${leadsLeft + leadsOrgW}" y="${rowY[3]}" width="${leadsPaidW}" height="${barH}" rx="3" fill="#94A3B8" />
+  </g>`;
+  svg += `<text x="${leadsLeft + leadsW + 10}" y="${rowY[3] + barH/2 + 4}" fill="#374151" font-size="10" font-weight="700" class="s-lbl">${formatNum(leadsVal)}</text>`;
+
+  // ── FLOWS: Leads → Destinations ──
+  const destDefs = [
+    { key:'dest-appstore', label:'App Store', val:920, color:'#43A047' },
+    { key:'dest-playstore', label:'Play Store', val:1382, color:'#2E7D32' },
+    { key:'dest-web', label:'Web', val:45000, color:'#1E88E5' },
+  ];
+  const destTotal = destDefs.reduce((s,d) => s + d.val, 0);
+  const destTotalW = pw(destTotal);
+  const destGap = 4;
+  let destNodes = destDefs.map(d => {
+    const w = Math.max(20, (destTotalW - (destDefs.length-1)*destGap) * (d.val / destTotal));
+    return { ...d, w };
+  });
+  const destSumW = destNodes.reduce((s,d) => s + d.w, 0) + (destNodes.length-1)*destGap;
+  let destStartX = CX - destSumW / 2;
+  destNodes = destNodes.map(d => {
+    const node = { ...d, x: destStartX, cx: destStartX + d.w/2 };
+    destStartX += d.w + destGap;
+    return node;
+  });
+
+  let leadsSliceX = leadsLeft;
+  destNodes.forEach(d => {
+    const srcW = leadsW * (d.val / destTotal);
+    const srcCx = leadsSliceX + srcW / 2;
+    svg += `<path class="s-flow" d="${vPath(srcCx, rowY[3] + barH, d.cx, rowY[4], srcW, d.w)}" fill="${d.color}" fill-opacity="0.14" />`;
+    leadsSliceX += srcW;
+  });
+
+  // ── ROW 4: Destinations ──
+  svg += `<text x="${labelX}" y="${rowY[4] + barH/2 + 4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">DESTINO</text>`;
+  destNodes.forEach(d => {
+    svg += `<g class="s-node" onclick="showBlockModal('${d.key}')">
+      <rect x="${d.x}" y="${rowY[4]}" width="${d.w}" height="${barH}" rx="3" fill="${d.color}" />
+    </g>`;
+    svg += `<text x="${d.cx}" y="${rowY[4] + barH + 14}" fill="#374151" font-size="8" font-weight="700" text-anchor="middle" class="s-lbl">${esc(d.label)}</text>`;
+    svg += `<text x="${d.cx}" y="${rowY[4] + barH + 24}" fill="#6B7280" font-size="7.5" text-anchor="middle" class="s-lbl">${formatNum(d.val)}</text>`;
+  });
+
+  // ── FLOWS: Destinations → Clients ──
+  const clientW = 60;
+  const clientCx = CX;
+  destNodes.forEach(d => {
+    const destW2 = clientW * (d.val / destTotal);
+    svg += `<path class="s-flow" onclick="showFlowModal('flow-dest-clients')" d="${vPath(d.cx, rowY[4] + barH, clientCx, rowY[5], d.w * 0.6, destW2)}" fill="#16A34A" fill-opacity="0.14" />`;
+  });
+
+  // ── ROW 5: Clients ──
+  svg += `<text x="${labelX}" y="${rowY[5] + barH/2 + 4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLIENTES</text>`;
+  svg += `<g class="s-node" onclick="showBlockModal('clients')">
+    <rect x="${CX - clientW/2}" y="${rowY[5]}" width="${clientW}" height="${barH}" rx="3" fill="#16A34A" />
+  </g>`;
+  svg += `<text x="${CX + clientW/2 + 10}" y="${rowY[5] + barH/2 - 2}" fill="#16A34A" font-size="13" font-weight="800" class="s-lbl">47</text>`;
+  svg += `<text x="${CX + clientW/2 + 10}" y="${rowY[5] + barH/2 + 12}" fill="#6B7280" font-size="8" class="s-lbl">CAC: €26.06</text>`;
+
+  // Bottom
+  svg += `<text x="${CX}" y="${H - 6}" fill="#9CA3AF" font-size="8" font-weight="500" text-anchor="middle" class="s-lbl">Gasto total: €12.1K · Click en barras y flujos para detalles</text>`;
+
+  svg += `</svg>`;
+  return svg;
+}
+
+// ============================================================
+// RENDER CEO MEDIA FUNNEL
+// ============================================================
+function renderCEOMediaFunnel() {
+  // ================================================================
+  // VERTICAL SANKEY — CEO Media — Apple-style with hardcoded data
+  // Plataformas → Etapas → Formatos → Leads → Conversaciones → Conversión → Cliente
+  // ================================================================
+  const W = 900, H = 680;
+  const labelX = 8;
+  const leftX = 120;
+  const barH = 10, maxBarW = W - leftX - 30;
+  const CX = leftX + maxBarW / 2;
+  const rowY = [40, 110, 185, 260, 340, 420, 500, 580];
+
+  // Hardcoded data
+  const tiktokViews = 5200000, tiktokPosts = 45;
+  const igViews = 1800000, igPosts = 32;
+  const totalViews = tiktokViews + igViews;
+  const volumenViews = 4200000, valorViews = 2100000, sinAtribViews = 700000;
+  const etapaTotal = volumenViews + valorViews + sinAtribViews;
+
+  const formatosData = [
+    {name:'Andrea',key:'Andrea',color:'#4B5563',views:1800000},
+    {name:'Beltrán',key:'Beltrán',color:'#374151',views:1200000},
+    {name:'Victor Heras',key:'Victor Heras',color:'#F97316',views:950000},
+    {name:'Veneno',key:'Veneno',color:'#EA580C',views:820000},
+    {name:'Post Personal',key:'Post Personal',color:'#E1306C',views:1100000},
+    {name:'Stories',key:'Stories',color:'#DB2777',views:630000},
+    {name:'Script',key:'Script',color:'#9CA3AF',views:350000},
+    {name:'Sin Atribución',key:'Sin Atribución',color:'#6B7280',views:150000},
+  ];
+  const fmtTotal = formatosData.reduce((s,f) => s + f.views, 0);
+
+  const leadsData = [
+    {key:'seguidores',label:'Seguidores nuevos',val:12400,color:'#22C55E'},
+    {key:'palabra',label:'Palabra clave',val:3200,color:'#22C55E'},
+    {key:'historia',label:'Historia respondida',val:1800,color:'#22C55E'},
+    {key:'sinatrib',label:'Sin atribución',val:950,color:'#9CA3AF'},
+  ];
+  const leadsTotal = leadsData.reduce((s,l) => s + l.val, 0);
+
+  const convData = [
+    {label:'Seguidores nuevos',val:4800,color:'#A855F7'},
+    {label:'Palabra clave',val:1600,color:'#A855F7'},
+    {label:'Historia respondida',val:720,color:'#A855F7'},
+    {label:'Sin atribución',val:380,color:'#9CA3AF'},
+  ];
+  const convTotal = convData.reduce((s,c) => s + c.val, 0);
+
+  const conversionData = [
+    {label:'Email Marketing',val:2100,sub:'suscriptores',color:'#EF4444'},
+    {label:'DM Ventas',val:1450,sub:'conversaciones',color:'#EF4444'},
+  ];
+
+  const clientTotal = 20, clientMRR = 1580;
+
+  const pw = (val) => Math.max(4, maxBarW * (val / totalViews));
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full">
+  <style>
+    .s-flow { transition: fill-opacity 0.25s; cursor: pointer; }
+    .s-flow:hover { fill-opacity: 0.4 !important; }
+    .s-node { transition: filter 0.2s; cursor: pointer; }
+    .s-node:hover { filter: brightness(1.12); }
+    .s-lbl { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>`;
+
+  // ── ROW 0: Plataformas ──
+  svg += `<text x="${labelX}" y="${rowY[0]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" letter-spacing="1.5" class="s-lbl">PLATAFORMAS</text>`;
+  const platDefs = [
+    {label:'TikTok',val:tiktokViews,sub:`${tiktokPosts} posts`,color:'#000000',click:"showCeoBlockModal('ceo-tiktok')"},
+    {label:'Instagram',val:igViews,sub:`${igPosts} posts`,color:'#E1306C',click:"showCeoBlockModal('ceo-instagram')"},
+  ];
+  const platGap = 6;
+  const platTotalW = platDefs.reduce((s,p) => s + pw(p.val), 0) + platGap;
+  let platX = CX - platTotalW/2;
+  const platNodes = platDefs.map(p => {
+    const w = pw(p.val); const node = {...p,x:platX,w,cx:platX+w/2}; platX += w+platGap; return node;
+  });
+  platNodes.forEach(p => {
+    svg += `<g class="s-node" onclick="${p.click}"><rect x="${p.x}" y="${rowY[0]}" width="${p.w}" height="${barH}" rx="3" fill="${p.color}" /></g>`;
+    svg += `<text x="${p.cx}" y="${rowY[0]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${p.label}</text>`;
+    svg += `<text x="${p.cx}" y="${rowY[0]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${p.sub} · ${formatNum(p.val)}</text>`;
+  });
+
+  // ── ROW 1: Etapas ──
+  const etapaDefs = [
+    {label:'Volumen',val:volumenViews,color:'#3B82F6'},
+    {label:'Valor',val:valorViews,color:'#F97316'},
+    {label:'Sin Atribución',val:sinAtribViews,color:'#6B7280'},
+  ];
+  const etapaGap = 4;
+  const etapaSumW = etapaDefs.reduce((s,e) => s + pw(e.val), 0) + (etapaDefs.length-1)*etapaGap;
+  let etX = CX - etapaSumW/2;
+  const etapaNodes = etapaDefs.map(e => {
+    const w = pw(e.val); const node = {...e,x:etX,w,cx:etX+w/2}; etX += w+etapaGap; return node;
+  });
+
+  // Flows: Plat → Etapas
+  platNodes.forEach(p => {
+    etapaNodes.forEach(e => {
+      const flowW = Math.max(3, p.w * (e.val/etapaTotal) * 0.5);
+      svg += `<path class="s-flow" onclick="showCeoFlowModal('ceo-flow-plat-etapa')" d="${vPath(p.cx,rowY[0]+barH,e.cx,rowY[1],flowW,flowW)}" fill="${e.color}" fill-opacity="0.14" />`;
+    });
+  });
+
+  svg += `<text x="${labelX}" y="${rowY[1]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">ETAPAS</text>`;
+  etapaNodes.forEach(e => {
+    svg += `<g class="s-node"><rect x="${e.x}" y="${rowY[1]}" width="${e.w}" height="${barH}" rx="3" fill="${e.color}" /></g>`;
+    svg += `<text x="${e.cx}" y="${rowY[1]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${e.label}</text>`;
+    svg += `<text x="${e.cx}" y="${rowY[1]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(e.val)}</text>`;
+  });
+
+  // ── ROW 2: Formatos ──
+  const fmtGap = 3;
+  const fmtSumW = formatosData.reduce((s,f) => s + pw(f.views), 0) + (formatosData.length-1)*fmtGap;
+  let fmX = CX - fmtSumW/2;
+  const fmtNodes = formatosData.map(f => {
+    const w = pw(f.views); const node = {...f,x:fmX,w,cx:fmX+w/2}; fmX += w+fmtGap; return node;
+  });
+
+  // Flows: Etapas → Formatos
+  etapaNodes.forEach(e => {
+    fmtNodes.forEach(f => {
+      const flowW = Math.max(2, e.w * (f.views/fmtTotal) * 0.5);
+      svg += `<path class="s-flow" onclick="showCeoFlowModal('ceo-flow-etapa-formato')" d="${vPath(e.cx,rowY[1]+barH,f.cx,rowY[2],flowW,flowW)}" fill="${f.color}" fill-opacity="0.12" />`;
+    });
+  });
+
+  svg += `<text x="${labelX}" y="${rowY[2]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">FORMATOS</text>`;
+  fmtNodes.forEach(f => {
+    const label = f.name.length > 10 ? f.name.slice(0,10)+'…' : f.name;
+    svg += `<g class="s-node"><rect x="${f.x}" y="${rowY[2]}" width="${f.w}" height="${barH}" rx="3" fill="${f.color}" /></g>`;
+    svg += `<text x="${f.cx}" y="${rowY[2]+barH+10}" fill="#374151" font-size="6" font-weight="700" text-anchor="middle" class="s-lbl">${esc(label)}</text>`;
+    svg += `<text x="${f.cx}" y="${rowY[2]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(f.views)}</text>`;
+  });
+
+  // ── ROW 3: Leads ──
+  const leadsGap = 4;
+  const leadsSumW = leadsData.reduce((s,l) => s + Math.max(30, maxBarW*(l.val/leadsTotal)*0.8), 0) + (leadsData.length-1)*leadsGap;
+  let ldX = CX - leadsSumW/2;
+  const leadsNodes = leadsData.map(l => {
+    const w = Math.max(30, maxBarW*(l.val/leadsTotal)*0.8); const node = {...l,x:ldX,w,cx:ldX+w/2}; ldX += w+leadsGap; return node;
+  });
+
+  // Flow: Formatos → Leads (single aggregated)
+  svg += `<path class="s-flow" onclick="showCeoFlowModal('ceo-flow-formato-leads')" d="${vPath(CX,rowY[2]+barH,CX,rowY[3],fmtSumW*0.3,leadsSumW*0.6)}" fill="#22C55E" fill-opacity="0.13" />`;
+
+  svg += `<text x="${labelX}" y="${rowY[3]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">LEADS</text>`;
+  leadsNodes.forEach(l => {
+    svg += `<g class="s-node"><rect x="${l.x}" y="${rowY[3]}" width="${l.w}" height="${barH}" rx="3" fill="${l.color}" /></g>`;
+    svg += `<text x="${l.cx}" y="${rowY[3]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${esc(l.label)}</text>`;
+    svg += `<text x="${l.cx}" y="${rowY[3]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(l.val)}</text>`;
+  });
+
+  // ── ROW 4: Conversaciones ──
+  const convGap = 4;
+  const convSumW = convData.reduce((s,c) => s + Math.max(30, maxBarW*(c.val/convTotal)*0.7), 0) + (convData.length-1)*convGap;
+  let cvX = CX - convSumW/2;
+  const convNodes = convData.map(c => {
+    const w = Math.max(30, maxBarW*(c.val/convTotal)*0.7); const node = {...c,x:cvX,w,cx:cvX+w/2}; cvX += w+convGap; return node;
+  });
+
+  // Flows: Leads → Conv (matching indices)
+  leadsNodes.forEach((l,i) => {
+    if (convNodes[i]) {
+      svg += `<path class="s-flow" onclick="showCeoFlowModal('ceo-flow-leads-conversaciones')" d="${vPath(l.cx,rowY[3]+barH,convNodes[i].cx,rowY[4],l.w*0.5,convNodes[i].w*0.5)}" fill="#A855F7" fill-opacity="0.12" />`;
+    }
+  });
+
+  svg += `<text x="${labelX}" y="${rowY[4]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSACIONES</text>`;
+  convNodes.forEach(c => {
+    svg += `<g class="s-node"><rect x="${c.x}" y="${rowY[4]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg += `<text x="${c.cx}" y="${rowY[4]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${esc(c.label)}</text>`;
+    svg += `<text x="${c.cx}" y="${rowY[4]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)}</text>`;
+  });
+
+  // ── ROW 5: Conversión ──
+  const conversionGap = 8;
+  const conversionSumW = conversionData.reduce((s,c) => s + Math.max(60, maxBarW*(c.val/(conversionData.reduce((a,b)=>a+b.val,0)))*0.5), 0) + conversionGap;
+  let crX = CX - conversionSumW/2;
+  const conversionNodes = conversionData.map(c => {
+    const total = conversionData.reduce((a,b)=>a+b.val,0);
+    const w = Math.max(60, maxBarW*(c.val/total)*0.5); const node = {...c,x:crX,w,cx:crX+w/2}; crX += w+conversionGap; return node;
+  });
+
+  svg += `<path class="s-flow" onclick="showCeoFlowModal('ceo-flow-conv-conversion')" d="${vPath(CX,rowY[4]+barH,CX,rowY[5],convSumW*0.3,conversionSumW*0.4)}" fill="#EF4444" fill-opacity="0.12" />`;
+
+  svg += `<text x="${labelX}" y="${rowY[5]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSIÓN</text>`;
+  conversionNodes.forEach(c => {
+    svg += `<g class="s-node"><rect x="${c.x}" y="${rowY[5]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg += `<text x="${c.cx}" y="${rowY[5]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${esc(c.label)}</text>`;
+    svg += `<text x="${c.cx}" y="${rowY[5]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)} ${c.sub}</text>`;
+  });
+
+  // ── ROW 6: Cliente ──
+  const clientW = Math.max(50, maxBarW * 0.08);
+  svg += `<path class="s-flow" d="${vPath(CX,rowY[5]+barH,CX,rowY[6],conversionSumW*0.3,clientW)}" fill="#10B981" fill-opacity="0.12" />`;
+
+  svg += `<text x="${labelX}" y="${rowY[6]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLIENTE</text>`;
+  svg += `<g class="s-node"><rect x="${CX-clientW/2}" y="${rowY[6]}" width="${clientW}" height="${barH}" rx="3" fill="#10B981" /></g>`;
+  svg += `<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2-2}" fill="#10B981" font-size="11" font-weight="800" class="s-lbl">${clientTotal} clientes</text>`;
+  svg += `<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2+10}" fill="#6B7280" font-size="8" class="s-lbl">€${formatNum(clientMRR)} MRR</text>`;
+
+  svg += `<text x="${CX}" y="${H-6}" fill="#9CA3AF" font-size="8" font-weight="500" text-anchor="middle" class="s-lbl">Click en barras y flujos para detalles</text>`;
+  svg += `</svg>`;
+  return svg;
+}
+
+// ============================================================
+// RENDER SOCIAL MEDIA FUNNEL (similar structure)
+// ============================================================
+function renderSocialMediaFunnel() {
+  // ================================================================
+  // VERTICAL SANKEY — Social Media — Apple-style with hardcoded data
+  // Plataformas → Etapas → Formatos → Leads → Conversaciones → Conversión → Cliente
+  // ================================================================
+  const W = 900, H = 680;
+  const labelX = 8;
+  const leftX = 120;
+  const barH = 10, maxBarW = W - leftX - 30;
+  const CX = leftX + maxBarW / 2;
+  const rowY = [40, 110, 185, 260, 340, 420, 500, 580];
+
+  // Hardcoded data
+  const tiktokViews = 380000, tiktokPosts = 28;
+  const igViews = 620000, igPosts = 35;
+  const totalViews = tiktokViews + igViews;
+  const volumenViews = 520000, valorViews = 310000, sinAtribViews = 170000;
+  const etapaTotal = volumenViews + valorViews + sinAtribViews;
+
+  const formatosData = [
+    {name:'Reels Tips',key:'Reels Tips',color:'#2ED573',views:280000},
+    {name:'Carrusel',key:'Carrusel',color:'#26C066',views:195000},
+    {name:'Behind Scenes',key:'Behind Scenes',color:'#20B259',views:145000},
+    {name:'Testimonios',key:'Testimonios',color:'#1AA34C',views:120000},
+    {name:'Tutoriales',key:'Tutoriales',color:'#7BED9F',views:95000},
+    {name:'Stories',key:'Stories',color:'#6AD98F',views:85000},
+    {name:'Colaboraciones',key:'Colaboraciones',color:'#9CA3AF',views:50000},
+    {name:'Sin Atribución',key:'Sin Atribución',color:'#6B7280',views:30000},
+  ];
+  const fmtTotal = formatosData.reduce((s,f) => s + f.views, 0);
+
+  const leadsData = [
+    {key:'seguidores',label:'Seguidores nuevos',val:4200,color:'#22C55E'},
+    {key:'palabra',label:'Palabra clave',val:850,color:'#22C55E'},
+    {key:'historia',label:'Historia respondida',val:620,color:'#22C55E'},
+    {key:'sinatrib',label:'Sin atribución',val:330,color:'#9CA3AF'},
+  ];
+  const leadsTotal = leadsData.reduce((s,l) => s + l.val, 0);
+
+  const convData = [
+    {label:'Seguidores nuevos',val:1680,color:'#A855F7'},
+    {label:'Palabra clave',val:420,color:'#A855F7'},
+    {label:'Historia respondida',val:250,color:'#A855F7'},
+    {label:'Sin atribución',val:130,color:'#9CA3AF'},
+  ];
+  const convTotal = convData.reduce((s,c) => s + c.val, 0);
+
+  const conversionData = [
+    {label:'Email Marketing',val:680,sub:'suscriptores',color:'#EF4444'},
+    {label:'DM Ventas',val:450,sub:'conversaciones',color:'#EF4444'},
+  ];
+
+  const clientTotal = 5, clientMRR = 395;
+
+  const pw = (val) => Math.max(4, maxBarW * (val / totalViews));
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full">
+  <style>
+    .s-flow { transition: fill-opacity 0.25s; cursor: pointer; }
+    .s-flow:hover { fill-opacity: 0.4 !important; }
+    .s-node { transition: filter 0.2s; cursor: pointer; }
+    .s-node:hover { filter: brightness(1.12); }
+    .s-lbl { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>`;
+
+  // ── ROW 0: Plataformas ──
+  svg += `<text x="${labelX}" y="${rowY[0]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" letter-spacing="1.5" class="s-lbl">PLATAFORMAS</text>`;
+  const platDefs = [
+    {label:'TikTok',val:tiktokViews,sub:`${tiktokPosts} posts`,color:'#2ED573'},
+    {label:'Instagram',val:igViews,sub:`${igPosts} posts`,color:'#7BED9F'},
+  ];
+  const platGap = 6;
+  const platTotalW = platDefs.reduce((s,p) => s + pw(p.val), 0) + platGap;
+  let platX = CX - platTotalW/2;
+  const platNodes = platDefs.map(p => {
+    const w = pw(p.val); const node = {...p,x:platX,w,cx:platX+w/2}; platX += w+platGap; return node;
+  });
+  platNodes.forEach(p => {
+    svg += `<g class="s-node"><rect x="${p.x}" y="${rowY[0]}" width="${p.w}" height="${barH}" rx="3" fill="${p.color}" /></g>`;
+    svg += `<text x="${p.cx}" y="${rowY[0]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${p.label}</text>`;
+    svg += `<text x="${p.cx}" y="${rowY[0]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${p.sub} · ${formatNum(p.val)}</text>`;
+  });
+
+  // ── ROW 1: Etapas ──
+  const etapaDefs = [
+    {label:'Volumen',val:volumenViews,color:'#3B82F6'},
+    {label:'Valor',val:valorViews,color:'#F97316'},
+    {label:'Sin Atribución',val:sinAtribViews,color:'#6B7280'},
+  ];
+  const etapaGap = 4;
+  const etapaSumW = etapaDefs.reduce((s,e) => s + pw(e.val), 0) + (etapaDefs.length-1)*etapaGap;
+  let etX = CX - etapaSumW/2;
+  const etapaNodes = etapaDefs.map(e => {
+    const w = pw(e.val); const node = {...e,x:etX,w,cx:etX+w/2}; etX += w+etapaGap; return node;
+  });
+
+  platNodes.forEach(p => {
+    etapaNodes.forEach(e => {
+      const flowW = Math.max(3, p.w * (e.val/etapaTotal) * 0.5);
+      svg += `<path class="s-flow" d="${vPath(p.cx,rowY[0]+barH,e.cx,rowY[1],flowW,flowW)}" fill="${e.color}" fill-opacity="0.14" />`;
+    });
+  });
+
+  svg += `<text x="${labelX}" y="${rowY[1]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">ETAPAS</text>`;
+  etapaNodes.forEach(e => {
+    svg += `<g class="s-node"><rect x="${e.x}" y="${rowY[1]}" width="${e.w}" height="${barH}" rx="3" fill="${e.color}" /></g>`;
+    svg += `<text x="${e.cx}" y="${rowY[1]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${e.label}</text>`;
+    svg += `<text x="${e.cx}" y="${rowY[1]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(e.val)}</text>`;
+  });
+
+  // ── ROW 2: Formatos ──
+  const fmtGap = 3;
+  const fmtSumW = formatosData.reduce((s,f) => s + pw(f.views), 0) + (formatosData.length-1)*fmtGap;
+  let fmX = CX - fmtSumW/2;
+  const fmtNodes = formatosData.map(f => {
+    const w = pw(f.views); const node = {...f,x:fmX,w,cx:fmX+w/2}; fmX += w+fmtGap; return node;
+  });
+
+  etapaNodes.forEach(e => {
+    fmtNodes.forEach(f => {
+      const flowW = Math.max(2, e.w * (f.views/fmtTotal) * 0.5);
+      svg += `<path class="s-flow" d="${vPath(e.cx,rowY[1]+barH,f.cx,rowY[2],flowW,flowW)}" fill="${f.color}" fill-opacity="0.12" />`;
+    });
+  });
+
+  svg += `<text x="${labelX}" y="${rowY[2]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">FORMATOS</text>`;
+  fmtNodes.forEach(f => {
+    const label = f.name.length > 11 ? f.name.slice(0,11)+'…' : f.name;
+    svg += `<g class="s-node"><rect x="${f.x}" y="${rowY[2]}" width="${f.w}" height="${barH}" rx="3" fill="${f.color}" /></g>`;
+    svg += `<text x="${f.cx}" y="${rowY[2]+barH+10}" fill="#374151" font-size="6" font-weight="700" text-anchor="middle" class="s-lbl">${esc(label)}</text>`;
+    svg += `<text x="${f.cx}" y="${rowY[2]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(f.views)}</text>`;
+  });
+
+  // ── ROW 3: Leads ──
+  const leadsGap = 4;
+  const leadsSumW = leadsData.reduce((s,l) => s + Math.max(30, maxBarW*(l.val/leadsTotal)*0.8), 0) + (leadsData.length-1)*leadsGap;
+  let ldX = CX - leadsSumW/2;
+  const leadsNodes = leadsData.map(l => {
+    const w = Math.max(30, maxBarW*(l.val/leadsTotal)*0.8); const node = {...l,x:ldX,w,cx:ldX+w/2}; ldX += w+leadsGap; return node;
+  });
+
+  svg += `<path class="s-flow" d="${vPath(CX,rowY[2]+barH,CX,rowY[3],fmtSumW*0.3,leadsSumW*0.6)}" fill="#22C55E" fill-opacity="0.13" />`;
+
+  svg += `<text x="${labelX}" y="${rowY[3]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">LEADS</text>`;
+  leadsNodes.forEach(l => {
+    svg += `<g class="s-node"><rect x="${l.x}" y="${rowY[3]}" width="${l.w}" height="${barH}" rx="3" fill="${l.color}" /></g>`;
+    svg += `<text x="${l.cx}" y="${rowY[3]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${esc(l.label)}</text>`;
+    svg += `<text x="${l.cx}" y="${rowY[3]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(l.val)}</text>`;
+  });
+
+  // ── ROW 4: Conversaciones ──
+  const convGap = 4;
+  const convSumW = convData.reduce((s,c) => s + Math.max(30, maxBarW*(c.val/convTotal)*0.7), 0) + (convData.length-1)*convGap;
+  let cvX = CX - convSumW/2;
+  const convNodes = convData.map(c => {
+    const w = Math.max(30, maxBarW*(c.val/convTotal)*0.7); const node = {...c,x:cvX,w,cx:cvX+w/2}; cvX += w+convGap; return node;
+  });
+
+  leadsNodes.forEach((l,i) => {
+    if (convNodes[i]) {
+      svg += `<path class="s-flow" d="${vPath(l.cx,rowY[3]+barH,convNodes[i].cx,rowY[4],l.w*0.5,convNodes[i].w*0.5)}" fill="#A855F7" fill-opacity="0.12" />`;
+    }
+  });
+
+  svg += `<text x="${labelX}" y="${rowY[4]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSACIONES</text>`;
+  convNodes.forEach(c => {
+    svg += `<g class="s-node"><rect x="${c.x}" y="${rowY[4]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg += `<text x="${c.cx}" y="${rowY[4]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${esc(c.label)}</text>`;
+    svg += `<text x="${c.cx}" y="${rowY[4]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)}</text>`;
+  });
+
+  // ── ROW 5: Conversión ──
+  const conversionGap = 8;
+  const crTotal = conversionData.reduce((a,b)=>a+b.val,0);
+  const conversionSumW = conversionData.reduce((s,c) => s + Math.max(60, maxBarW*(c.val/crTotal)*0.5), 0) + conversionGap;
+  let crX = CX - conversionSumW/2;
+  const conversionNodes = conversionData.map(c => {
+    const w = Math.max(60, maxBarW*(c.val/crTotal)*0.5); const node = {...c,x:crX,w,cx:crX+w/2}; crX += w+conversionGap; return node;
+  });
+
+  svg += `<path class="s-flow" d="${vPath(CX,rowY[4]+barH,CX,rowY[5],convSumW*0.3,conversionSumW*0.4)}" fill="#EF4444" fill-opacity="0.12" />`;
+
+  svg += `<text x="${labelX}" y="${rowY[5]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSIÓN</text>`;
+  conversionNodes.forEach(c => {
+    svg += `<g class="s-node"><rect x="${c.x}" y="${rowY[5]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg += `<text x="${c.cx}" y="${rowY[5]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${esc(c.label)}</text>`;
+    svg += `<text x="${c.cx}" y="${rowY[5]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)} ${c.sub}</text>`;
+  });
+
+  // ── ROW 6: Cliente ──
+  const clientW = Math.max(40, maxBarW * 0.06);
+  svg += `<path class="s-flow" d="${vPath(CX,rowY[5]+barH,CX,rowY[6],conversionSumW*0.3,clientW)}" fill="#10B981" fill-opacity="0.12" />`;
+
+  svg += `<text x="${labelX}" y="${rowY[6]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLIENTE</text>`;
+  svg += `<g class="s-node"><rect x="${CX-clientW/2}" y="${rowY[6]}" width="${clientW}" height="${barH}" rx="3" fill="#10B981" /></g>`;
+  svg += `<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2-2}" fill="#10B981" font-size="11" font-weight="800" class="s-lbl">${clientTotal} clientes</text>`;
+  svg += `<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2+10}" fill="#6B7280" font-size="8" class="s-lbl">€${formatNum(clientMRR)} MRR</text>`;
+
+  svg += `<text x="${CX}" y="${H-6}" fill="#9CA3AF" font-size="8" font-weight="500" text-anchor="middle" class="s-lbl">Click en barras y flujos para detalles</text>`;
+  svg += `</svg>`;
+  return svg;
+}
+
+// ============================================================
+// RENDER EMAIL FUNNEL
+// ============================================================
+function renderEmailFunnel() {
+  const W = 900, H = 620;
+  const labelX = 8, leftX = 120;
+  const barH = 10, maxBarW = W - leftX - 30;
+  const CX = leftX + maxBarW / 2;
+  const rowY = [40, 110, 185, 260, 340, 420, 500, 580];
+
+  const campanas = [
+    {label:'Newsletter Semanal',val:85000,color:'#A55EEA'},
+    {label:'Onboarding',val:35000,color:'#8B5CF6'},
+    {label:'Promociones',val:30000,color:'#7C3AED'},
+  ];
+  const campTotal = campanas.reduce((s,c)=>s+c.val,0);
+  const pw = (val) => Math.max(4, maxBarW * (val / campTotal));
+
+  const tipoData = [
+    {label:'Educativo',val:62000,color:'#6366F1'},
+    {label:'Promocional',val:48000,color:'#818CF8'},
+    {label:'Transaccional',val:40000,color:'#A5B4FC'},
+  ];
+  const tipoTotal = tipoData.reduce((s,t)=>s+t.val,0);
+
+  const audienciaData = [
+    {label:'Activos 30d',val:72000,color:'#22D3EE'},
+    {label:'Leads fríos',val:45000,color:'#67E8F9'},
+    {label:'Re-engagement',val:33000,color:'#A5F3FC'},
+  ];
+  const audTotal = audienciaData.reduce((s,a)=>s+a.val,0);
+
+  const aperturas = [
+    {label:'Abierto',val:52500,color:'#10B981'},
+    {label:'No abierto',val:97500,color:'#D1D5DB'},
+  ];
+  const apTotal = aperturas.reduce((s,a)=>s+a.val,0);
+
+  const clicks = [
+    {label:'CTA principal',val:8400,color:'#F59E0B'},
+    {label:'Links secundarios',val:3150,color:'#FBBF24'},
+    {label:'Sin click',val:40950,color:'#D1D5DB'},
+  ];
+  const clickTotal = clicks.reduce((s,c)=>s+c.val,0);
+
+  const conversionData = [
+    {label:'Trial iniciado',val:420,sub:'registros',color:'#EF4444'},
+    {label:'Compra directa',val:180,sub:'ventas',color:'#DC2626'},
+  ];
+
+  const clientTotal = 1, clientMRR = 85;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full">
+  <style>
+    .s-flow { transition: fill-opacity 0.25s; cursor: pointer; }
+    .s-flow:hover { fill-opacity: 0.4 !important; }
+    .s-node { transition: filter 0.2s; cursor: pointer; }
+    .s-node:hover { filter: brightness(1.12); }
+    .s-lbl { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>`;
+
+  // ROW 0: Campañas
+  svg += `<text x="${labelX}" y="${rowY[0]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CAMPAÑAS</text>`;
+  const campGap = 6;
+  const campSumW = campanas.reduce((s,c)=>s+pw(c.val),0)+(campanas.length-1)*campGap;
+  let cX = CX - campSumW/2;
+  const campNodes = campanas.map(c=>{const w=pw(c.val);const n={...c,x:cX,w,cx:cX+w/2};cX+=w+campGap;return n;});
+  campNodes.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[0]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[0]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[0]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)} envíos</text>`;
+  });
+
+  // ROW 1: Tipo
+  const tipGap = 4;
+  const tipSumW = tipoData.reduce((s,t)=>s+pw(t.val),0)+(tipoData.length-1)*tipGap;
+  let tX = CX - tipSumW/2;
+  const tipNodes = tipoData.map(t=>{const w=pw(t.val);const n={...t,x:tX,w,cx:tX+w/2};tX+=w+tipGap;return n;});
+  campNodes.forEach(c=>{tipNodes.forEach(t=>{
+    const fw=Math.max(2,c.w*(t.val/tipoTotal)*0.5);
+    svg+=`<path class="s-flow" d="${vPath(c.cx,rowY[0]+barH,t.cx,rowY[1],fw,fw)}" fill="${t.color}" fill-opacity="0.14" />`;
+  });});
+  svg += `<text x="${labelX}" y="${rowY[1]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">TIPO</text>`;
+  tipNodes.forEach(t=>{
+    svg+=`<g class="s-node"><rect x="${t.x}" y="${rowY[1]}" width="${t.w}" height="${barH}" rx="3" fill="${t.color}" /></g>`;
+    svg+=`<text x="${t.cx}" y="${rowY[1]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${t.label}</text>`;
+    svg+=`<text x="${t.cx}" y="${rowY[1]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(t.val)}</text>`;
+  });
+
+  // ROW 2: Audiencia
+  const audGap = 4;
+  const audSumW = audienciaData.reduce((s,a)=>s+pw(a.val),0)+(audienciaData.length-1)*audGap;
+  let aX = CX - audSumW/2;
+  const audNodes = audienciaData.map(a=>{const w=pw(a.val);const n={...a,x:aX,w,cx:aX+w/2};aX+=w+audGap;return n;});
+  tipNodes.forEach(t=>{audNodes.forEach(a=>{
+    const fw=Math.max(2,t.w*(a.val/audTotal)*0.5);
+    svg+=`<path class="s-flow" d="${vPath(t.cx,rowY[1]+barH,a.cx,rowY[2],fw,fw)}" fill="${a.color}" fill-opacity="0.12" />`;
+  });});
+  svg += `<text x="${labelX}" y="${rowY[2]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">AUDIENCIA</text>`;
+  audNodes.forEach(a=>{
+    svg+=`<g class="s-node"><rect x="${a.x}" y="${rowY[2]}" width="${a.w}" height="${barH}" rx="3" fill="${a.color}" /></g>`;
+    svg+=`<text x="${a.cx}" y="${rowY[2]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${a.label}</text>`;
+    svg+=`<text x="${a.cx}" y="${rowY[2]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(a.val)}</text>`;
+  });
+
+  // ROW 3: Aperturas
+  const apGap = 4;
+  const apSumW = aperturas.reduce((s,a)=>s+Math.max(30,maxBarW*(a.val/apTotal)*0.8),0)+(aperturas.length-1)*apGap;
+  let apX = CX - apSumW/2;
+  const apNodes = aperturas.map(a=>{const w=Math.max(30,maxBarW*(a.val/apTotal)*0.8);const n={...a,x:apX,w,cx:apX+w/2};apX+=w+apGap;return n;});
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[2]+barH,CX,rowY[3],audSumW*0.3,apSumW*0.6)}" fill="#10B981" fill-opacity="0.13" />`;
+  svg += `<text x="${labelX}" y="${rowY[3]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">APERTURAS</text>`;
+  apNodes.forEach(a=>{
+    svg+=`<g class="s-node"><rect x="${a.x}" y="${rowY[3]}" width="${a.w}" height="${barH}" rx="3" fill="${a.color}" /></g>`;
+    svg+=`<text x="${a.cx}" y="${rowY[3]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${a.label}</text>`;
+    svg+=`<text x="${a.cx}" y="${rowY[3]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(a.val)}</text>`;
+  });
+
+  // ROW 4: Clicks
+  const clGap = 4;
+  const clSumW = clicks.reduce((s,c)=>s+Math.max(30,maxBarW*(c.val/clickTotal)*0.7),0)+(clicks.length-1)*clGap;
+  let clX = CX - clSumW/2;
+  const clNodes = clicks.map(c=>{const w=Math.max(30,maxBarW*(c.val/clickTotal)*0.7);const n={...c,x:clX,w,cx:clX+w/2};clX+=w+clGap;return n;});
+  apNodes.forEach((a,i)=>{if(clNodes[i]){
+    svg+=`<path class="s-flow" d="${vPath(a.cx,rowY[3]+barH,clNodes[i].cx,rowY[4],a.w*0.5,clNodes[i].w*0.5)}" fill="${clNodes[i].color}" fill-opacity="0.12" />`;
+  }});
+  svg += `<text x="${labelX}" y="${rowY[4]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLICKS</text>`;
+  clNodes.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[4]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[4]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[4]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)}</text>`;
+  });
+
+  // ROW 5: Conversión
+  const convGap2 = 8;
+  const convSumW2 = conversionData.reduce((s,c)=>s+Math.max(60,maxBarW*(c.val/(conversionData.reduce((a,b)=>a+b.val,0)))*0.5),0)+convGap2;
+  let crX = CX - convSumW2/2;
+  const convNodes2 = conversionData.map(c=>{const total=conversionData.reduce((a,b)=>a+b.val,0);const w=Math.max(60,maxBarW*(c.val/total)*0.5);const n={...c,x:crX,w,cx:crX+w/2};crX+=w+convGap2;return n;});
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[4]+barH,CX,rowY[5],clSumW*0.3,convSumW2*0.4)}" fill="#EF4444" fill-opacity="0.12" />`;
+  svg += `<text x="${labelX}" y="${rowY[5]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSIÓN</text>`;
+  convNodes2.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[5]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[5]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[5]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)} ${c.sub}</text>`;
+  });
+
+  // ROW 6: Cliente
+  const clientW = Math.max(40, maxBarW * 0.06);
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[5]+barH,CX,rowY[6],convSumW2*0.3,clientW)}" fill="#10B981" fill-opacity="0.12" />`;
+  svg += `<text x="${labelX}" y="${rowY[6]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLIENTE</text>`;
+  svg+=`<g class="s-node"><rect x="${CX-clientW/2}" y="${rowY[6]}" width="${clientW}" height="${barH}" rx="3" fill="#10B981" /></g>`;
+  svg+=`<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2-2}" fill="#10B981" font-size="11" font-weight="800" class="s-lbl">${clientTotal} cliente</text>`;
+  svg+=`<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2+10}" fill="#6B7280" font-size="8" class="s-lbl">€${formatNum(clientMRR)} MRR</text>`;
+
+  svg+=`<text x="${CX}" y="${H-6}" fill="#9CA3AF" font-size="8" font-weight="500" text-anchor="middle" class="s-lbl">Click en barras y flujos para detalles</text>`;
+  svg+=`</svg>`;
+  return svg;
+}
+
+// ============================================================
+// RENDER RUN CLUB FUNNEL
+// ============================================================
+function renderRunClubFunnel() {
+  const W = 900, H = 620;
+  const labelX = 8, leftX = 120;
+  const barH = 10, maxBarW = W - leftX - 30;
+  const CX = leftX + maxBarW / 2;
+  const rowY = [40, 110, 185, 260, 340, 420, 500, 580];
+
+  const eventos = [
+    {label:'Entrenos grupales',val:28000,color:'#FF9F43'},
+    {label:'Carreras',val:15000,color:'#F59E0B'},
+    {label:'Talleres',val:7000,color:'#FBBF24'},
+  ];
+  const evTotal = eventos.reduce((s,e)=>s+e.val,0);
+  const pw = (val) => Math.max(4, maxBarW * (val / evTotal));
+
+  const tipoData = [
+    {label:'Presencial',val:35000,color:'#EA580C'},
+    {label:'Virtual',val:12000,color:'#FB923C'},
+    {label:'Híbrido',val:3000,color:'#FDBA74'},
+  ];
+  const tipoTotal = tipoData.reduce((s,t)=>s+t.val,0);
+
+  const asistData = [
+    {label:'Nuevos',val:18500,color:'#22C55E'},
+    {label:'Recurrentes',val:24000,color:'#16A34A'},
+    {label:'Invitados',val:7500,color:'#86EFAC'},
+  ];
+  const asistTotal = asistData.reduce((s,a)=>s+a.val,0);
+
+  const leadsData = [
+    {label:'WhatsApp grupo',val:2800,color:'#25D366'},
+    {label:'Instagram follow',val:1200,color:'#E1306C'},
+    {label:'Email registro',val:850,color:'#A55EEA'},
+  ];
+  const leadsTotal = leadsData.reduce((s,l)=>s+l.val,0);
+
+  const convData = [
+    {label:'Consulta app',val:1400,color:'#A855F7'},
+    {label:'Trial activo',val:680,color:'#8B5CF6'},
+    {label:'Sin acción',val:2770,color:'#D1D5DB'},
+  ];
+  const convTotal = convData.reduce((s,c)=>s+c.val,0);
+
+  const conversionData = [
+    {label:'Suscripción mensual',val:85,sub:'pagos',color:'#EF4444'},
+    {label:'Plan anual',val:42,sub:'pagos',color:'#DC2626'},
+  ];
+
+  const clientTotal = 1, clientMRR = 95;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full">
+  <style>
+    .s-flow { transition: fill-opacity 0.25s; cursor: pointer; }
+    .s-flow:hover { fill-opacity: 0.4 !important; }
+    .s-node { transition: filter 0.2s; cursor: pointer; }
+    .s-node:hover { filter: brightness(1.12); }
+    .s-lbl { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>`;
+
+  // ROW 0: Eventos
+  svg += `<text x="${labelX}" y="${rowY[0]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">EVENTOS</text>`;
+  const evGap = 6;
+  const evSumW = eventos.reduce((s,e)=>s+pw(e.val),0)+(eventos.length-1)*evGap;
+  let eX = CX - evSumW/2;
+  const evNodes = eventos.map(e=>{const w=pw(e.val);const n={...e,x:eX,w,cx:eX+w/2};eX+=w+evGap;return n;});
+  evNodes.forEach(e=>{
+    svg+=`<g class="s-node"><rect x="${e.x}" y="${rowY[0]}" width="${e.w}" height="${barH}" rx="3" fill="${e.color}" /></g>`;
+    svg+=`<text x="${e.cx}" y="${rowY[0]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${e.label}</text>`;
+    svg+=`<text x="${e.cx}" y="${rowY[0]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(e.val)}</text>`;
+  });
+
+  // ROW 1: Tipo
+  const tipGap = 4;
+  const tipSumW = tipoData.reduce((s,t)=>s+pw(t.val),0)+(tipoData.length-1)*tipGap;
+  let tX = CX - tipSumW/2;
+  const tipNodes = tipoData.map(t=>{const w=pw(t.val);const n={...t,x:tX,w,cx:tX+w/2};tX+=w+tipGap;return n;});
+  evNodes.forEach(e=>{tipNodes.forEach(t=>{
+    const fw=Math.max(2,e.w*(t.val/tipoTotal)*0.5);
+    svg+=`<path class="s-flow" d="${vPath(e.cx,rowY[0]+barH,t.cx,rowY[1],fw,fw)}" fill="${t.color}" fill-opacity="0.14" />`;
+  });});
+  svg += `<text x="${labelX}" y="${rowY[1]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">TIPO</text>`;
+  tipNodes.forEach(t=>{
+    svg+=`<g class="s-node"><rect x="${t.x}" y="${rowY[1]}" width="${t.w}" height="${barH}" rx="3" fill="${t.color}" /></g>`;
+    svg+=`<text x="${t.cx}" y="${rowY[1]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${t.label}</text>`;
+    svg+=`<text x="${t.cx}" y="${rowY[1]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(t.val)}</text>`;
+  });
+
+  // ROW 2: Asistentes
+  const asGap = 4;
+  const asSumW = asistData.reduce((s,a)=>s+pw(a.val),0)+(asistData.length-1)*asGap;
+  let asX = CX - asSumW/2;
+  const asNodes = asistData.map(a=>{const w=pw(a.val);const n={...a,x:asX,w,cx:asX+w/2};asX+=w+asGap;return n;});
+  tipNodes.forEach(t=>{asNodes.forEach(a=>{
+    const fw=Math.max(2,t.w*(a.val/asistTotal)*0.5);
+    svg+=`<path class="s-flow" d="${vPath(t.cx,rowY[1]+barH,a.cx,rowY[2],fw,fw)}" fill="${a.color}" fill-opacity="0.12" />`;
+  });});
+  svg += `<text x="${labelX}" y="${rowY[2]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">ASISTENTES</text>`;
+  asNodes.forEach(a=>{
+    svg+=`<g class="s-node"><rect x="${a.x}" y="${rowY[2]}" width="${a.w}" height="${barH}" rx="3" fill="${a.color}" /></g>`;
+    svg+=`<text x="${a.cx}" y="${rowY[2]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${a.label}</text>`;
+    svg+=`<text x="${a.cx}" y="${rowY[2]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(a.val)}</text>`;
+  });
+
+  // ROW 3: Leads
+  const ldGap = 4;
+  const ldSumW = leadsData.reduce((s,l)=>s+Math.max(30,maxBarW*(l.val/leadsTotal)*0.8),0)+(leadsData.length-1)*ldGap;
+  let ldX = CX - ldSumW/2;
+  const ldNodes = leadsData.map(l=>{const w=Math.max(30,maxBarW*(l.val/leadsTotal)*0.8);const n={...l,x:ldX,w,cx:ldX+w/2};ldX+=w+ldGap;return n;});
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[2]+barH,CX,rowY[3],asSumW*0.3,ldSumW*0.6)}" fill="#22C55E" fill-opacity="0.13" />`;
+  svg += `<text x="${labelX}" y="${rowY[3]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">LEADS</text>`;
+  ldNodes.forEach(l=>{
+    svg+=`<g class="s-node"><rect x="${l.x}" y="${rowY[3]}" width="${l.w}" height="${barH}" rx="3" fill="${l.color}" /></g>`;
+    svg+=`<text x="${l.cx}" y="${rowY[3]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${l.label}</text>`;
+    svg+=`<text x="${l.cx}" y="${rowY[3]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(l.val)}</text>`;
+  });
+
+  // ROW 4: Conversaciones
+  const cvGap = 4;
+  const cvSumW = convData.reduce((s,c)=>s+Math.max(30,maxBarW*(c.val/convTotal)*0.7),0)+(convData.length-1)*cvGap;
+  let cvX = CX - cvSumW/2;
+  const cvNodes = convData.map(c=>{const w=Math.max(30,maxBarW*(c.val/convTotal)*0.7);const n={...c,x:cvX,w,cx:cvX+w/2};cvX+=w+cvGap;return n;});
+  ldNodes.forEach((l,i)=>{if(cvNodes[i]){
+    svg+=`<path class="s-flow" d="${vPath(l.cx,rowY[3]+barH,cvNodes[i].cx,rowY[4],l.w*0.5,cvNodes[i].w*0.5)}" fill="${cvNodes[i].color}" fill-opacity="0.12" />`;
+  }});
+  svg += `<text x="${labelX}" y="${rowY[4]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSACIONES</text>`;
+  cvNodes.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[4]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[4]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[4]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)}</text>`;
+  });
+
+  // ROW 5: Conversión
+  const convGap2 = 8;
+  const convSumW2 = conversionData.reduce((s,c)=>s+Math.max(60,maxBarW*(c.val/(conversionData.reduce((a,b)=>a+b.val,0)))*0.5),0)+convGap2;
+  let crX = CX - convSumW2/2;
+  const convNodes2 = conversionData.map(c=>{const total=conversionData.reduce((a,b)=>a+b.val,0);const w=Math.max(60,maxBarW*(c.val/total)*0.5);const n={...c,x:crX,w,cx:crX+w/2};crX+=w+convGap2;return n;});
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[4]+barH,CX,rowY[5],cvSumW*0.3,convSumW2*0.4)}" fill="#EF4444" fill-opacity="0.12" />`;
+  svg += `<text x="${labelX}" y="${rowY[5]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSIÓN</text>`;
+  convNodes2.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[5]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[5]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[5]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)} ${c.sub}</text>`;
+  });
+
+  // ROW 6: Cliente
+  const clientW = Math.max(40, maxBarW * 0.06);
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[5]+barH,CX,rowY[6],convSumW2*0.3,clientW)}" fill="#10B981" fill-opacity="0.12" />`;
+  svg += `<text x="${labelX}" y="${rowY[6]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLIENTE</text>`;
+  svg+=`<g class="s-node"><rect x="${CX-clientW/2}" y="${rowY[6]}" width="${clientW}" height="${barH}" rx="3" fill="#10B981" /></g>`;
+  svg+=`<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2-2}" fill="#10B981" font-size="11" font-weight="800" class="s-lbl">${clientTotal} cliente</text>`;
+  svg+=`<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2+10}" fill="#6B7280" font-size="8" class="s-lbl">€${formatNum(clientMRR)} MRR</text>`;
+
+  svg+=`<text x="${CX}" y="${H-6}" fill="#9CA3AF" font-size="8" font-weight="500" text-anchor="middle" class="s-lbl">Click en barras y flujos para detalles</text>`;
+  svg+=`</svg>`;
+  return svg;
+}
+
+// ============================================================
+// RENDER META ADS FUNNEL
+// ============================================================
+function renderMetaAdsFunnel() {
+  const W = 900, H = 620;
+  const labelX = 8, leftX = 120;
+  const barH = 10, maxBarW = W - leftX - 30;
+  const CX = leftX + maxBarW / 2;
+  const rowY = [40, 110, 185, 260, 340, 420, 500, 580];
+
+  const campanas = [
+    {label:'Conversiones App',val:950000,color:'#3742FA'},
+    {label:'Tráfico Web',val:580000,color:'#5352ED'},
+    {label:'Retargeting',val:320000,color:'#7C6CF0'},
+    {label:'Lookalike',val:150000,color:'#A29BFE'},
+  ];
+  const campTotal = campanas.reduce((s,c)=>s+c.val,0);
+  const pw = (val) => Math.max(4, maxBarW * (val / campTotal));
+
+  const publicoData = [
+    {label:'Runners 25-45',val:820000,color:'#2196F3'},
+    {label:'Fitness general',val:650000,color:'#42A5F5'},
+    {label:'Lookalike compradores',val:350000,color:'#64B5F6'},
+    {label:'Retargeting web',val:180000,color:'#90CAF9'},
+  ];
+  const pubTotal = publicoData.reduce((s,p)=>s+p.val,0);
+
+  const formatoData = [
+    {label:'Video corto',val:750000,color:'#FF5252'},
+    {label:'Carrusel',val:520000,color:'#FF8A80'},
+    {label:'Stories',val:430000,color:'#FF1744'},
+    {label:'Imagen estática',val:300000,color:'#D50000'},
+  ];
+  const fmtTotal = formatoData.reduce((s,f)=>s+f.val,0);
+
+  const impresiones = [
+    {label:'Feed',val:1100000,color:'#FF9800'},
+    {label:'Stories',val:580000,color:'#FFB74D'},
+    {label:'Reels',val:320000,color:'#FFA726'},
+  ];
+  const impTotal = impresiones.reduce((s,i)=>s+i.val,0);
+
+  const clicksData = [
+    {label:'CTA App',val:28500,color:'#4CAF50'},
+    {label:'CTA Web',val:15200,color:'#66BB6A'},
+    {label:'Link bio',val:4800,color:'#81C784'},
+  ];
+  const clickTotal = clicksData.reduce((s,c)=>s+c.val,0);
+
+  const conversionData = [
+    {label:'Install App',val:4200,sub:'installs',color:'#EF4444'},
+    {label:'Registro Web',val:2850,sub:'registros',color:'#DC2626'},
+    {label:'Compra directa',val:380,sub:'ventas',color:'#B91C1C'},
+  ];
+
+  const clientTotal = 8, clientMRR = 960, spend = 9000;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full">
+  <style>
+    .s-flow { transition: fill-opacity 0.25s; cursor: pointer; }
+    .s-flow:hover { fill-opacity: 0.4 !important; }
+    .s-node { transition: filter 0.2s; cursor: pointer; }
+    .s-node:hover { filter: brightness(1.12); }
+    .s-lbl { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>`;
+
+  // ROW 0: Campañas
+  svg += `<text x="${labelX}" y="${rowY[0]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CAMPAÑAS</text>`;
+  const cGap = 4;
+  const cSumW = campanas.reduce((s,c)=>s+pw(c.val),0)+(campanas.length-1)*cGap;
+  let cX = CX - cSumW/2;
+  const cNodes = campanas.map(c=>{const w=pw(c.val);const n={...c,x:cX,w,cx:cX+w/2};cX+=w+cGap;return n;});
+  cNodes.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[0]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[0]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[0]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(c.val)} imp</text>`;
+  });
+
+  // ROW 1: Público
+  const pGap = 4;
+  const pSumW = publicoData.reduce((s,p)=>s+pw(p.val),0)+(publicoData.length-1)*pGap;
+  let pX = CX - pSumW/2;
+  const pNodes = publicoData.map(p=>{const w=pw(p.val);const n={...p,x:pX,w,cx:pX+w/2};pX+=w+pGap;return n;});
+  cNodes.forEach(c=>{pNodes.forEach(p=>{
+    const fw=Math.max(2,c.w*(p.val/pubTotal)*0.5);
+    svg+=`<path class="s-flow" d="${vPath(c.cx,rowY[0]+barH,p.cx,rowY[1],fw,fw)}" fill="${p.color}" fill-opacity="0.14" />`;
+  });});
+  svg += `<text x="${labelX}" y="${rowY[1]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">PÚBLICO</text>`;
+  pNodes.forEach(p=>{
+    svg+=`<g class="s-node"><rect x="${p.x}" y="${rowY[1]}" width="${p.w}" height="${barH}" rx="3" fill="${p.color}" /></g>`;
+    svg+=`<text x="${p.cx}" y="${rowY[1]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${p.label}</text>`;
+    svg+=`<text x="${p.cx}" y="${rowY[1]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(p.val)}</text>`;
+  });
+
+  // ROW 2: Formato
+  const fGap = 4;
+  const fSumW = formatoData.reduce((s,f)=>s+pw(f.val),0)+(formatoData.length-1)*fGap;
+  let fX = CX - fSumW/2;
+  const fNodes = formatoData.map(f=>{const w=pw(f.val);const n={...f,x:fX,w,cx:fX+w/2};fX+=w+fGap;return n;});
+  pNodes.forEach(p=>{fNodes.forEach(f=>{
+    const fw=Math.max(2,p.w*(f.val/fmtTotal)*0.5);
+    svg+=`<path class="s-flow" d="${vPath(p.cx,rowY[1]+barH,f.cx,rowY[2],fw,fw)}" fill="${f.color}" fill-opacity="0.12" />`;
+  });});
+  svg += `<text x="${labelX}" y="${rowY[2]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">FORMATO</text>`;
+  fNodes.forEach(f=>{
+    svg+=`<g class="s-node"><rect x="${f.x}" y="${rowY[2]}" width="${f.w}" height="${barH}" rx="3" fill="${f.color}" /></g>`;
+    svg+=`<text x="${f.cx}" y="${rowY[2]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${f.label}</text>`;
+    svg+=`<text x="${f.cx}" y="${rowY[2]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(f.val)}</text>`;
+  });
+
+  // ROW 3: Impresiones por ubicación
+  const iGap = 4;
+  const iSumW = impresiones.reduce((s,i)=>s+Math.max(30,maxBarW*(i.val/impTotal)*0.8),0)+(impresiones.length-1)*iGap;
+  let iX = CX - iSumW/2;
+  const iNodes = impresiones.map(i=>{const w=Math.max(30,maxBarW*(i.val/impTotal)*0.8);const n={...i,x:iX,w,cx:iX+w/2};iX+=w+iGap;return n;});
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[2]+barH,CX,rowY[3],fSumW*0.3,iSumW*0.6)}" fill="#FF9800" fill-opacity="0.13" />`;
+  svg += `<text x="${labelX}" y="${rowY[3]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">UBICACIÓN</text>`;
+  iNodes.forEach(i=>{
+    svg+=`<g class="s-node"><rect x="${i.x}" y="${rowY[3]}" width="${i.w}" height="${barH}" rx="3" fill="${i.color}" /></g>`;
+    svg+=`<text x="${i.cx}" y="${rowY[3]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${i.label}</text>`;
+    svg+=`<text x="${i.cx}" y="${rowY[3]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(i.val)}</text>`;
+  });
+
+  // ROW 4: Clicks
+  const clGap = 4;
+  const clSumW = clicksData.reduce((s,c)=>s+Math.max(30,maxBarW*(c.val/clickTotal)*0.7),0)+(clicksData.length-1)*clGap;
+  let clX = CX - clSumW/2;
+  const clNodes = clicksData.map(c=>{const w=Math.max(30,maxBarW*(c.val/clickTotal)*0.7);const n={...c,x:clX,w,cx:clX+w/2};clX+=w+clGap;return n;});
+  iNodes.forEach((nd,i)=>{if(clNodes[i]){
+    svg+=`<path class="s-flow" d="${vPath(nd.cx,rowY[3]+barH,clNodes[i].cx,rowY[4],nd.w*0.5,clNodes[i].w*0.5)}" fill="${clNodes[i].color}" fill-opacity="0.12" />`;
+  }});
+  svg += `<text x="${labelX}" y="${rowY[4]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLICKS</text>`;
+  clNodes.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[4]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[4]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[4]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)}</text>`;
+  });
+
+  // ROW 5: Conversión
+  const convGap2 = 6;
+  const cvTotal2 = conversionData.reduce((a,b)=>a+b.val,0);
+  const convSumW2 = conversionData.reduce((s,c)=>s+Math.max(50,maxBarW*(c.val/cvTotal2)*0.5),0)+(conversionData.length-1)*convGap2;
+  let crX = CX - convSumW2/2;
+  const convNodes2 = conversionData.map(c=>{const w=Math.max(50,maxBarW*(c.val/cvTotal2)*0.5);const n={...c,x:crX,w,cx:crX+w/2};crX+=w+convGap2;return n;});
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[4]+barH,CX,rowY[5],clSumW*0.3,convSumW2*0.4)}" fill="#EF4444" fill-opacity="0.12" />`;
+  svg += `<text x="${labelX}" y="${rowY[5]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSIÓN</text>`;
+  convNodes2.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[5]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[5]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[5]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(c.val)} ${c.sub}</text>`;
+  });
+
+  // ROW 6: Cliente
+  const clientW = Math.max(50, maxBarW * 0.08);
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[5]+barH,CX,rowY[6],convSumW2*0.3,clientW)}" fill="#10B981" fill-opacity="0.12" />`;
+  svg += `<text x="${labelX}" y="${rowY[6]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLIENTE</text>`;
+  svg+=`<g class="s-node"><rect x="${CX-clientW/2}" y="${rowY[6]}" width="${clientW}" height="${barH}" rx="3" fill="#10B981" /></g>`;
+  svg+=`<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2-2}" fill="#10B981" font-size="11" font-weight="800" class="s-lbl">${clientTotal} clientes</text>`;
+  svg+=`<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2+10}" fill="#6B7280" font-size="8" class="s-lbl">€${formatNum(clientMRR)} MRR · Gasto: €${formatNum(spend)}</text>`;
+
+  svg+=`<text x="${CX}" y="${H-6}" fill="#9CA3AF" font-size="8" font-weight="500" text-anchor="middle" class="s-lbl">Click en barras y flujos para detalles</text>`;
+  svg+=`</svg>`;
+  return svg;
+}
+
+// ============================================================
+// RENDER GOOGLE ADS FUNNEL
+// ============================================================
+function renderGoogleAdsFunnel() {
+  const W = 900, H = 620;
+  const labelX = 8, leftX = 120;
+  const barH = 10, maxBarW = W - leftX - 30;
+  const CX = leftX + maxBarW / 2;
+  const rowY = [40, 110, 185, 260, 340, 420, 500, 580];
+
+  const campanas = [
+    {label:'Search Brand',val:180000,color:'#FECA57'},
+    {label:'Search Generic',val:150000,color:'#F9CA24'},
+    {label:'Display',val:120000,color:'#FFA502'},
+    {label:'YouTube',val:50000,color:'#FF6348'},
+  ];
+  const campTotal = campanas.reduce((s,c)=>s+c.val,0);
+  const pw = (val) => Math.max(4, maxBarW * (val / campTotal));
+
+  const tipoData = [
+    {label:'Search',val:330000,color:'#4285F4'},
+    {label:'Display',val:120000,color:'#34A853'},
+    {label:'Video',val:50000,color:'#EA4335'},
+  ];
+  const tipoTotal = tipoData.reduce((s,t)=>s+t.val,0);
+
+  const keywordData = [
+    {label:'running app',val:95000,color:'#FBBC04'},
+    {label:'plan entrenamiento',val:82000,color:'#F9AB00'},
+    {label:'app correr',val:68000,color:'#F29900'},
+    {label:'maratón prep',val:55000,color:'#E37400'},
+    {label:'Otros',val:200000,color:'#BDC3C7'},
+  ];
+  const kwTotal = keywordData.reduce((s,k)=>s+k.val,0);
+
+  const impresiones = [
+    {label:'Móvil',val:310000,color:'#00BCD4'},
+    {label:'Desktop',val:140000,color:'#0097A7'},
+    {label:'Tablet',val:50000,color:'#00ACC1'},
+  ];
+  const impTotal = impresiones.reduce((s,i)=>s+i.val,0);
+
+  const clicksData = [
+    {label:'Search clicks',val:18500,color:'#4CAF50'},
+    {label:'Display clicks',val:3200,color:'#66BB6A'},
+    {label:'Video clicks',val:1800,color:'#81C784'},
+  ];
+  const clickTotal = clicksData.reduce((s,c)=>s+c.val,0);
+
+  const conversionData = [
+    {label:'Install App',val:2100,sub:'installs',color:'#EF4444'},
+    {label:'Registro Web',val:1850,sub:'registros',color:'#DC2626'},
+    {label:'Compra directa',val:220,sub:'ventas',color:'#B91C1C'},
+  ];
+
+  const clientTotal = 5, clientMRR = 620, spend = 3100;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full">
+  <style>
+    .s-flow { transition: fill-opacity 0.25s; cursor: pointer; }
+    .s-flow:hover { fill-opacity: 0.4 !important; }
+    .s-node { transition: filter 0.2s; cursor: pointer; }
+    .s-node:hover { filter: brightness(1.12); }
+    .s-lbl { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>`;
+
+  // ROW 0: Campañas
+  svg += `<text x="${labelX}" y="${rowY[0]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CAMPAÑAS</text>`;
+  const cGap = 4;
+  const cSumW = campanas.reduce((s,c)=>s+pw(c.val),0)+(campanas.length-1)*cGap;
+  let cX2 = CX - cSumW/2;
+  const cNodes = campanas.map(c=>{const w=pw(c.val);const n={...c,x:cX2,w,cx:cX2+w/2};cX2+=w+cGap;return n;});
+  cNodes.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[0]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[0]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[0]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(c.val)} imp</text>`;
+  });
+
+  // ROW 1: Tipo
+  const tGap = 4;
+  const tSumW = tipoData.reduce((s,t)=>s+pw(t.val),0)+(tipoData.length-1)*tGap;
+  let tX = CX - tSumW/2;
+  const tNodes = tipoData.map(t=>{const w=pw(t.val);const n={...t,x:tX,w,cx:tX+w/2};tX+=w+tGap;return n;});
+  cNodes.forEach(c=>{tNodes.forEach(t=>{
+    const fw=Math.max(2,c.w*(t.val/tipoTotal)*0.5);
+    svg+=`<path class="s-flow" d="${vPath(c.cx,rowY[0]+barH,t.cx,rowY[1],fw,fw)}" fill="${t.color}" fill-opacity="0.14" />`;
+  });});
+  svg += `<text x="${labelX}" y="${rowY[1]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">TIPO</text>`;
+  tNodes.forEach(t=>{
+    svg+=`<g class="s-node"><rect x="${t.x}" y="${rowY[1]}" width="${t.w}" height="${barH}" rx="3" fill="${t.color}" /></g>`;
+    svg+=`<text x="${t.cx}" y="${rowY[1]+barH+10}" fill="#374151" font-size="7" font-weight="700" text-anchor="middle" class="s-lbl">${t.label}</text>`;
+    svg+=`<text x="${t.cx}" y="${rowY[1]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(t.val)}</text>`;
+  });
+
+  // ROW 2: Keywords
+  const kGap = 3;
+  const kSumW = keywordData.reduce((s,k)=>s+pw(k.val),0)+(keywordData.length-1)*kGap;
+  let kX = CX - kSumW/2;
+  const kNodes = keywordData.map(k=>{const w=pw(k.val);const n={...k,x:kX,w,cx:kX+w/2};kX+=w+kGap;return n;});
+  tNodes.forEach(t=>{kNodes.forEach(k=>{
+    const fw=Math.max(2,t.w*(k.val/kwTotal)*0.5);
+    svg+=`<path class="s-flow" d="${vPath(t.cx,rowY[1]+barH,k.cx,rowY[2],fw,fw)}" fill="${k.color}" fill-opacity="0.12" />`;
+  });});
+  svg += `<text x="${labelX}" y="${rowY[2]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">KEYWORDS</text>`;
+  kNodes.forEach(k=>{
+    const label = k.label.length > 12 ? k.label.slice(0,12)+'…' : k.label;
+    svg+=`<g class="s-node"><rect x="${k.x}" y="${rowY[2]}" width="${k.w}" height="${barH}" rx="3" fill="${k.color}" /></g>`;
+    svg+=`<text x="${k.cx}" y="${rowY[2]+barH+10}" fill="#374151" font-size="6" font-weight="700" text-anchor="middle" class="s-lbl">${esc(label)}</text>`;
+    svg+=`<text x="${k.cx}" y="${rowY[2]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(k.val)}</text>`;
+  });
+
+  // ROW 3: Dispositivo
+  const dGap = 4;
+  const dSumW = impresiones.reduce((s,i)=>s+Math.max(30,maxBarW*(i.val/impTotal)*0.8),0)+(impresiones.length-1)*dGap;
+  let dX = CX - dSumW/2;
+  const dNodes = impresiones.map(i=>{const w=Math.max(30,maxBarW*(i.val/impTotal)*0.8);const n={...i,x:dX,w,cx:dX+w/2};dX+=w+dGap;return n;});
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[2]+barH,CX,rowY[3],kSumW*0.3,dSumW*0.6)}" fill="#00BCD4" fill-opacity="0.13" />`;
+  svg += `<text x="${labelX}" y="${rowY[3]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">DISPOSITIVO</text>`;
+  dNodes.forEach(d=>{
+    svg+=`<g class="s-node"><rect x="${d.x}" y="${rowY[3]}" width="${d.w}" height="${barH}" rx="3" fill="${d.color}" /></g>`;
+    svg+=`<text x="${d.cx}" y="${rowY[3]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${d.label}</text>`;
+    svg+=`<text x="${d.cx}" y="${rowY[3]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(d.val)}</text>`;
+  });
+
+  // ROW 4: Clicks
+  const clGap = 4;
+  const clSumW = clicksData.reduce((s,c)=>s+Math.max(30,maxBarW*(c.val/clickTotal)*0.7),0)+(clicksData.length-1)*clGap;
+  let clX = CX - clSumW/2;
+  const clNodes = clicksData.map(c=>{const w=Math.max(30,maxBarW*(c.val/clickTotal)*0.7);const n={...c,x:clX,w,cx:clX+w/2};clX+=w+clGap;return n;});
+  dNodes.forEach((d,i)=>{if(clNodes[i]){
+    svg+=`<path class="s-flow" d="${vPath(d.cx,rowY[3]+barH,clNodes[i].cx,rowY[4],d.w*0.5,clNodes[i].w*0.5)}" fill="${clNodes[i].color}" fill-opacity="0.12" />`;
+  }});
+  svg += `<text x="${labelX}" y="${rowY[4]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLICKS</text>`;
+  clNodes.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[4]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[4]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[4]+barH+18}" fill="#6B7280" font-size="6" text-anchor="middle" class="s-lbl">${formatNum(c.val)}</text>`;
+  });
+
+  // ROW 5: Conversión
+  const convGap2 = 6;
+  const cvTotal2 = conversionData.reduce((a,b)=>a+b.val,0);
+  const convSumW2 = conversionData.reduce((s,c)=>s+Math.max(50,maxBarW*(c.val/cvTotal2)*0.5),0)+(conversionData.length-1)*convGap2;
+  let crX = CX - convSumW2/2;
+  const convNodes2 = conversionData.map(c=>{const w=Math.max(50,maxBarW*(c.val/cvTotal2)*0.5);const n={...c,x:crX,w,cx:crX+w/2};crX+=w+convGap2;return n;});
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[4]+barH,CX,rowY[5],clSumW*0.3,convSumW2*0.4)}" fill="#EF4444" fill-opacity="0.12" />`;
+  svg += `<text x="${labelX}" y="${rowY[5]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CONVERSIÓN</text>`;
+  convNodes2.forEach(c=>{
+    svg+=`<g class="s-node"><rect x="${c.x}" y="${rowY[5]}" width="${c.w}" height="${barH}" rx="3" fill="${c.color}" /></g>`;
+    svg+=`<text x="${c.cx}" y="${rowY[5]+barH+10}" fill="#374151" font-size="6.5" font-weight="700" text-anchor="middle" class="s-lbl">${c.label}</text>`;
+    svg+=`<text x="${c.cx}" y="${rowY[5]+barH+18}" fill="#6B7280" font-size="5.5" text-anchor="middle" class="s-lbl">${formatNum(c.val)} ${c.sub}</text>`;
+  });
+
+  // ROW 6: Cliente
+  const clientW = Math.max(50, maxBarW * 0.08);
+  svg+=`<path class="s-flow" d="${vPath(CX,rowY[5]+barH,CX,rowY[6],convSumW2*0.3,clientW)}" fill="#10B981" fill-opacity="0.12" />`;
+  svg += `<text x="${labelX}" y="${rowY[6]+barH/2+4}" fill="#9CA3AF" font-size="9" font-weight="700" text-anchor="start" class="s-lbl">CLIENTE</text>`;
+  svg+=`<g class="s-node"><rect x="${CX-clientW/2}" y="${rowY[6]}" width="${clientW}" height="${barH}" rx="3" fill="#10B981" /></g>`;
+  svg+=`<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2-2}" fill="#10B981" font-size="11" font-weight="800" class="s-lbl">${clientTotal} clientes</text>`;
+  svg+=`<text x="${CX+clientW/2+10}" y="${rowY[6]+barH/2+10}" fill="#6B7280" font-size="8" class="s-lbl">€${formatNum(clientMRR)} MRR · Gasto: €${formatNum(spend)}</text>`;
+
+  svg+=`<text x="${CX}" y="${H-6}" fill="#9CA3AF" font-size="8" font-weight="500" text-anchor="middle" class="s-lbl">Click en barras y flujos para detalles</text>`;
+  svg+=`</svg>`;
+  return svg;
+}
+
+// ============================================================
+// MAIN RENDER
+// ============================================================
+function render() {
+  const titles = {
+    general: { title: 'Marketing Funnel', sub: 'Click en barras y flujos para detalles' },
+    ceoMedia: { title: 'CEO Media Funnel', sub: '@cristobal_running_ → RunnerPro' },
+    socialMedia: { title: 'Social Media Funnel', sub: '@runnerproapp → RunnerPro' },
+    email: { title: 'Email Marketing Funnel', sub: 'Newsletter y automatizaciones' },
+    runClub: { title: 'Run Club Funnel', sub: 'Run Club Valencia → RunnerPro' },
+    metaAds: { title: 'Meta Ads Funnel', sub: 'Facebook + Instagram Ads → RunnerPro' },
+    googleAds: { title: 'Google Ads Funnel', sub: 'Search + Display + YouTube → RunnerPro' },
+  };
+  const t = titles[state.activeView];
+  document.getElementById('main-title').textContent = t.title;
+  document.getElementById('main-subtitle').textContent = t.sub;
+
+  renderTabs();
+  renderDateFilters();
+
+  // Funnel
+  const funnelContent = document.getElementById('funnel-content');
+  const renderers = {
+    general: renderGeneralFunnel,
+    ceoMedia: renderCEOMediaFunnel,
+    socialMedia: renderSocialMediaFunnel,
+    email: renderEmailFunnel,
+    runClub: renderRunClubFunnel,
+    metaAds: renderMetaAdsFunnel,
+    googleAds: renderGoogleAdsFunnel,
+  };
+  const renderer = renderers[state.activeView] || renderGeneralFunnel;
+  funnelContent.innerHTML = renderer();
+}
+
+// ============================================================
+// EVENT HANDLERS
+// ============================================================
+function setActiveView(view) {
+  state.activeView = view;
+  closeModal();
+  render();
+}
+
+function setQuickFilter(days) {
+  const end = new Date().toISOString().split('T')[0];
+  let start;
+  if (days === 0) start = end;
+  else start = new Date(Date.now() - days*24*60*60*1000).toISOString().split('T')[0];
+  state.dateRange = { from: start, to: end };
+  state.activeFilter = days;
+  reprocessData();
+  render();
+}
+
+document.getElementById('date-from').addEventListener('change', (e) => {
+  state.dateRange.from = e.target.value;
+  state.activeFilter = null;
+  reprocessData();
+  render();
+});
+document.getElementById('date-to').addEventListener('change', (e) => {
+  state.dateRange.to = e.target.value;
+  state.activeFilter = null;
+  reprocessData();
+  render();
+});
+
+// Initial render
+render();
+</script>
+</body>
+</html>

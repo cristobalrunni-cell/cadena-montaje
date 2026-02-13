@@ -390,8 +390,11 @@ body.light .parrilla-save-btn:hover { background: #27ae60; color: #fff; }
 
   <div style="height:16px"></div>
   <div class="sidebar-title">Vistas</div>
-  <div class="sidebar-item active" onclick="showView('kanban')">
+  <div class="sidebar-item active" data-view="kanban" onclick="showView('kanban')">
     <span class="icon">&#9776;</span> Pipeline
+  </div>
+  <div class="sidebar-item" data-view="funnel" onclick="showView('funnel')">
+    <span class="icon">&#9698;</span> Funnel
   </div>
 
   <div class="sidebar-legend">
@@ -412,6 +415,7 @@ body.light .parrilla-save-btn:hover { background: #27ae60; color: #fff; }
     <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">&#9790;</button>
   </div>
   <div class="kanban" id="kanban"></div>
+  <iframe id="funnel-frame" src="vertical-sankey/public/index.html" style="display:none;width:100%;height:calc(100vh - 49px);border:none;"></iframe>
 </div>
 
 <!-- Overlay -->
@@ -491,13 +495,36 @@ const brandPhases = {
 const typeLabels = { drum: "DRUM", buffer: "BUFFER", reu: "REU" };
 const typeTags = { drum: "tag-drum", buffer: "tag-buffer", reu: "tag-reu" };
 
+// ── View switching ──
+let currentView = 'kanban';
+function showView(view) {
+  currentView = view;
+  document.querySelectorAll('.sidebar-item[data-view]').forEach(i => i.classList.remove('active'));
+  const item = document.querySelector(`.sidebar-item[data-view="${view}"]`);
+  if (item) item.classList.add('active');
+
+  const kanban = document.getElementById('kanban');
+  const funnel = document.getElementById('funnel-frame');
+  const topbar = document.querySelector('.topbar');
+
+  if (view === 'funnel') {
+    kanban.style.display = 'none';
+    funnel.style.display = 'block';
+    topbar.style.display = 'none';
+  } else {
+    kanban.style.display = '';
+    funnel.style.display = 'none';
+    topbar.style.display = '';
+  }
+}
+
 // ── Brand switching ──
 function switchBrand(brand) {
   currentBrand = brand;
   document.getElementById('main-title').textContent = 'Pipeline — ' + brandConfig[brand].label;
   document.querySelectorAll('.brand-option').forEach(o => o.classList.remove('selected'));
   document.querySelector(`.brand-option[data-brand="${brand}"]`).classList.add('selected');
-  renderKanban();
+  if (currentView === 'kanban') renderKanban();
 }
 
 // ── Theme toggle ──
