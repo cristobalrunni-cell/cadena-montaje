@@ -776,16 +776,31 @@ function openNuevaIdea() {
       </div>
       <div class="idea-form-row">
         <div class="idea-form-field">
-          <label>👤 Perfil / Referente</label>
+          <label>🟣 Pilar de contenido (Referente)</label>
+          <select id="idea-pilar">
+            <option value="🏃🏻 Educación">🏃 Educacion</option>
+            <option value="❤️‍🔥 Community">❤️‍🔥 Community</option>
+            <option value="📱⚡ Producto">📱 Producto</option>
+            <option value="⚡branding">⚡ Branding</option>
+            <option value="🗓️ Lifestyle (Sport+Work)">🗓️ Lifestyle</option>
+            <option value="🏟️ Comunidad">🏟️ Comunidad</option>
+            <option value="📣 Educar">📣 Educar</option>
+            <option value="trendyyy">Trend</option>
+          </select>
+        </div>
+        <div class="idea-form-field">
+          <label>👤 Perfil (donde se publica)</label>
           <select id="idea-perfil">
-            <option value="RunnerPro">RunnerPro</option>
             <option value="cristobal running">Cristobal Running</option>
+            <option value="RunnerPro">RunnerPro</option>
             <option value="cristobal redondo">Cristobal Redondo</option>
             <option value="Runclub">Runclub</option>
             <option value="Lucia IA">Lucia IA</option>
             <option value="Mono Blanco">Mono Blanco</option>
           </select>
         </div>
+      </div>
+      <div class="idea-form-row">
         <div class="idea-form-field">
           <label>📱 Red Social</label>
           <select id="idea-red" multiple style="min-height:80px">
@@ -808,56 +823,15 @@ function openNuevaIdea() {
             <option value="Script">Script</option>
           </select>
         </div>
-      </div>
-      <div class="idea-form-row">
-        <div class="idea-form-field">
-          <label>🟣 Pilar de contenido</label>
-          <select id="idea-pilar">
-            <option value="🏃🏻 Educación">🏃 Educacion</option>
-            <option value="❤️‍🔥 Community">❤️‍🔥 Community</option>
-            <option value="📱⚡ Producto">📱 Producto</option>
-            <option value="⚡branding">⚡ Branding</option>
-            <option value="🗓️ Lifestyle (Sport+Work)">🗓️ Lifestyle</option>
-            <option value="🏟️ Comunidad">🏟️ Comunidad</option>
-            <option value="📣 Educar">📣 Educar</option>
-            <option value="trendyyy">Trend</option>
-          </select>
-        </div>
-        <div class="idea-form-field">
-          <label>🟣 Tipo de Guion</label>
-          <select id="idea-guion-tipo">
-            <option value="">Sin definir</option>
-            <option value="PAS">PAS</option>
-            <option value="Guion Viral 4P">Guion Viral 4P</option>
-            <option value="Storytelling">Storytelling</option>
-            <option value="Básico">Basico</option>
-            <option value="Sin guión">Sin guion</option>
-          </select>
-        </div>
         <div class="idea-form-field">
           <label>📅 Fecha publicacion</label>
           <input type="date" id="idea-fecha">
         </div>
       </div>
       <div class="idea-form-row">
-        <div class="idea-form-field" style="flex:2">
-          <label>🟣 Hook / Gancho</label>
-          <input type="text" id="idea-hook" placeholder="ej: No hagas esto si quieres correr mas rapido...">
-        </div>
-        <div class="idea-form-field">
-          <label>🟣 CTA</label>
-          <select id="idea-cta">
-            <option value="">Sin CTA</option>
-            <option value="Comentar Palabra Clave">Comentar Palabra Clave</option>
-            <option value="Seguirnos para más">Seguirnos para mas</option>
-            <option value="Link a web">Link a web</option>
-          </select>
-        </div>
-      </div>
-      <div class="idea-form-row">
         <div class="idea-form-field" style="flex:1">
-          <label>🔴 Descripcion / Contexto</label>
-          <textarea id="idea-descripcion" placeholder="Describe la idea, referencia, contexto..."></textarea>
+          <label>💬 Contexto del proceso</label>
+          <textarea id="idea-contexto" placeholder="Contexto extra para que la IA o el equipo entienda mejor la idea: referencias, tono, objetivo, lo que quieras..."></textarea>
         </div>
       </div>
 
@@ -886,18 +860,13 @@ async function submitIdea() {
   btn.innerHTML = '⏳ Creando en Notion...';
   result.className = 'idea-result';
 
-  // Collect selected multi-selects
   const redes = Array.from(document.getElementById('idea-red').selectedOptions).map(o => ({name: o.value}));
   const tipos = Array.from(document.getElementById('idea-tipo').selectedOptions).map(o => ({name: o.value}));
   const perfil = document.getElementById('idea-perfil').value;
   const pilar = document.getElementById('idea-pilar').value;
-  const guionTipo = document.getElementById('idea-guion-tipo').value;
   const fecha = document.getElementById('idea-fecha').value;
-  const hook = document.getElementById('idea-hook').value.trim();
-  const cta = document.getElementById('idea-cta').value;
-  const descripcion = document.getElementById('idea-descripcion').value.trim();
+  const contexto = document.getElementById('idea-contexto').value.trim();
 
-  // Build properties
   const props = {
     "Nombre": { title: [{ text: { content: nombre } }] },
     "⚫Perfil (vacío = RunnerPro)": { multi_select: [{ name: perfil }] },
@@ -907,11 +876,8 @@ async function submitIdea() {
     "⚫Estado": { status: { name: "Idea" } },
   };
 
-  if (guionTipo) props["🔴Tipo de Guion"] = { select: { name: guionTipo } };
   if (fecha) props["⚫Publicación"] = { date: { start: fecha } };
-  if (hook) props["🟣Hook"] = { rich_text: [{ text: { content: hook } }] };
-  if (cta) props["🟣CTA"] = { select: { name: cta } };
-  if (descripcion) props["🔴Descripción"] = { rich_text: [{ text: { content: descripcion } }] };
+  if (contexto) props["🔴Descripción"] = { rich_text: [{ text: { content: contexto } }] };
 
   try {
     const res = await fetch('https://api.notion.com/v1/pages', {
