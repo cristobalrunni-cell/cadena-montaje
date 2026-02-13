@@ -1,197 +1,215 @@
 <!DOCTYPE html><html lang="es"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadena de Montaje — CEO Media</title>
-<style>    * { margin: 0; padding: 0; box-sizing: border-box; }
+<title>Cadena de Montaje</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-background: #0f1419;
-min-height: 100vh;
-padding: 60px 20px 24px;
-color: #e8e8e8;
-overflow-x: auto;
-display: flex;
-flex-direction: column;
-align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #191919;
+  min-height: 100vh;
+  color: #e0e0e0;
+  display: flex;
 }
-.header { margin-bottom: 24px; text-align: center; }
-.header h1 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
-/* Brand selector */
-.brand-selector { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
-.brand-pill {
-  padding: 8px 20px; border-radius: 24px; font-size: 13px; font-weight: 700;
-  cursor: pointer; transition: all 0.3s; user-select: none;
-  border: 2px solid #333; background: #1a1f25; color: #888; letter-spacing: 0.3px;
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 240px; min-height: 100vh; background: #202020;
+  border-right: 1px solid #2a2a2a; padding: 16px 10px;
+  display: flex; flex-direction: column; gap: 4px;
+  position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
 }
-.brand-pill:hover { border-color: #bb86fc66; color: #ccc; transform: scale(1.03); }
-.brand-pill.active { border-color: var(--brand-color, #bb86fc); background: var(--brand-bg, #bb86fc18); color: var(--brand-color, #bb86fc); font-weight: 800; box-shadow: 0 0 16px var(--brand-glow, #bb86fc22); }
-.legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-.legend-item { display: flex; align-items: center; gap: 6px; }
-.legend-dot { width: 10px; height: 10px; border-radius: 3px; }
-.legend-label { font-size: 11px; color: #888; }
-.parrilla-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  margin-top: 14px; padding: 10px 24px;
-  background: linear-gradient(135deg, #1a0f2e, #2d1b4e);
-  border: 2px solid #bb86fc; border-radius: 10px;
-  color: #bb86fc; font-size: 13px; font-weight: 800;
-  cursor: pointer; transition: all 0.3s; letter-spacing: 0.5px;
+.sidebar-title {
+  font-size: 11px; font-weight: 600; color: #6b6b6b;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 8px 10px 6px; margin-top: 8px;
 }
-.parrilla-btn:hover {
-  background: linear-gradient(135deg, #bb86fc, #9c5ce0);
-  color: #fff; transform: scale(1.03);
-  box-shadow: 0 0 20px #bb86fc44;
+.sidebar-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 4px; cursor: pointer;
+  font-size: 13px; color: #9a9a9a; transition: background 0.15s;
 }
-.parrilla-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
-.parrilla-table th {
-  padding: 10px 12px; text-align: left; color: #bb86fc;
-  font-weight: 800; font-size: 10px; text-transform: uppercase;
-  letter-spacing: 0.5px; border-bottom: 2px solid #bb86fc44;
-  background: #1a0f2e;
+.sidebar-item:hover { background: #2a2a2a; color: #e0e0e0; }
+.sidebar-item.active { background: #2a2a2a; color: #e0e0e0; }
+.sidebar-item .icon { font-size: 14px; width: 20px; text-align: center; }
+
+/* Brand dropdown */
+.brand-dropdown {
+  position: relative; margin: 0 6px;
 }
-.parrilla-table td {
-  padding: 10px 12px; border-bottom: 1px solid #222; color: #ccc; font-size: 12px;
+.brand-dropdown-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 7px 10px; border-radius: 4px;
+  background: transparent; border: none; color: #e0e0e0;
+  font-size: 13px; font-family: inherit; cursor: pointer;
+  transition: background 0.15s;
 }
-.parrilla-table tr:hover { background: #bb86fc0a; }
-.parrilla-table .red-badge {
-  display: inline-block; padding: 2px 8px; border-radius: 6px;
-  font-size: 10px; font-weight: 700; margin: 1px 2px;
+.brand-dropdown-btn:hover { background: #2a2a2a; }
+.brand-dropdown-btn .arrow { font-size: 10px; color: #6b6b6b; transition: transform 0.2s; }
+.brand-dropdown-btn.open .arrow { transform: rotate(180deg); }
+.brand-dropdown-list {
+  display: none; padding: 2px 0; margin-top: 2px;
 }
-.parrilla-total { font-weight: 800; color: #bb86fc; background: #1a0f2e; }
-.parrilla-section-title {
-  font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 4px;
-  padding: 12px 0 8px; border-bottom: 1px solid #333;
+.brand-dropdown-list.open { display: block; }
+.brand-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px 6px 28px; border-radius: 4px; cursor: pointer;
+  font-size: 13px; color: #8a8a8a; transition: all 0.15s;
 }
-.chain { display: flex; gap: 0; align-items: flex-start; min-width: fit-content; overflow-x: auto; padding-bottom: 20px; transform: scale(1.1); transform-origin: top center; margin-top: 10px; }
-.phase-group { display: flex; align-items: stretch; }
-.phase {
-min-width: 190px; max-width: 210px; min-height: 200px;
-background: #111518; border-radius: 14px;
-overflow: visible; display: flex; flex-direction: column;
+.brand-option:hover { background: #2a2a2a; color: #e0e0e0; }
+.brand-option.selected { color: #e0e0e0; }
+.brand-option.selected::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; margin-left: -16px; margin-right: 2px;
 }
-.phase.construction { min-width: 140px; max-width: 160px; }
-.phase-header {
-padding: 8px 12px; text-align: center;
-border-bottom-width: 2px; border-bottom-style: solid;
+.brand-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
-.phase-emoji { font-size: 16px; }
-.phase-title { font-size: 12px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
-.phase-steps { padding: 10px 8px; flex: 1; display: flex; flex-direction: column; gap: 0; }
-.construction-placeholder {
-flex: 1; display: flex; flex-direction: column;
-align-items: center; justify-content: center; gap: 6px; opacity: 0.4;
+
+/* Sidebar legend */
+.sidebar-legend { padding: 8px 10px; margin-top: auto; }
+.sidebar-legend-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 0; font-size: 11px; color: #6b6b6b;
 }
-.construction-placeholder span:first-child { font-size: 24px; }
-.construction-placeholder span:last-child {
-font-size: 10px; font-weight: 700; color: #666;
-text-transform: uppercase; letter-spacing: 1px;
+.sidebar-legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+/* ── MAIN CONTENT ── */
+.main {
+  margin-left: 240px; flex: 1; min-height: 100vh;
+  display: flex; flex-direction: column;
 }
-.step {
-border-radius: 8px; padding: 7px 10px;
-position: relative; transition: all 0.2s; cursor: pointer;
-border-width: 2px; border-style: solid;
+
+/* Top bar */
+.topbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-bottom: 1px solid #2a2a2a;
+  background: #202020; position: sticky; top: 0; z-index: 50;
 }
-.step:hover { transform: scale(1.03); }
-.step-badge {
-position: absolute; top: -7px; right: 6px;
-color: #fff; font-size: 8px; font-weight: 900;
-letter-spacing: 0.5px; padding: 1px 6px; border-radius: 8px;
+.topbar-title {
+  font-size: 14px; font-weight: 600; color: #e0e0e0; margin-right: auto;
 }
-.step-name { font-size: 11px; font-weight: 700; color: #fff; line-height: 1.3; margin-top: 2px; }
-.step-owner { font-size: 9px; color: #aaa; margin-top: 3px; opacity: 0.8; }
-.step-connector { display: flex; justify-content: center; padding: 4px 0; }
-.step-connector-line { width: 2px; height: 16px; }
-.chain-connector { display: flex; align-items: center; padding: 0 2px; align-self: center; }
-/* Overlay */    .overlay {
-position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-background: rgba(0,0,0,0.75); z-index: 1000;
-display: none; align-items: center; justify-content: center; padding: 20px;
+.topbar-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 4px;
+  background: transparent; border: 1px solid #333;
+  color: #9a9a9a; font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all 0.15s; font-weight: 500;
+}
+.topbar-btn:hover { background: #2a2a2a; color: #e0e0e0; border-color: #444; }
+.topbar-btn .btn-icon { font-size: 13px; }
+
+/* ── KANBAN ── */
+.kanban {
+  display: flex; gap: 0; padding: 20px 24px; flex: 1;
+  overflow-x: auto; align-items: flex-start;
+}
+.kanban-column {
+  min-width: 220px; max-width: 260px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+}
+.kanban-column + .kanban-column { border-left: 1px solid #2a2a2a; padding-left: 16px; margin-left: 16px; }
+
+.kanban-col-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 4px 12px; margin-bottom: 8px;
+}
+.kanban-col-dot { width: 8px; height: 8px; border-radius: 2px; }
+.kanban-col-title {
+  font-size: 12px; font-weight: 600; color: #9a9a9a;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.kanban-col-count {
+  font-size: 11px; color: #555; background: #2a2a2a;
+  padding: 0 6px; border-radius: 10px; margin-left: auto;
+}
+
+/* Kanban cards */
+.kanban-card {
+  background: #252525; border: 1px solid #2e2e2e;
+  border-radius: 4px; padding: 10px 12px; margin-bottom: 6px;
+  cursor: pointer; transition: background 0.15s;
+}
+.kanban-card:hover { background: #2a2a2a; }
+.kanban-card-name { font-size: 13px; font-weight: 500; color: #e0e0e0; margin-bottom: 6px; }
+.kanban-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.kanban-card-tag {
+  font-size: 10px; font-weight: 600; padding: 2px 6px;
+  border-radius: 3px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.kanban-card-owner {
+  font-size: 11px; color: #6b6b6b; margin-left: auto;
+}
+
+/* Tag colors for step types */
+.tag-drum { background: #27ae6022; color: #57d48f; }
+.tag-buffer { background: #2980b922; color: #5dade2; }
+.tag-reu { background: #8e44ad22; color: #bb86fc; }
+
+/* Construction placeholder */
+.kanban-construction {
+  padding: 24px 12px; text-align: center; color: #444;
+  font-size: 12px;
+}
+.kanban-construction span { display: block; margin-bottom: 4px; font-size: 18px; }
+
+/* ── OVERLAY / POPUPS (unchanged logic) ── */
+.overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); z-index: 1000;
+  display: none; align-items: center; justify-content: center; padding: 20px;
 }
 .overlay.active { display: flex; }
 .popup {
-background: #1a1f25; border-radius: 16px;
-max-width: 860px; width: 100%; max-height: 90vh; overflow-y: auto;
+  background: #252525; border-radius: 8px; border: 1px solid #333;
+  max-width: 860px; width: 100%; max-height: 90vh; overflow-y: auto;
 }
 .popup-header {
-padding: 16px 24px; border-radius: 16px 16px 0 0;
-display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 24px; border-radius: 8px 8px 0 0;
+  display: flex; justify-content: space-between; align-items: center;
 }
-.popup-header-title { font-size: 16px; font-weight: 800; color: #fff; }
-.popup-header-sub { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+.popup-header-title { font-size: 15px; font-weight: 700; color: #fff; }
+.popup-header-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
 .popup-close {
-cursor: pointer; color: #fff; font-size: 20px;
-font-weight: 700; opacity: 0.7; padding: 0 4px;
-background: none; border: none;
+  cursor: pointer; color: #fff; font-size: 18px; font-weight: 600;
+  opacity: 0.5; padding: 0 4px; background: none; border: none;
 }
+.popup-close:hover { opacity: 1; }
 .popup-body { padding: 20px; }
-.section-label { font-size: 11px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px; }
+.section-label { font-size: 11px; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.8px; text-transform: uppercase; }
 .section-block { margin-bottom: 16px; }
 .section-item {
-border-radius: 8px; padding: 8px 12px;
-display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;
+  border-radius: 4px; padding: 8px 12px;
+  display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;
 }
 .section-item-emoji { font-size: 14px; }
-.section-item-text { font-size: 12px; color: #ccc; line-height: 1.5; }
-.section-item-text a { color: #bb86fc; font-size: 11px; text-decoration: underline; font-weight: 600; }
-/* Execute button base */    .execute-btn {
-display: flex; align-items: center; justify-content: center; gap: 10px;
-width: 100%; padding: 14px 24px; margin-top: 8px;
-border: 2px solid #bb86fc; border-radius: 12px;
-background: linear-gradient(135deg, #1a0f2e, #2d1b4e);
-color: #bb86fc; font-size: 14px; font-weight: 800;
-cursor: pointer; transition: all 0.3s; letter-spacing: 0.5px;
+.section-item-text { font-size: 12px; color: #bbb; line-height: 1.5; }
+.section-item-text a { color: #bb86fc; font-size: 11px; text-decoration: underline; }
+
+/* Execute / Week / Log */
+.execute-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 12px 24px; margin-top: 8px;
+  border: 1px solid #bb86fc55; border-radius: 4px;
+  background: #bb86fc12; color: #bb86fc; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
 }
-.execute-btn:hover {
-background: linear-gradient(135deg, #bb86fc, #9c5ce0);
-color: #fff; transform: scale(1.02);
-box-shadow: 0 0 20px #bb86fc44;
-}
-.execute-btn:active { transform: scale(0.98); }
-.execute-btn.loading {
-pointer-events: none; opacity: 0.7;
-border-color: #f39c12; color: #f39c12;
-background: linear-gradient(135deg, #2e1a0a, #4a2e1a);
-}
-.execute-btn.success {
-border-color: #27ae60; color: #fff;
-background: linear-gradient(135deg, #27ae60, #2ecc71);
-}
-.execute-btn.error {
-border-color: #e74c3c; color: #e74c3c;
-background: linear-gradient(135deg, #2e0a0a, #4a1a1a);
-}
-/* Table */    .grid-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.grid-table th {
-padding: 8px 10px; text-align: left; color: #888;
-font-weight: 700; font-size: 10px; text-transform: uppercase;
-letter-spacing: 0.5px; border-bottom: 2px solid #333;
-}
-.grid-table td { padding: 10px; }
-.grid-table tr { border-bottom: 1px solid #222; }
-.grid-table tr:nth-child(even) { background: #0f141933; }
-.badge {
-display: inline-block; padding: 2px 8px;
-border-radius: 6px; font-size: 11px; font-weight: 600;
-}
-.stat-cards { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
-.stat-card { border-radius: 8px; padding: 8px 12px; flex: 1 1 140px; }
-.stat-card-label { font-size: 10px; color: #888; font-weight: 600; }
-.stat-card-value { font-size: 16px; font-weight: 800; margin-top: 2px; }
-.stat-card-note { font-size: 9px; color: #666; margin-top: 2px; }
-/* Week selector */
-.week-selector { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; padding: 10px 14px; background: #bb86fc12; border: 1px solid #bb86fc33; border-radius: 10px; }
-.week-selector label { font-size: 11px; font-weight: 700; color: #bb86fc; text-transform: uppercase; letter-spacing: 0.5px; }
+.execute-btn:hover { background: #bb86fc22; border-color: #bb86fc; }
+.execute-btn.loading { border-color: #f39c1255; color: #f39c12; background: #f39c1212; pointer-events: none; opacity: 0.7; }
+.execute-btn.success { border-color: #27ae60; color: #fff; background: #27ae60; }
+.execute-btn.error { border-color: #e74c3c55; color: #e74c3c; background: #e74c3c12; }
+.week-selector { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; padding: 10px 14px; background: #2a2a2a; border: 1px solid #333; border-radius: 4px; }
+.week-selector label { font-size: 11px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: 0.5px; }
 .week-selector input[type="date"] {
-  background: #1a1f25; color: #e8e8e8; border: 1px solid #bb86fc44; border-radius: 6px;
+  background: #191919; color: #e0e0e0; border: 1px solid #333; border-radius: 4px;
   padding: 6px 10px; font-size: 13px; font-family: inherit;
 }
 .week-selector input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
-/* Log terminal */
 .log-terminal {
-  background: #0a0e12; border: 1px solid #bb86fc33; border-radius: 10px;
+  background: #191919; border: 1px solid #333; border-radius: 4px;
   max-height: 350px; overflow-y: auto; padding: 12px; margin-top: 8px;
-  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 11px;
-  line-height: 1.6; color: #a0a0a0; display: none;
+  font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px;
+  line-height: 1.6; color: #888; display: none;
 }
 .log-terminal.active { display: block; }
 .log-line { white-space: pre-wrap; word-break: break-all; }
@@ -200,485 +218,317 @@ border-radius: 6px; font-size: 11px; font-weight: 600;
 .cancel-btn {
   display: none; align-items: center; justify-content: center; gap: 8px;
   width: 100%; padding: 10px; margin-top: 6px;
-  border: 1px solid #e74c3c55; border-radius: 8px;
-  background: #2e0a0a; color: #e74c3c; font-size: 12px; font-weight: 700;
+  border: 1px solid #e74c3c33; border-radius: 4px;
+  background: transparent; color: #e74c3c; font-size: 12px; font-weight: 600;
   cursor: pointer; transition: all 0.2s;
 }
 .cancel-btn.active { display: flex; }
 .cancel-btn:hover { background: #e74c3c; color: #fff; }
-/* Context box */
-.context-box { margin-bottom: 8px; padding: 10px 14px; background: #bb86fc08; border: 1px solid #bb86fc22; border-radius: 10px; }
-.context-box label { display: block; font-size: 11px; font-weight: 700; color: #bb86fc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.context-box textarea {
-  width: 100%; min-height: 60px; background: #1a1f25; color: #e8e8e8; border: 1px solid #bb86fc44; border-radius: 6px;
-  padding: 8px 10px; font-size: 12px; font-family: inherit; resize: vertical; line-height: 1.5;
+.context-box { margin-bottom: 8px; padding: 10px 14px; background: #2a2a2a; border: 1px solid #333; border-radius: 4px; }
+.context-box label { display: block; font-size: 11px; font-weight: 600; color: #9a9a9a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.context-box .context-hint { font-size: 10px; color: #555; margin-top: 4px; }
+
+/* Parrilla table */
+.parrilla-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+.parrilla-table th {
+  padding: 8px 12px; text-align: left; color: #9a9a9a;
+  font-weight: 600; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.5px; border-bottom: 1px solid #333; background: #2a2a2a;
 }
-.context-box textarea::placeholder { color: #555; font-style: italic; }
-.context-box .context-hint { font-size: 10px; color: #666; margin-top: 4px; }
+.parrilla-table td { padding: 8px 12px; border-bottom: 1px solid #2a2a2a; color: #bbb; font-size: 12px; }
+.parrilla-table tr:hover { background: #2a2a2a; }
+.parrilla-table .red-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 3px;
+  font-size: 10px; font-weight: 600;
+}
+.parrilla-total { font-weight: 700; color: #e0e0e0; background: #2a2a2a; }
+
 /* Nueva idea form */
-.idea-form-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .idea-form-field { flex: 1; min-width: 180px; }
-.idea-form-field label { display: block; font-size: 10px; font-weight: 700; color: #bb86fc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.idea-form-field label { display: block; font-size: 10px; font-weight: 600; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
 .idea-form-field input, .idea-form-field textarea {
-  width: 100%; background: #1a1f25; color: #e8e8e8; border: 1px solid #bb86fc44; border-radius: 8px;
+  width: 100%; background: #191919; color: #e0e0e0; border: 1px solid #333; border-radius: 4px;
   padding: 10px 12px; font-size: 13px; font-family: inherit;
 }
-.idea-form-field textarea { min-height: 60px; resize: vertical; }
-.idea-form-field input::placeholder, .idea-form-field textarea::placeholder { color: #555; font-style: italic; }
-/* Tag selector */
-.tag-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.idea-form-field input::placeholder, .idea-form-field textarea::placeholder { color: #555; }
+.idea-form-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.tag-group { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag-pill {
-  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s; user-select: none;
-  border: 1.5px solid #333; background: #1a1f25; color: #888;
+  padding: 4px 10px; border-radius: 3px; font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+  border: 1px solid #333; background: #2a2a2a; color: #888;
 }
-.tag-pill:hover { border-color: #bb86fc88; color: #ccc; }
-.tag-pill.selected { border-color: var(--tag-color, #bb86fc); background: var(--tag-bg, #bb86fc18); color: var(--tag-color, #bb86fc); font-weight: 700; }
-/* Context extras */
+.tag-pill:hover { border-color: #555; color: #ccc; }
+.tag-pill.selected { border-color: var(--tag-color, #bb86fc); background: var(--tag-bg, #bb86fc18); color: var(--tag-color, #bb86fc); font-weight: 600; }
 .context-extras {
-  margin-top: 16px; padding: 14px; border-radius: 10px;
-  background: #ffffff06; border: 1px dashed #444;
+  margin-top: 14px; padding: 12px; border-radius: 4px;
+  background: #2a2a2a; border: 1px dashed #3a3a3a;
 }
-.context-extras label { display: block; font-size: 10px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.context-extras label { display: block; font-size: 10px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
 .context-extras textarea {
-  width: 100%; min-height: 120px; background: #0f1419; color: #999; border: 1px solid #333; border-radius: 8px;
-  padding: 10px 12px; font-size: 12px; font-family: inherit; resize: none; font-style: italic;
+  width: 100%; min-height: 100px; background: #191919; color: #888; border: 1px solid #333; border-radius: 4px;
+  padding: 10px 12px; font-size: 12px; font-family: inherit; resize: none;
   overflow: hidden; field-sizing: content;
 }
 .context-extras textarea::placeholder { color: #444; }
-.context-extras .hint { font-size: 9px; color: #555; margin-top: 4px; }
-/* Submit */
+.context-extras .hint { font-size: 9px; color: #444; margin-top: 4px; }
 .idea-submit-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 14px; margin-top: 14px;
-  border: 2px solid #27ae60; border-radius: 12px;
-  background: linear-gradient(135deg, #0a2e1a, #1a4a2e);
-  color: #27ae60; font-size: 14px; font-weight: 800;
-  cursor: pointer; transition: all 0.3s;
+  width: 100%; padding: 12px; margin-top: 12px;
+  border: 1px solid #27ae60; border-radius: 4px;
+  background: #27ae6012; color: #27ae60; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
 }
-.idea-submit-btn:hover { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; transform: scale(1.02); box-shadow: 0 0 20px #27ae6044; }
+.idea-submit-btn:hover { background: #27ae60; color: #fff; }
 .idea-submit-btn:disabled { opacity: 0.5; pointer-events: none; }
-.idea-submit-btn.success { border-color: #27ae60; background: #27ae60; color: #fff; }
-.idea-submit-btn.error { border-color: #e74c3c; color: #e74c3c; background: linear-gradient(135deg, #2e0a0a, #4a1a1a); }
-.idea-result { margin-top: 8px; padding: 10px; border-radius: 8px; font-size: 12px; display: none; }
+.idea-submit-btn.success { background: #27ae60; color: #fff; }
+.idea-submit-btn.error { border-color: #e74c3c; color: #e74c3c; background: #e74c3c12; }
+.idea-result { margin-top: 8px; padding: 10px; border-radius: 4px; font-size: 12px; display: none; }
 .idea-result.show { display: block; }
-.idea-result.success { background: #27ae6022; border: 1px solid #27ae6044; color: #27ae60; }
-.idea-result.error { background: #e74c3c22; border: 1px solid #e74c3c44; color: #e74c3c; }
+.idea-result.success { background: #27ae6018; border: 1px solid #27ae6033; color: #27ae60; }
+.idea-result.error { background: #e74c3c18; border: 1px solid #e74c3c33; color: #e74c3c; }
 </style></head><body>
-<div class="header">
-<h1 id="main-title">⛓️ CADENA DE MONTAJE — CEO MEDIA</h1>
-<div class="brand-selector">
-  <span class="brand-pill active" data-brand="ceomedia" style="--brand-color:#bb86fc;--brand-bg:#bb86fc18;--brand-glow:#bb86fc22" onclick="switchBrand('ceomedia')">⛓️ CEO Media</span>
-  <span class="brand-pill" data-brand="runclub" style="--brand-color:#00f2ea;--brand-bg:#00f2ea18;--brand-glow:#00f2ea22" onclick="switchBrand('runclub')">🏃 Runclub</span>
-  <span class="brand-pill" data-brand="runnerpro" style="--brand-color:#f39c12;--brand-bg:#f39c1218;--brand-glow:#f39c1222" onclick="switchBrand('runnerpro')">⚡ RunnerPro</span>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div style="padding:6px 10px;margin-bottom:8px">
+    <div style="font-size:14px;font-weight:700;color:#e0e0e0">Cadena de Montaje</div>
+  </div>
+
+  <div class="sidebar-title">Redes Sociales</div>
+  <div class="brand-dropdown">
+    <button class="brand-dropdown-btn" onclick="toggleBrandDropdown()">
+      <span id="brand-label">CEO Media</span>
+      <span class="arrow">&#9662;</span>
+    </button>
+    <div class="brand-dropdown-list" id="brand-list">
+      <div class="brand-option selected" data-brand="ceomedia" onclick="switchBrand('ceomedia')">
+        <span class="brand-dot" style="background:#bb86fc"></span> CEO Media
+      </div>
+      <div class="brand-option" data-brand="runclub" onclick="switchBrand('runclub')">
+        <span class="brand-dot" style="background:#00f2ea"></span> Runclub
+      </div>
+      <div class="brand-option" data-brand="runnerpro" onclick="switchBrand('runnerpro')">
+        <span class="brand-dot" style="background:#f39c12"></span> RunnerPro
+      </div>
+    </div>
+  </div>
+
+  <div style="height:16px"></div>
+  <div class="sidebar-title">Vistas</div>
+  <div class="sidebar-item active" onclick="showView('kanban')">
+    <span class="icon">&#9776;</span> Pipeline
+  </div>
+
+  <div class="sidebar-legend">
+    <div class="sidebar-title" style="padding-left:0">Leyenda</div>
+    <div class="sidebar-legend-item"><span class="sidebar-legend-dot" style="background:#27ae60"></span> Drum (IA)</div>
+    <div class="sidebar-legend-item"><span class="sidebar-legend-dot" style="background:#2980b9"></span> Buffer (Revision)</div>
+    <div class="sidebar-legend-item"><span class="sidebar-legend-dot" style="background:#8e44ad"></span> Reunion</div>
+    <div class="sidebar-legend-item"><span class="sidebar-legend-dot" style="background:#555"></span> En construccion</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="main-title">Pipeline — CEO Media</div>
+    <button class="topbar-btn" onclick="openParrilla()"><span class="btn-icon">&#128197;</span> Parrilla</button>
+    <button class="topbar-btn" onclick="openNuevaIdea()"><span class="btn-icon">&#43;</span> Nueva idea</button>
+  </div>
+  <div class="kanban" id="kanban"></div>
 </div>
-<div class="legend">
-<div class="legend-item">
-<div class="legend-dot" style="background:#27ae60;border:1px solid #1e8449"></div>
-<span class="legend-label">🥁 Drum (IA)</span>
-</div>
-<div class="legend-item">
-<div class="legend-dot" style="background:#2980b9;border:1px solid #2471a3"></div>
-<span class="legend-label">📦 Buffer (Revision)</span>
-</div>
-<div class="legend-item">
-<div class="legend-dot" style="background:#8e44ad;border:1px solid #7d3c98"></div>
-<span class="legend-label">🟣 Reunion</span>
-</div>
-<div class="legend-item">
-<div class="legend-dot" style="background:#555;border:1px solid #444"></div>
-<span class="legend-label">🚧 En construccion</span>
-</div>
-</div>
-<button class="parrilla-btn" onclick="openParrilla()">📅 VER PARRILLA DE CONTENIDO</button>
-<button class="parrilla-btn" onclick="openNuevaIdea()" style="border-color:#27ae60;color:#27ae60;margin-left:8px">➕ NUEVA IDEA DE VIDEO</button>
-</div>
-<div class="chain" id="chain"></div>
-<!-- Overlay for popups -->
+
+<!-- Overlay -->
 <div class="overlay" id="overlay" onclick="closePopup()">
-<div class="popup" id="popup-content" onclick="event.stopPropagation()"></div>
-</div>  <script>    // Current brand state
+  <div class="popup" id="popup-content" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+// ── State ──
 let currentBrand = 'ceomedia';
 
 const brandConfig = {
-  ceomedia: {
-    title: "⛓️ CADENA DE MONTAJE — CEO MEDIA",
-    profile: "cristobal running",
-    defaultPilar: "🏃🏻 Educación",
-    defaultRedes: ["Instagram", "TikTok"],
-  },
-  runclub: {
-    title: "⛓️ CADENA DE MONTAJE — RUNCLUB",
-    profile: "Runclub",
-    defaultPilar: "🏟️ Comunidad",
-    defaultRedes: ["Instagram"],
-  },
-  runnerpro: {
-    title: "⛓️ CADENA DE MONTAJE — RUNNERPRO",
-    profile: "RunnerPro",
-    defaultPilar: "🏃🏻 Educación",
-    defaultRedes: ["Instagram", "TikTok", "YouTube"],
-  },
+  ceomedia: { label: "CEO Media", profile: "cristobal running", defaultPilar: "🏃🏻 Educación", defaultRedes: ["Instagram","TikTok"] },
+  runclub:  { label: "Runclub",   profile: "Runclub",           defaultPilar: "🏟️ Comunidad",    defaultRedes: ["Instagram"] },
+  runnerpro:{ label: "RunnerPro", profile: "RunnerPro",         defaultPilar: "🏃🏻 Educación",   defaultRedes: ["Instagram","TikTok","YouTube"] },
 };
 
-// Phase data per brand
+// Phase data — IDEA is always #1B4F72 (blue)
 const brandPhases = {
   ceomedia: [
-    {
-      id: "idea", emoji: "💡", title: "IDEA", color: "#1B4F72",
-      steps: [
-        { name: "Crea Idea", type: "drum", popupId: "crea-idea", owner: "👩 Lucia · 🤖 Runni" },
-        { name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa", owner: "👩 Lucia" },
-        { name: "Reu Validacion Ideas", type: "reu", popupId: "reu-validacion", owner: "👩 Lucia · 👩‍💼 Carmen · 👨 Cristobal" },
-        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica", owner: "👩 Lucia" },
-      ]
-    },
-    {
-      id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
-      steps: [
-        { name: "Guion IA", type: "drum", popupId: "guion-ia", owner: "👩 Lucia · 🤖 Runni" },
-        { name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones", owner: "👩 Lucia" },
-        { name: "Reu Validacion Guiones", type: "reu", popupId: "reu-validacion-guiones", owner: "👩 Lucia · 👩‍💼 Carmen" },
-        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones", owner: "👩 Lucia" },
-      ]
-    },
-    {
-      id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400",
-      steps: [
-        { name: "Visual IA", type: "drum", popupId: "visual-ia", owner: "👩 Lucia · 🤖 Runni" },
-        { name: "Revisa Visuales", type: "buffer", popupId: "revisa-visuales", owner: "👩 Lucia" },
-        { name: "Reu Validacion Visuales", type: "reu", popupId: "reu-validacion-visuales", owner: "👩 Lucia · 👩‍💼 Carmen" },
-        { name: "Aplica Cambios", type: "buffer", popupId: "aplica-visuales", owner: "👩 Lucia" },
-      ]
-    },
-    { id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
-    { id: "editing", emoji: "✂️", title: "EDICION", color: "#8E44AD", construction: true, steps: [] },
-    { id: "publishing", emoji: "🚀", title: "PUBLICACION", color: "#2C3E50", construction: true, steps: [] },
+    { id:"idea", title:"IDEA", color:"#1B4F72", steps:[
+      { name:"Crea Idea", type:"drum", popupId:"crea-idea", owner:"Lucia · Runni" },
+      { name:"Revisa Ideas", type:"buffer", popupId:"lucia-revisa", owner:"Lucia" },
+      { name:"Reu Validacion Ideas", type:"reu", popupId:"reu-validacion", owner:"Lucia · Carmen · Cristobal" },
+      { name:"Aplica Cambios", type:"buffer", popupId:"lucia-aplica", owner:"Lucia" },
+    ]},
+    { id:"creation", title:"CREACION GUION", color:"#7D3C98", steps:[
+      { name:"Guion IA", type:"drum", popupId:"guion-ia", owner:"Lucia · Runni" },
+      { name:"Revisa Guiones", type:"buffer", popupId:"lucia-revisa-guiones", owner:"Lucia" },
+      { name:"Reu Validacion Guiones", type:"reu", popupId:"reu-validacion-guiones", owner:"Lucia · Carmen" },
+      { name:"Aplica Cambios", type:"buffer", popupId:"lucia-aplica-guiones", owner:"Lucia" },
+    ]},
+    { id:"visual", title:"CREACION VISUAL", color:"#D35400", steps:[
+      { name:"Visual IA", type:"drum", popupId:"visual-ia", owner:"Lucia · Runni" },
+      { name:"Revisa Visuales", type:"buffer", popupId:"revisa-visuales", owner:"Lucia" },
+      { name:"Reu Validacion Visuales", type:"reu", popupId:"reu-validacion-visuales", owner:"Lucia · Carmen" },
+      { name:"Aplica Cambios", type:"buffer", popupId:"aplica-visuales", owner:"Lucia" },
+    ]},
+    { id:"recording", title:"GRABACION", color:"#1E8449", construction:true, steps:[] },
+    { id:"editing", title:"EDICION", color:"#8E44AD", construction:true, steps:[] },
+    { id:"publishing", title:"PUBLICACION", color:"#2C3E50", construction:true, steps:[] },
   ],
   runclub: [
-    {
-      id: "idea", emoji: "💡", title: "IDEA", color: "#006D6F",
-      steps: [
-        { name: "Crea Idea", type: "drum", popupId: "crea-idea", owner: "🤖 Runni" },
-        { name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa", owner: "👩 Lucia" },
-        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica", owner: "👩 Lucia" },
-      ]
-    },
-    {
-      id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
-      steps: [
-        { name: "Guion IA", type: "drum", popupId: "guion-ia", owner: "🤖 Runni" },
-        { name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones", owner: "👩 Lucia" },
-        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones", owner: "👩 Lucia" },
-      ]
-    },
-    { id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400", construction: true, steps: [] },
-    { id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
-    { id: "editing", emoji: "✂️", title: "EDICION", color: "#8E44AD", construction: true, steps: [] },
-    { id: "publishing", emoji: "🚀", title: "PUBLICACION", color: "#2C3E50", construction: true, steps: [] },
+    { id:"idea", title:"IDEA", color:"#1B4F72", steps:[
+      { name:"Crea Idea", type:"drum", popupId:"crea-idea", owner:"Runni" },
+      { name:"Revisa Ideas", type:"buffer", popupId:"lucia-revisa", owner:"Lucia" },
+      { name:"Aplica Cambios", type:"buffer", popupId:"lucia-aplica", owner:"Lucia" },
+    ]},
+    { id:"creation", title:"CREACION GUION", color:"#7D3C98", steps:[
+      { name:"Guion IA", type:"drum", popupId:"guion-ia", owner:"Runni" },
+      { name:"Revisa Guiones", type:"buffer", popupId:"lucia-revisa-guiones", owner:"Lucia" },
+      { name:"Aplica Cambios", type:"buffer", popupId:"lucia-aplica-guiones", owner:"Lucia" },
+    ]},
+    { id:"visual", title:"CREACION VISUAL", color:"#D35400", construction:true, steps:[] },
+    { id:"recording", title:"GRABACION", color:"#1E8449", construction:true, steps:[] },
+    { id:"editing", title:"EDICION", color:"#8E44AD", construction:true, steps:[] },
+    { id:"publishing", title:"PUBLICACION", color:"#2C3E50", construction:true, steps:[] },
   ],
   runnerpro: [
-    {
-      id: "idea", emoji: "💡", title: "IDEA", color: "#7D5A00",
-      steps: [
-        { name: "Crea Idea", type: "drum", popupId: "crea-idea", owner: "🤖 Runni" },
-        { name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa", owner: "👩 Lucia" },
-        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica", owner: "👩 Lucia" },
-      ]
-    },
-    {
-      id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
-      steps: [
-        { name: "Guion IA", type: "drum", popupId: "guion-ia", owner: "🤖 Runni" },
-        { name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones", owner: "👩 Lucia" },
-        { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones", owner: "👩 Lucia" },
-      ]
-    },
-    { id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400", construction: true, steps: [] },
-    { id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
-    { id: "editing", emoji: "✂️", title: "EDICION", color: "#8E44AD", construction: true, steps: [] },
-    { id: "publishing", emoji: "🚀", title: "PUBLICACION", color: "#2C3E50", construction: true, steps: [] },
+    { id:"idea", title:"IDEA", color:"#1B4F72", steps:[
+      { name:"Crea Idea", type:"drum", popupId:"crea-idea", owner:"Runni" },
+      { name:"Revisa Ideas", type:"buffer", popupId:"lucia-revisa", owner:"Lucia" },
+      { name:"Aplica Cambios", type:"buffer", popupId:"lucia-aplica", owner:"Lucia" },
+    ]},
+    { id:"creation", title:"CREACION GUION", color:"#7D3C98", steps:[
+      { name:"Guion IA", type:"drum", popupId:"guion-ia", owner:"Runni" },
+      { name:"Revisa Guiones", type:"buffer", popupId:"lucia-revisa-guiones", owner:"Lucia" },
+      { name:"Aplica Cambios", type:"buffer", popupId:"lucia-aplica-guiones", owner:"Lucia" },
+    ]},
+    { id:"visual", title:"CREACION VISUAL", color:"#D35400", construction:true, steps:[] },
+    { id:"recording", title:"GRABACION", color:"#1E8449", construction:true, steps:[] },
+    { id:"editing", title:"EDICION", color:"#8E44AD", construction:true, steps:[] },
+    { id:"publishing", title:"PUBLICACION", color:"#2C3E50", construction:true, steps:[] },
   ],
 };
-const typeStyles = {
-drum:   { bg: "#0a2e1a", border: "#27ae60", accent: "#27ae60", icon: "🥁", label: "DRUM" },
-buffer: { bg: "#0f1f2e", border: "#2980b9", accent: "#2980b9", icon: "📦", label: "BUFFER" },
-reu:    { bg: "#1a0f2e", border: "#8e44ad", accent: "#8e44ad", icon: "🟣", label: "REU" },
-};
 
-// Brand switch function
+const typeLabels = { drum: "DRUM", buffer: "BUFFER", reu: "REU" };
+const typeTags = { drum: "tag-drum", buffer: "tag-buffer", reu: "tag-reu" };
+
+// ── Brand switching ──
+function toggleBrandDropdown() {
+  const list = document.getElementById('brand-list');
+  const btn = document.querySelector('.brand-dropdown-btn');
+  list.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
 function switchBrand(brand) {
   currentBrand = brand;
-  // Update pills
-  document.querySelectorAll('.brand-pill').forEach(p => p.classList.remove('active'));
-  document.querySelector(`.brand-pill[data-brand="${brand}"]`).classList.add('active');
-  // Update title
-  document.getElementById('main-title').textContent = brandConfig[brand].title;
-  // Re-render chain
-  renderChain();
+  document.getElementById('brand-label').textContent = brandConfig[brand].label;
+  document.getElementById('main-title').textContent = 'Pipeline — ' + brandConfig[brand].label;
+  // Update selected state
+  document.querySelectorAll('.brand-option').forEach(o => o.classList.remove('selected'));
+  document.querySelector(`.brand-option[data-brand="${brand}"]`).classList.add('selected');
+  // Close dropdown
+  document.getElementById('brand-list').classList.remove('open');
+  document.querySelector('.brand-dropdown-btn').classList.remove('open');
+  renderKanban();
 }
 
-// Render chain
-function renderChain() {
-const chain = document.getElementById('chain');
-chain.innerHTML = '';
-const phases = brandPhases[currentBrand];
-phases.forEach((phase, pi) => {
-const group = document.createElement('div');
-group.className = 'phase-group';
-const phaseDiv = document.createElement('div');
-phaseDiv.className = 'phase' + (phase.construction ? ' construction' : '');
-phaseDiv.style.border = `2px solid ${phase.color}55`;
-// Header
-const header = document.createElement('div');
-header.className = 'phase-header';
-header.style.background = `linear-gradient(135deg, ${phase.color}, ${phase.color}cc)`;
-header.style.borderBottomColor = `${phase.color}88`;
-header.innerHTML = `<div class="phase-emoji">${phase.emoji}</div><div class="phase-title">${phase.title}</div>`;
-phaseDiv.appendChild(header);
-// Steps
-const stepsDiv = document.createElement('div');
-stepsDiv.className = 'phase-steps';
-if (phase.construction) {
-stepsDiv.innerHTML = '<div class="construction-placeholder"><span>🚧</span><span>Proximamente</span></div>';
-} else {
-phase.steps.forEach((step, si) => {
-const st = typeStyles[step.type];
-const stepEl = document.createElement('div');
-stepEl.className = 'step';
-stepEl.style.background = st.bg;
-stepEl.style.borderColor = st.border;
-stepEl.style.boxShadow = `0 0 8px ${st.accent}11`;
-stepEl.onclick = () => openPopup(step.popupId);
-stepEl.onmouseenter = () => {
-stepEl.style.borderColor = '#fff';
-stepEl.style.boxShadow = `0 0 16px ${st.accent}44`;
-stepEl.style.transform = 'scale(1.03)';
-};
-stepEl.onmouseleave = () => {
-stepEl.style.borderColor = st.border;
-stepEl.style.boxShadow = `0 0 8px ${st.accent}11`;
-stepEl.style.transform = 'scale(1)';
-};
-stepEl.innerHTML = `<div class="step-badge" style="background:${st.accent}">${st.label}</div><div class="step-name">${st.icon} ${step.name}</div>${step.owner ? `<div class="step-owner">${step.owner}</div>` : ''}`;
-stepsDiv.appendChild(stepEl);
-if (si < phase.steps.length - 1) {
-const conn = document.createElement('div');
-conn.className = 'step-connector';
-conn.innerHTML = `<div class="step-connector-line" style="background:${st.accent}44"></div>`;
-stepsDiv.appendChild(conn);
+function showView() { /* future views */ }
+
+// ── Kanban render ──
+function renderKanban() {
+  const kanban = document.getElementById('kanban');
+  kanban.innerHTML = '';
+  const phases = brandPhases[currentBrand];
+  phases.forEach(phase => {
+    const col = document.createElement('div');
+    col.className = 'kanban-column';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'kanban-col-header';
+    header.innerHTML = `
+      <span class="kanban-col-dot" style="background:${phase.color}"></span>
+      <span class="kanban-col-title">${phase.title}</span>
+      ${!phase.construction ? `<span class="kanban-col-count">${phase.steps.length}</span>` : ''}
+    `;
+    col.appendChild(header);
+
+    if (phase.construction) {
+      col.innerHTML += '<div class="kanban-construction"><span>&#128679;</span>Proximamente</div>';
+    } else {
+      phase.steps.forEach(step => {
+        const card = document.createElement('div');
+        card.className = 'kanban-card';
+        card.onclick = () => openPopup(step.popupId);
+        card.innerHTML = `
+          <div class="kanban-card-name">${step.name}</div>
+          <div class="kanban-card-meta">
+            <span class="kanban-card-tag ${typeTags[step.type]}">${typeLabels[step.type]}</span>
+            <span class="kanban-card-owner">${step.owner}</span>
+          </div>
+        `;
+        col.appendChild(card);
+      });
+    }
+    kanban.appendChild(col);
+  });
 }
-});
-}
-phaseDiv.appendChild(stepsDiv);
-group.appendChild(phaseDiv);
-// Chain connector between phases
-if (pi < phases.length - 1) {
-const nextColor = phases[pi + 1].color;
-const connDiv = document.createElement('div');
-connDiv.className = 'chain-connector';
-connDiv.innerHTML = `          <svg width="36" height="24" viewBox="0 0 36 24">            <defs>              <linearGradient id="chain-${pi}" x1="0%" y1="0%" x2="100%" y2="0%">                <stop offset="0%" stop-color="${phase.color}" stop-opacity="0.7"/>                <stop offset="100%" stop-color="${nextColor}" stop-opacity="0.7"/>              </linearGradient>            </defs>            <rect x="4" y="8" width="20" height="8" rx="4" fill="none" stroke="url(#chain-${pi})" stroke-width="2"/>            <polygon points="26,6 36,12 26,18" fill="${nextColor}" opacity="0.7"/>          </svg>        `;
-group.appendChild(connDiv);
-}
-chain.appendChild(group);
-});
-}
-// Initial render
-renderChain();
-// Popup content generators
+renderKanban();
+
+// ── Popup system ──
 function sectionHTML(section, color, items) {
-return `        <div class="section-block">          <div class="section-label" style="color:${color}">${section}</div>          ${items.map(item => `            <div class="section-item" style="background:${color}12;border:1px solid ${color}33">              <span class="section-item-emoji">${item.emoji}</span>              <span class="section-item-text">${item.text}${item.link ? ` <a href="${item.link}" target="_blank">(Notion Prompt)</a>` : ''}</span>            </div>          `).join('')}
-</div>      `;
+  return `<div class="section-block"><div class="section-label" style="color:${color}">${section}</div>${items.map(item => `<div class="section-item" style="background:${color}12;border:1px solid ${color}22"><span class="section-item-emoji">${item.emoji}</span><span class="section-item-text">${item.text}${item.link ? ` <a href="${item.link}" target="_blank">(Notion Prompt)</a>` : ''}</span></div>`).join('')}</div>`;
 }
+
 function getNextMonday() {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = day === 0 ? 1 : 8 - day;
-  d.setDate(d.getDate() + diff);
+  const d = new Date(); const day = d.getDay();
+  d.setDate(d.getDate() + (day === 0 ? 1 : 8 - day));
   return d.toISOString().split('T')[0];
 }
+
 function executeButtonHTML(apiEndpoint, label, showContext) {
   const defaultDate = getNextMonday();
   let contextHTML = '';
   if (showContext) {
-    const pilares = ['veneno', 'victor_heras', 'andrea', 'post_personal', 'stories'];
-    const pilarLabels = { veneno: '🐍 Veneno', victor_heras: '🎯 Víctor Heras', andrea: '🎬 Andrea', post_personal: '📸 Post Personal', stories: '📖 Stories' };
+    const pilares = ['veneno','victor_heras','andrea','post_personal','stories'];
+    const pilarLabels = { veneno:'Veneno', victor_heras:'Victor Heras', andrea:'Andrea', post_personal:'Post Personal', stories:'Stories' };
     const contextFields = pilares.map(p =>
-      `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px">` +
-      `<span style="min-width:120px;font-size:11px;font-weight:600;color:#bb86fc;padding-top:6px">${pilarLabels[p]}</span>` +
-      `<input type="text" id="ctx-${apiEndpoint}-${p}" placeholder="ej: haz uno sobre lanzamiento premium" ` +
-      `style="flex:1;background:#1a1f25;color:#e8e8e8;border:1px solid #bb86fc33;border-radius:6px;padding:6px 8px;font-size:11px;font-family:inherit">` +
-      `</div>`
+      `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="min-width:100px;font-size:11px;font-weight:500;color:#9a9a9a">${pilarLabels[p]}</span><input type="text" id="ctx-${apiEndpoint}-${p}" placeholder="contexto opcional" style="flex:1;background:#191919;color:#e0e0e0;border:1px solid #333;border-radius:4px;padding:6px 8px;font-size:11px;font-family:inherit"></div>`
     ).join('');
-    contextHTML = `
-    <div class="context-box">
-      <label>💬 Contexto por pilar <span style="font-weight:400;text-transform:none;color:#666">(opcional)</span></label>
-      ${contextFields}
-      <div class="context-hint">Deja vacío para que la IA decida libremente. Si pones varias ideas separadas por coma, se reparten entre los días.</div>
-    </div>`;
+    contextHTML = `<div class="context-box"><label>Contexto por pilar <span style="font-weight:400;text-transform:none;color:#555">(opcional)</span></label>${contextFields}<div class="context-hint">Deja vacio para que la IA decida libremente.</div></div>`;
   }
-  return `
-  <div class="week-selector">
-    <label>📅 Semana del lunes:</label>
-    <input type="date" id="semana-${apiEndpoint}" value="${defaultDate}">
-  </div>
-  ${contextHTML}
-  <button class="execute-btn" id="btn-${apiEndpoint}" onclick="executeProcess('${apiEndpoint}', this)">
-    🚀 EJECUTAR: ${label}
-  </button>
-  <button class="cancel-btn" id="cancel-${apiEndpoint}" onclick="cancelProcess('${apiEndpoint}')">
-    ⛔ CANCELAR
-  </button>
-  <div class="log-terminal" id="log-${apiEndpoint}"></div>
-  <div style="height:16px"></div>`;
+  return `<div class="week-selector"><label>Semana del lunes:</label><input type="date" id="semana-${apiEndpoint}" value="${defaultDate}"></div>${contextHTML}<button class="execute-btn" id="btn-${apiEndpoint}" onclick="executeProcess('${apiEndpoint}', this)">EJECUTAR: ${label}</button><button class="cancel-btn" id="cancel-${apiEndpoint}" onclick="cancelProcess('${apiEndpoint}')">CANCELAR</button><div class="log-terminal" id="log-${apiEndpoint}"></div><div style="height:12px"></div>`;
 }
+
 const popups = {
-"crea-idea": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">          <div>            <div class="popup-header-title">✅ CREA IDEA — CEO MEDIA</div>            <div class="popup-header-sub">40+ piezas/semana · TikTok 28 nativos · Instagram 12 nativos + resubidas top</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📅", text: "Parrilla Semanal — distribucion de formatos, frecuencias y plataformas (ver tabla abajo)" },
-{ emoji: "🎙️", text: "Embeddings BBDD Historico — videos propios publicados" },
-{ emoji: "🔍", text: "Embeddings BBDD Creadores Referentes — busqueda semantica en 20K+ escenas" },
-{ emoji: "📊", text: "Excel Moneyball por Creador — patrones ganadores con % exito" },
-{ emoji: "🎯", text: "Estrategia — objetivo de cada tipo de video y posicionamiento de marca" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [])}
-${executeButtonHTML("crea-idea", "CREA IDEA", true)}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📝", text: "Por cada hueco de la parrilla, la IA genera una primera idea de contenido con hook, semantica, probabilidad de exito y un comentario de por que es ganadora." },
-])}
-</div>      `,
-"lucia-revisa": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2980b9,#3498db)">          <div>            <div class="popup-header-title">👤 REVISA IDEAS</div>            <div class="popup-header-sub">Revision previa a la reunion · Prepara comentarios y propuestas</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🤖", text: "Ideas generadas por Runni en el Calendario Social Media de Notion" },
-{ emoji: "📅", text: "Calendario de la semana con los huecos ya asignados" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "👀", text: "Lucia revisa cada idea generada por la IA" },
-{ emoji: "✍️", text: "Anade comentarios en Notion sobre cada idea" },
-{ emoji: "💡", text: "Apunta ideas propias que se le ocurran al revisar" },
-{ emoji: "⚠️", text: "Marca las ideas que ve mas flojas" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📋", text: "Calendario con comentarios de Lucia — listo para la reu de validacion" },
-{ emoji: "💡", text: "Lista de ideas propias como alternativas o complementos" },
-])}
-</div>      `,
-"reu-validacion": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)">          <div>            <div class="popup-header-title">🟣 REU VALIDACION IDEAS</div>            <div class="popup-header-sub">Maximo 30 minutos · Decisiones concretas sobre cada idea</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🤖", text: "Ideas de Runni ya escritas en el Calendario" },
-{ emoji: "✍️", text: "Comentarios de Lucia en cada idea" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🗣️", text: "Reu de maximo 30 minutos" },
-{ emoji: "✅", text: "Por cada idea: aprobar, modificar o descartar con razon concreta" },
-{ emoji: "📝", text: "Se apuntan cambios directos y contexto especifico" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "🎙️", text: "Reunion transcrita automaticamente" },
-{ emoji: "📋", text: "Lista de cambios concisos sobre cada idea" },
-])}
-</div>      `,
-"lucia-aplica": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2980b9,#3498db)">          <div>            <div class="popup-header-title">👤 APLICA CAMBIOS</div>            <div class="popup-header-sub">Transcripcion de reu → IA aplica → Lucia revisa → activa guiones</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎙️", text: "Transcripcion de la reunion de validacion" },
-{ emoji: "📅", text: "Calendario Social Media actual" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🤖", text: "Notion Prompt recibe la transcripcion + calendario → aplica cambios" },
-{ emoji: "👀", text: "Lucia revisa los cambios aplicados por la IA" },
-{ emoji: "✏️", text: "Ajustes finales manuales si algo no cuadra" },
-{ emoji: "🚀", text: "Activar Notion Prompt para fase CREACION", link: "https://www.notion.so/Guion-IA-CEO-Media-303a67fd29b280188115cd8bd2fb4c87" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📅", text: "Calendario de la semana cerrado con ideas finales" },
-{ emoji: "🤖", text: "Runni empieza a rodar — genera automaticamente Guion IA" },
-{ emoji: "🔒", text: "Ciclo IDEA cerrado → las ideas pasan a CREACION" },
-])}
-</div>      `,
-"guion-ia": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">          <div>            <div class="popup-header-title">✅ GUION IA</div>            <div class="popup-header-sub">6 inputs → Runni genera guion completo en cada pagina de Notion</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📅", text: "Parrilla Semanal — distribucion de formatos, frecuencias y plataformas" },
-{ emoji: "🎙️", text: "Embeddings BBDD Historico — videos propios publicados" },
-{ emoji: "🔍", text: "Embeddings BBDD Creadores Referentes — busqueda semantica en 20K+ escenas" },
-{ emoji: "📊", text: "Excel Moneyball por Creador — patrones ganadores" },
-{ emoji: "🎯", text: "Estrategia — objetivo de cada tipo de video" },
-{ emoji: "💡", text: "Ideas y Comentarios del Calendario Notion — ideas validadas en reu" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [])}
-${executeButtonHTML("guion-ia", "GUION IA")}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📝", text: "En cada pagina de Notion de cada post: guion completo del video con hook detallado + guion narrativo" },
-{ emoji: "📋", text: "Descripcion de la publicacion" },
-])}
-</div>      `,
-"lucia-revisa-guiones": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)">          <div>            <div class="popup-header-title">👤 REVISA GUIONES</div>            <div class="popup-header-sub">Revision de cada guion generado por Runni</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📝", text: "Guiones de Runni escritos en cada pagina de Notion" },
-{ emoji: "📅", text: "Calendario semanal con las ideas validadas" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "👁️", text: "Lucia lee cada guion y compara con la idea original" },
-{ emoji: "💬", text: "Anade comentarios en Notion" },
-{ emoji: "⚠️", text: "Marca los guiones que necesitan cambios fuertes" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📋", text: "Guiones con comentarios listos para la reu de validacion" },
-])}
-</div>      `,
-"reu-validacion-guiones": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)">          <div>            <div class="popup-header-title">🟣 REU VALIDACION GUIONES</div>            <div class="popup-header-sub">Maximo 30 minutos · Decisiones concretas sobre cada guion</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📝", text: "Guiones generados por Runni con comentarios de revision" },
-{ emoji: "💬", text: "Comentarios de Lucia en cada guion" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🗣️", text: "Reu de maximo 30 minutos" },
-{ emoji: "✅", text: "Por cada guion: aprobar, modificar o descartar" },
-{ emoji: "📝", text: "Se apuntan cambios directos" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "🎙️", text: "Reunion transcrita automaticamente" },
-{ emoji: "📋", text: "Lista de cambios concisos sobre cada guion" },
-])}
-</div>      `,
-"lucia-aplica-guiones": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)">          <div>            <div class="popup-header-title">👤 APLICA CAMBIOS</div>            <div class="popup-header-sub">Aplica los cambios de la reu en los guiones de Notion</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎙️", text: "Transcripcion de la reu de validacion de guiones" },
-{ emoji: "📝", text: "Guiones actuales en Notion" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🤖", text: "Notion Prompt recibe transcripcion + guiones → aplica cambios" },
-{ emoji: "👁️", text: "Lucia revisa los cambios aplicados" },
-{ emoji: "✏️", text: "Ajustes manuales si es necesario" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "✅", text: "Guiones cerrados y listos para crear Visual IA" },
-{ emoji: "🤖", text: "Runni empieza a rodar — genera automaticamente Visual IA" },
-])}
-</div>      `,
-"visual-ia": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">          <div>            <div class="popup-header-title">✅ VISUAL IA</div>            <div class="popup-header-sub">Guion cerrado → embeddings buscan escenas similares → Gemini genera storyboard → PDF</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "📅", text: "Parrilla Semanal" },
-{ emoji: "🎙️", text: "Embeddings BBDD Historico" },
-{ emoji: "🔍", text: "Embeddings BBDD Creadores Referentes — 20K+ escenas" },
-{ emoji: "📊", text: "Excel Moneyball por Creador" },
-{ emoji: "📝", text: "Guion de cada video (viene de CREACION GUION)" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [])}
-${executeButtonHTML("visual-ia", "VISUAL IA")}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "🎬", text: "Google Doc con Visual y Storyboard subido a Drive, linkeado en Notion" },
-])}
-</div>      `,
-"revisa-visuales": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)">          <div>            <div class="popup-header-title">👤 REVISA VISUALES</div>            <div class="popup-header-sub">Revision de cada storyboard visual generado</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎬", text: "Storyboards visuales PDF generados por Visual IA" },
-{ emoji: "📝", text: "Guiones cerrados de Notion como referencia" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "👁️", text: "Revisa cada storyboard y compara con el guion cerrado" },
-{ emoji: "💬", text: "Anade comentarios: que ajustar en planos, transiciones, overlays" },
-{ emoji: "⚠️", text: "Marca los que necesitan cambios fuertes" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "📋", text: "Storyboards con comentarios listos para la reu" },
-])}
-</div>      `,
-"reu-validacion-visuales": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)">          <div>            <div class="popup-header-title">🟣 REU VALIDACION VISUALES</div>            <div class="popup-header-sub">Maximo 30 minutos · Decisiones concretas sobre cada storyboard</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎬", text: "Storyboards visuales con comentarios de la revision" },
-{ emoji: "💬", text: "Notas y ajustes propuestos" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "🗣️", text: "Reu de maximo 30 minutos" },
-{ emoji: "✅", text: "Por cada visual: aprobar, modificar o descartar" },
-{ emoji: "📝", text: "Se apuntan cambios directos" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "🎙️", text: "Reunion transcrita automaticamente" },
-{ emoji: "📋", text: "Lista de cambios concisos sobre cada storyboard" },
-])}
-</div>      `,
-"aplica-visuales": () => `        <div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)">          <div>            <div class="popup-header-title">👤 APLICA CAMBIOS</div>            <div class="popup-header-sub">Aplica los cambios de la reu en los storyboards</div>          </div>          <button class="popup-close" onclick="closePopup()">✕</button>        </div>        <div class="popup-body">          ${sectionHTML("INPUT", "#3498db", [            { emoji: "🎙️", text: "Transcripcion de la reu de validacion visual" },
-{ emoji: "🎬", text: "Storyboards actuales con los comentarios previos" },
-])}
-${sectionHTML("PROCESO", "#bb86fc", [            { emoji: "✏️", text: "Aplica cambios manuales en los storyboards segun la reu" },
-{ emoji: "👁️", text: "Revision final de coherencia guion ↔ visual" },
-])}
-${sectionHTML("OUTPUT", "#27ae60", [            { emoji: "✅", text: "Storyboards cerrados y listos para grabar" },
-{ emoji: "🔒", text: "Ciclo CREACION cerrado → pasan a GRABACION" },
-])}
-</div>      `,
+"crea-idea": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Crea Idea — ${brandConfig[currentBrand].label}</div><div class="popup-header-sub">40+ piezas/semana</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal — distribucion de formatos, frecuencias y plataformas"},{emoji:"🎙️",text:"Embeddings BBDD Historico — videos propios publicados"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes — busqueda semantica en 20K+ escenas"},{emoji:"📊",text:"Excel Moneyball por Creador — patrones ganadores con % exito"},{emoji:"🎯",text:"Estrategia — objetivo de cada tipo de video y posicionamiento de marca"},])}${sectionHTML("PROCESO","#bb86fc",[])}${executeButtonHTML("crea-idea","CREA IDEA",true)}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📝",text:"Por cada hueco de la parrilla, la IA genera una primera idea de contenido con hook, semantica, probabilidad de exito y un comentario de por que es ganadora."},])}</div>`,
+"lucia-revisa": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Revisa Ideas</div><div class="popup-header-sub">Revision previa a la reunion</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🤖",text:"Ideas generadas por Runni en el Calendario Social Media de Notion"},{emoji:"📅",text:"Calendario de la semana con los huecos ya asignados"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"👀",text:"Lucia revisa cada idea generada por la IA"},{emoji:"✍️",text:"Anade comentarios en Notion sobre cada idea"},{emoji:"💡",text:"Apunta ideas propias que se le ocurran al revisar"},{emoji:"⚠️",text:"Marca las ideas que ve mas flojas"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📋",text:"Calendario con comentarios de Lucia — listo para la reu de validacion"},{emoji:"💡",text:"Lista de ideas propias como alternativas o complementos"},])}</div>`,
+"reu-validacion": () => `<div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)"><div><div class="popup-header-title">Reu Validacion Ideas</div><div class="popup-header-sub">Maximo 30 minutos</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🤖",text:"Ideas de Runni ya escritas en el Calendario"},{emoji:"✍️",text:"Comentarios de Lucia en cada idea"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🗣️",text:"Reu de maximo 30 minutos"},{emoji:"✅",text:"Por cada idea: aprobar, modificar o descartar con razon concreta"},{emoji:"📝",text:"Se apuntan cambios directos y contexto especifico"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎙️",text:"Reunion transcrita automaticamente"},{emoji:"📋",text:"Lista de cambios concisos sobre cada idea"},])}</div>`,
+"lucia-aplica": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Aplica Cambios</div><div class="popup-header-sub">Transcripcion de reu → IA aplica → Lucia revisa</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎙️",text:"Transcripcion de la reunion de validacion"},{emoji:"📅",text:"Calendario Social Media actual"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🤖",text:"Notion Prompt recibe la transcripcion + calendario → aplica cambios"},{emoji:"👀",text:"Lucia revisa los cambios aplicados por la IA"},{emoji:"✏️",text:"Ajustes finales manuales si algo no cuadra"},{emoji:"🚀",text:"Activar Notion Prompt para fase CREACION",link:"https://www.notion.so/Guion-IA-CEO-Media-303a67fd29b280188115cd8bd2fb4c87"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📅",text:"Calendario de la semana cerrado con ideas finales"},{emoji:"🤖",text:"Runni empieza a rodar — genera automaticamente Guion IA"},{emoji:"🔒",text:"Ciclo IDEA cerrado → las ideas pasan a CREACION"},])}</div>`,
+"guion-ia": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Guion IA</div><div class="popup-header-sub">6 inputs → Runni genera guion completo</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal"},{emoji:"🎙️",text:"Embeddings BBDD Historico"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes"},{emoji:"📊",text:"Excel Moneyball por Creador"},{emoji:"🎯",text:"Estrategia — objetivo de cada tipo de video"},{emoji:"💡",text:"Ideas y Comentarios del Calendario Notion"},])}${sectionHTML("PROCESO","#bb86fc",[])}${executeButtonHTML("guion-ia","GUION IA")}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📝",text:"En cada pagina de Notion: guion completo del video con hook detallado + guion narrativo"},{emoji:"📋",text:"Descripcion de la publicacion"},])}</div>`,
+"lucia-revisa-guiones": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Revisa Guiones</div><div class="popup-header-sub">Revision de cada guion generado</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📝",text:"Guiones de Runni escritos en cada pagina de Notion"},{emoji:"📅",text:"Calendario semanal con las ideas validadas"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"👁️",text:"Lucia lee cada guion y compara con la idea original"},{emoji:"💬",text:"Anade comentarios en Notion"},{emoji:"⚠️",text:"Marca los guiones que necesitan cambios fuertes"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📋",text:"Guiones con comentarios listos para la reu de validacion"},])}</div>`,
+"reu-validacion-guiones": () => `<div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)"><div><div class="popup-header-title">Reu Validacion Guiones</div><div class="popup-header-sub">Maximo 30 minutos</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📝",text:"Guiones generados por Runni con comentarios"},{emoji:"💬",text:"Comentarios de Lucia en cada guion"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🗣️",text:"Reu de maximo 30 minutos"},{emoji:"✅",text:"Por cada guion: aprobar, modificar o descartar"},{emoji:"📝",text:"Se apuntan cambios directos"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎙️",text:"Reunion transcrita automaticamente"},{emoji:"📋",text:"Lista de cambios concisos sobre cada guion"},])}</div>`,
+"lucia-aplica-guiones": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Aplica Cambios Guiones</div><div class="popup-header-sub">Aplica los cambios de la reu en los guiones</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎙️",text:"Transcripcion de la reu de validacion de guiones"},{emoji:"📝",text:"Guiones actuales en Notion"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🤖",text:"Notion Prompt recibe transcripcion + guiones → aplica cambios"},{emoji:"👁️",text:"Lucia revisa los cambios aplicados"},{emoji:"✏️",text:"Ajustes manuales si es necesario"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"✅",text:"Guiones cerrados y listos para crear Visual IA"},{emoji:"🤖",text:"Runni empieza a rodar — genera automaticamente Visual IA"},])}</div>`,
+"visual-ia": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Visual IA</div><div class="popup-header-sub">Guion cerrado → storyboard → PDF</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal"},{emoji:"🎙️",text:"Embeddings BBDD Historico"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes — 20K+ escenas"},{emoji:"📊",text:"Excel Moneyball por Creador"},{emoji:"📝",text:"Guion de cada video (viene de CREACION GUION)"},])}${sectionHTML("PROCESO","#bb86fc",[])}${executeButtonHTML("visual-ia","VISUAL IA")}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎬",text:"Google Doc con Visual y Storyboard subido a Drive, linkeado en Notion"},])}</div>`,
+"revisa-visuales": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Revisa Visuales</div><div class="popup-header-sub">Revision de storyboards visuales</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎬",text:"Storyboards visuales PDF generados por Visual IA"},{emoji:"📝",text:"Guiones cerrados de Notion como referencia"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"👁️",text:"Revisa cada storyboard y compara con el guion cerrado"},{emoji:"💬",text:"Anade comentarios sobre planos, transiciones, overlays"},{emoji:"⚠️",text:"Marca los que necesitan cambios fuertes"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📋",text:"Storyboards con comentarios listos para la reu"},])}</div>`,
+"reu-validacion-visuales": () => `<div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)"><div><div class="popup-header-title">Reu Validacion Visuales</div><div class="popup-header-sub">Maximo 30 minutos</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎬",text:"Storyboards visuales con comentarios de la revision"},{emoji:"💬",text:"Notas y ajustes propuestos"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🗣️",text:"Reu de maximo 30 minutos"},{emoji:"✅",text:"Por cada visual: aprobar, modificar o descartar"},{emoji:"📝",text:"Se apuntan cambios directos"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎙️",text:"Reunion transcrita automaticamente"},{emoji:"📋",text:"Lista de cambios concisos sobre cada storyboard"},])}</div>`,
+"aplica-visuales": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Aplica Cambios Visuales</div><div class="popup-header-sub">Aplica los cambios de la reu en los storyboards</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎙️",text:"Transcripcion de la reu de validacion visual"},{emoji:"🎬",text:"Storyboards actuales con los comentarios previos"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"✏️",text:"Aplica cambios manuales en los storyboards segun la reu"},{emoji:"👁️",text:"Revision final de coherencia guion ↔ visual"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"✅",text:"Storyboards cerrados y listos para grabar"},{emoji:"🔒",text:"Ciclo CREACION cerrado → pasan a GRABACION"},])}</div>`,
 };
-// Popup functions
+
 function openPopup(popupId) {
-if (popups[popupId]) {
-document.getElementById('popup-content').innerHTML = popups[popupId]();
-document.getElementById('overlay').classList.add('active');
+  if (popups[popupId]) {
+    document.getElementById('popup-content').innerHTML = popups[popupId]();
+    document.getElementById('overlay').classList.add('active');
+  }
 }
-}
-function closePopup() {
-document.getElementById('overlay').classList.remove('active');
-}
-// Execute process with SSE streaming
+function closePopup() { document.getElementById('overlay').classList.remove('active'); }
+
+// ── Execute process (SSE) ──
 let currentRunId = null;
 let currentEventSource = null;
 
@@ -687,207 +537,101 @@ async function executeProcess(endpoint, btn) {
   const semana = semanaInput ? semanaInput.value : null;
   const logDiv = document.getElementById('log-' + endpoint);
   const cancelBtn = document.getElementById('cancel-' + endpoint);
-  const label = endpoint.replace(/-/g, ' ').toUpperCase();
-
-  // Collect context per pilar
+  const label = endpoint.replace(/-/g,' ').toUpperCase();
   const context = {};
-  ['veneno', 'victor_heras', 'andrea', 'post_personal', 'stories'].forEach(p => {
+  ['veneno','victor_heras','andrea','post_personal','stories'].forEach(p => {
     const input = document.getElementById('ctx-' + endpoint + '-' + p);
     if (input && input.value.trim()) context[p] = input.value.trim();
   });
-
-  // Reset UI
-  btn.className = 'execute-btn loading';
-  btn.innerHTML = '⏳ Ejecutando...';
-  logDiv.innerHTML = '';
-  logDiv.classList.add('active');
-  cancelBtn.classList.add('active');
-
+  btn.className = 'execute-btn loading'; btn.textContent = 'Ejecutando...';
+  logDiv.innerHTML = ''; logDiv.classList.add('active'); cancelBtn.classList.add('active');
   try {
-    const res = await fetch('/api/cadena/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ process: endpoint, semana, context })
-    });
+    const res = await fetch('/api/cadena/run', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({process:endpoint,semana,context}) });
     const data = await res.json();
-
     if (!res.ok) throw new Error(data.error || 'Error desconocido');
-
     currentRunId = data.runId;
-    addLogLine(logDiv, `▶ Proceso: ${endpoint} | Semana: ${semana || 'auto'} | Run: ${data.runId}`, 'success');
-
-    // Open SSE stream
+    addLogLine(logDiv, '▶ Proceso: '+endpoint+' | Semana: '+(semana||'auto')+' | Run: '+data.runId, 'success');
     if (currentEventSource) currentEventSource.close();
-    currentEventSource = new EventSource('/api/pipeline/stream/' + data.runId);
-
+    currentEventSource = new EventSource('/api/pipeline/stream/'+data.runId);
     currentEventSource.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type === 'log') {
-        const cls = msg.text.includes('❌') || msg.text.includes('[stderr]') ? 'error' :
-                    msg.text.includes('✅') ? 'success' : '';
-        addLogLine(logDiv, msg.text, cls);
-      } else if (msg.type === 'done') {
-        currentEventSource.close();
-        currentEventSource = null;
-        currentRunId = null;
-        cancelBtn.classList.remove('active');
-
-        if (msg.status === 'completed') {
-          btn.className = 'execute-btn success';
-          btn.innerHTML = '✅ Completado';
-          addLogLine(logDiv, '═══ PROCESO COMPLETADO ═══', 'success');
-        } else {
-          btn.className = 'execute-btn error';
-          btn.innerHTML = '❌ Error (exit ' + msg.exitCode + ')';
-          addLogLine(logDiv, '═══ PROCESO FALLIDO (exit ' + msg.exitCode + ') ═══', 'error');
-        }
-        setTimeout(() => { btn.className = 'execute-btn'; btn.innerHTML = '🚀 EJECUTAR: ' + label; }, 5000);
+      if (msg.type === 'log') { addLogLine(logDiv, msg.text, msg.text.includes('❌')||msg.text.includes('[stderr]')?'error':msg.text.includes('✅')?'success':''); }
+      else if (msg.type === 'done') {
+        currentEventSource.close(); currentEventSource=null; currentRunId=null; cancelBtn.classList.remove('active');
+        if (msg.status==='completed') { btn.className='execute-btn success'; btn.textContent='Completado'; addLogLine(logDiv,'PROCESO COMPLETADO','success'); }
+        else { btn.className='execute-btn error'; btn.textContent='Error (exit '+msg.exitCode+')'; addLogLine(logDiv,'PROCESO FALLIDO','error'); }
+        setTimeout(()=>{btn.className='execute-btn';btn.textContent='EJECUTAR: '+label;},5000);
       }
     };
-
     currentEventSource.onerror = () => {
-      currentEventSource.close();
-      currentEventSource = null;
-      cancelBtn.classList.remove('active');
-      btn.className = 'execute-btn error';
-      btn.innerHTML = '❌ Conexión perdida';
-      addLogLine(logDiv, '═══ CONEXIÓN PERDIDA ═══', 'error');
-      setTimeout(() => { btn.className = 'execute-btn'; btn.innerHTML = '🚀 EJECUTAR: ' + label; }, 3000);
+      currentEventSource.close(); currentEventSource=null; cancelBtn.classList.remove('active');
+      btn.className='execute-btn error'; btn.textContent='Conexion perdida';
+      setTimeout(()=>{btn.className='execute-btn';btn.textContent='EJECUTAR: '+label;},3000);
     };
-
-  } catch (err) {
-    btn.className = 'execute-btn error';
-    btn.innerHTML = '❌ ' + err.message;
-    cancelBtn.classList.remove('active');
-    addLogLine(logDiv, '❌ ' + err.message, 'error');
-    setTimeout(() => { btn.className = 'execute-btn'; btn.innerHTML = '🚀 EJECUTAR: ' + label; }, 3000);
+  } catch(err) {
+    btn.className='execute-btn error'; btn.textContent=err.message; cancelBtn.classList.remove('active');
+    addLogLine(logDiv, err.message,'error');
+    setTimeout(()=>{btn.className='execute-btn';btn.textContent='EJECUTAR: '+label;},3000);
   }
 }
-
 function addLogLine(logDiv, text, cls) {
   const line = document.createElement('div');
-  line.className = 'log-line' + (cls ? ' ' + cls : '');
-  line.textContent = text;
-  logDiv.appendChild(line);
-  logDiv.scrollTop = logDiv.scrollHeight;
+  line.className = 'log-line'+(cls?' '+cls:''); line.textContent = text;
+  logDiv.appendChild(line); logDiv.scrollTop = logDiv.scrollHeight;
 }
-
 async function cancelProcess(endpoint) {
   if (!currentRunId) return;
-  try {
-    await fetch('/api/pipeline/cancel/' + currentRunId, { method: 'POST' });
-    const logDiv = document.getElementById('log-' + endpoint);
-    addLogLine(logDiv, '⛔ Cancelado por el usuario', 'error');
-  } catch (e) {}
+  try { await fetch('/api/pipeline/cancel/'+currentRunId,{method:'POST'}); addLogLine(document.getElementById('log-'+endpoint),'Cancelado por el usuario','error'); } catch(e){}
 }
 
-// Parrilla de contenido per brand
+// ── Parrilla ──
 const brandParrillas = {
   ceomedia: {
-    title: "📅 PARRILLA SEMANAL DE CONTENIDO — CEO MEDIA",
-    sub: "40+ piezas/semana · Distribucion por referente, red social e intencion",
-    gradient: "linear-gradient(90deg,#6c3483,#bb86fc)",
-    rows: [
-      { ref: "🐍 Veneno", qty: "15", tiktok: "7 nativos", ig: "5 reels + 3 resubidas", yt: "—", intencion: "🎯 Alcance + Viralizacion + Entretenimiento" },
-      { ref: "🎯 Victor Heras", qty: "14", tiktok: "5 nativos", ig: "3 reels + 2 resubidas", yt: "3 shorts + 1 long", intencion: "🧠 Autoridad + Educacion + SEO" },
-      { ref: "🎬 Andrea", qty: "7", tiktok: "4 nativos", ig: "2 reels + 1 resubida", yt: "—", intencion: "💜 Lifestyle + Conexion + Comunidad" },
-      { ref: "📸 Post Personal", qty: "2", tiktok: "—", ig: "1 carrusel + 1 estatico", yt: "—", intencion: "📚 Educacion + Guardados + Engagement" },
-      { ref: "📖 Stories", qty: "5-7", tiktok: "—", ig: "5-7 stories diarias", yt: "—", intencion: "🤝 Cercania + Dia a dia" },
+    sub:"40+ piezas/semana",
+    rows:[
+      {ref:"Veneno",qty:"15",tiktok:"7 nativos",ig:"5 reels + 3 resubidas",yt:"—",intencion:"Alcance + Viralizacion"},
+      {ref:"Victor Heras",qty:"14",tiktok:"5 nativos",ig:"3 reels + 2 resubidas",yt:"3 shorts + 1 long",intencion:"Autoridad + Educacion + SEO"},
+      {ref:"Andrea",qty:"7",tiktok:"4 nativos",ig:"2 reels + 1 resubida",yt:"—",intencion:"Lifestyle + Conexion"},
+      {ref:"Post Personal",qty:"2",tiktok:"—",ig:"1 carrusel + 1 estatico",yt:"—",intencion:"Educacion + Guardados"},
+      {ref:"Stories",qty:"5-7",tiktok:"—",ig:"5-7 stories diarias",yt:"—",intencion:"Cercania + Dia a dia"},
     ],
-    total: { qty: "40+", tiktok: "~16", ig: "~18-20", yt: "~4" },
+    total:{qty:"40+",tiktok:"~16",ig:"~18-20",yt:"~4"},
   },
   runclub: {
-    title: "📅 PARRILLA SEMANAL DE CONTENIDO — RUNCLUB",
-    sub: "Parrilla por definir · Estructura base de ejemplo",
-    gradient: "linear-gradient(90deg,#006D6F,#00f2ea)",
-    rows: [
-      { ref: "🏟️ Comunidad", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "🤝 Comunidad + Engagement" },
-      { ref: "🏃 Entrenos", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "📚 Educacion + Valor" },
-      { ref: "🎉 Eventos", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "📣 Difusion + Captacion" },
+    sub:"Parrilla por definir",
+    rows:[
+      {ref:"Comunidad",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Comunidad + Engagement"},
+      {ref:"Entrenos",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Educacion + Valor"},
+      {ref:"Eventos",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Difusion + Captacion"},
     ],
-    total: { qty: "Por definir", tiktok: "—", ig: "—", yt: "—" },
+    total:{qty:"Por definir",tiktok:"—",ig:"—",yt:"—"},
   },
   runnerpro: {
-    title: "📅 PARRILLA SEMANAL DE CONTENIDO — RUNNERPRO",
-    sub: "Parrilla por definir · Estructura base de ejemplo",
-    gradient: "linear-gradient(90deg,#7D5A00,#f39c12)",
-    rows: [
-      { ref: "🏃🏻 Educacion", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "📚 Educacion + SEO" },
-      { ref: "📱 Producto", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "⚡ Conversion + Features" },
-      { ref: "❤️‍🔥 Comunidad", qty: "—", tiktok: "—", ig: "—", yt: "—", intencion: "🤝 Community + Engagement" },
+    sub:"Parrilla por definir",
+    rows:[
+      {ref:"Educacion",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Educacion + SEO"},
+      {ref:"Producto",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Conversion + Features"},
+      {ref:"Comunidad",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Community + Engagement"},
     ],
-    total: { qty: "Por definir", tiktok: "—", ig: "—", yt: "—" },
+    total:{qty:"Por definir",tiktok:"—",ig:"—",yt:"—"},
   },
 };
 
 function openParrilla() {
   const p = brandParrillas[currentBrand];
-  const tiktok = '<span class="red-badge" style="background:#00f2ea22;color:#00f2ea">';
-  const ig = '<span class="red-badge" style="background:#E1306C22;color:#E1306C">';
-  const yt = '<span class="red-badge" style="background:#FF000022;color:#FF4444">';
-  const end = '</span>';
-  const rowsHTML = p.rows.map(r => `
-        <tr>
-          <td style="font-weight:700">${r.ref}</td>
-          <td style="text-align:center;font-weight:700">${r.qty}</td>
-          <td style="text-align:center${r.tiktok === '—' ? ';color:#555' : ''}">${r.tiktok}</td>
-          <td style="text-align:center${r.ig === '—' ? ';color:#555' : ''}">${r.ig}</td>
-          <td style="text-align:center${r.yt === '—' ? ';color:#555' : ''}">${r.yt}</td>
-          <td>${r.intencion}</td>
-        </tr>`).join('');
-  const html = `
-    <div class="popup-header" style="background:${p.gradient}">
-      <div>
-        <div class="popup-header-title">${p.title}</div>
-        <div class="popup-header-sub">${p.sub}</div>
-      </div>
-      <button class="popup-close" onclick="closePopup()">✕</button>
-    </div>
-    <div class="popup-body" style="overflow-x:auto">
-      <table class="parrilla-table">
-        <tr>
-          <th>Referente</th>
-          <th style="text-align:center">Qty/Sem</th>
-          <th style="text-align:center">${tiktok}TikTok${end}</th>
-          <th style="text-align:center">${ig}Instagram${end}</th>
-          <th style="text-align:center">${yt}YouTube${end}</th>
-          <th>Intencion</th>
-        </tr>
-        ${rowsHTML}
-        <tr class="parrilla-total">
-          <td>TOTAL</td>
-          <td style="text-align:center">${p.total.qty}</td>
-          <td style="text-align:center">${p.total.tiktok}</td>
-          <td style="text-align:center">${p.total.ig}</td>
-          <td style="text-align:center">${p.total.yt}</td>
-          <td></td>
-        </tr>
-      </table>
-
-      <div style="margin-top:20px;padding:16px;background:#bb86fc12;border:2px solid #bb86fc44;border-radius:12px;text-align:center">
-        <div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:1px">Total semanal</div>
-        <div style="font-size:28px;font-weight:900;color:#bb86fc;margin-top:4px">${p.total.qty} piezas</div>
-        <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;flex-wrap:wrap">
-          <span class="red-badge" style="background:#00f2ea22;color:#00f2ea;padding:4px 12px;font-size:12px">TikTok ${p.total.tiktok}</span>
-          <span class="red-badge" style="background:#E1306C22;color:#E1306C;padding:4px 12px;font-size:12px">Instagram ${p.total.ig}</span>
-          <span class="red-badge" style="background:#FF000022;color:#FF4444;padding:4px 12px;font-size:12px">YouTube ${p.total.yt}</span>
-        </div>
-      </div>
-    </div>
-  `;
-  document.getElementById('popup-content').innerHTML = html;
+  const bl = brandConfig[currentBrand].label;
+  const rowsHTML = p.rows.map(r => `<tr><td style="font-weight:600">${r.ref}</td><td style="text-align:center;font-weight:600">${r.qty}</td><td style="text-align:center${r.tiktok==='—'?';color:#555':''}">${r.tiktok}</td><td style="text-align:center${r.ig==='—'?';color:#555':''}">${r.ig}</td><td style="text-align:center${r.yt==='—'?';color:#555':''}">${r.yt}</td><td>${r.intencion}</td></tr>`).join('');
+  document.getElementById('popup-content').innerHTML = `
+    <div class="popup-header" style="background:#2a2a2a"><div><div class="popup-header-title">Parrilla — ${bl}</div><div class="popup-header-sub">${p.sub}</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div>
+    <div class="popup-body" style="overflow-x:auto"><table class="parrilla-table"><tr><th>Referente</th><th style="text-align:center">Qty/Sem</th><th style="text-align:center">TikTok</th><th style="text-align:center">Instagram</th><th style="text-align:center">YouTube</th><th>Intencion</th></tr>${rowsHTML}<tr class="parrilla-total"><td>TOTAL</td><td style="text-align:center">${p.total.qty}</td><td style="text-align:center">${p.total.tiktok}</td><td style="text-align:center">${p.total.ig}</td><td style="text-align:center">${p.total.yt}</td><td></td></tr></table></div>`;
   document.getElementById('overlay').classList.add('active');
 }
 
-// Nueva Idea de Video
-// Notion config - token se guarda en localStorage para no exponer en el repo
+// ── Nueva Idea ──
 const CALENDARIO_DB = '13da67fd-29b2-801f-bac3-c72d4fb45bf2';
 function getNotionKey() {
   let key = localStorage.getItem('notion_key');
-  if (!key) {
-    key = prompt('🔑 Introduce tu Notion API Key (se guarda en tu navegador):');
-    if (key) localStorage.setItem('notion_key', key);
-  }
+  if (!key) { key = prompt('Introduce tu Notion API Key (se guarda en tu navegador):'); if (key) localStorage.setItem('notion_key', key); }
   return key;
 }
 
@@ -897,20 +641,12 @@ function tagHTML(group, values, color, bg, multi, preselected) {
     return `<span class="tag-pill${sel}" data-group="${group}" data-value="${v}" data-multi="${multi}" style="--tag-color:${color};--tag-bg:${bg}" onclick="toggleTag(this)">${v}</span>`;
   }).join('');
 }
-
 function toggleTag(el) {
   const multi = el.dataset.multi === 'true';
-  if (multi) {
-    el.classList.toggle('selected');
-  } else {
-    document.querySelectorAll(`.tag-pill[data-group="${el.dataset.group}"]`).forEach(t => t.classList.remove('selected'));
-    el.classList.add('selected');
-  }
+  if (multi) { el.classList.toggle('selected'); }
+  else { document.querySelectorAll(`.tag-pill[data-group="${el.dataset.group}"]`).forEach(t=>t.classList.remove('selected')); el.classList.add('selected'); }
 }
-
-function getTagValues(group) {
-  return Array.from(document.querySelectorAll(`.tag-pill[data-group="${group}"].selected`)).map(t => t.dataset.value);
-}
+function getTagValues(group) { return Array.from(document.querySelectorAll(`.tag-pill[data-group="${group}"].selected`)).map(t=>t.dataset.value); }
 
 function openNuevaIdea() {
   const bc = brandConfig[currentBrand];
@@ -919,63 +655,19 @@ function openNuevaIdea() {
   const redes = ['Instagram','TikTok','YouTube','LinkedIn','X','Threads','Cristóbal','Podcast','Strava','Stories','Meta ADS'];
   const tipos = ['Guion','Script','Vídeo','Historia','Carrusel','LinkedIn Post','Texto','Cortos'];
 
-  const brandLabels = { ceomedia: '⛓️ CEO Media', runclub: '🏃 Runclub', runnerpro: '⚡ RunnerPro' };
-
-  const html = `
-    <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">
-      <div>
-        <div class="popup-header-title">➕ NUEVA IDEA DE VIDEO — ${brandLabels[currentBrand]}</div>
-        <div class="popup-header-sub">Crea una entrada en el Calendario Social Media de Notion · Perfil: ${bc.profile}</div>
-      </div>
-      <button class="popup-close" onclick="closePopup()">✕</button>
-    </div>
+  document.getElementById('popup-content').innerHTML = `
+    <div class="popup-header" style="background:#2a2a2a"><div><div class="popup-header-title">Nueva idea — ${bc.label}</div><div class="popup-header-sub">Crea una entrada en el Calendario Social Media de Notion</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div>
     <div class="popup-body">
-
-      <div class="idea-form-field" style="margin-bottom:14px">
-        <label>📝 Nombre / Idea del video</label>
-        <input type="text" id="idea-nombre" placeholder="ej: Tutorial plan de entreno 10K para principiantes" style="font-size:15px;padding:12px 14px">
-      </div>
-
-      <div class="idea-form-field" style="margin-bottom:14px">
-        <label>🟣 Pilar de contenido (Referente)</label>
-        <div class="tag-group">${tagHTML('pilar', pilares, '#bb86fc', '#bb86fc18', false, [bc.defaultPilar])}</div>
-      </div>
-
-      <div class="idea-form-field" style="margin-bottom:14px">
-        <label>👤 Perfil (donde se publica)</label>
-        <div class="tag-group">${tagHTML('perfil', perfiles, '#f39c12', '#f39c1218', false, [bc.profile])}</div>
-      </div>
-
-      <div class="idea-form-field" style="margin-bottom:14px">
-        <label>📱 Red Social</label>
-        <div class="tag-group">${tagHTML('red', redes, '#00f2ea', '#00f2ea18', true, bc.defaultRedes)}</div>
-      </div>
-
-      <div class="idea-form-field" style="margin-bottom:14px">
-        <label>🎬 Tipo de contenido</label>
-        <div class="tag-group">${tagHTML('tipo', tipos, '#e74c3c', '#e74c3c18', true, ['Vídeo'])}</div>
-      </div>
-
-      <div class="idea-form-row">
-        <div class="idea-form-field">
-          <label>📅 Fecha publicacion</label>
-          <input type="date" id="idea-fecha">
-        </div>
-      </div>
-
-      <div class="context-extras">
-        <label>💬 Comentarios extra <span style="font-weight:400;text-transform:none;color:#555">(no se sube a Notion — solo notas internas)</span></label>
-        <textarea id="idea-contexto" placeholder="Apuntes, referencias, tono deseado, enlace de inspiracion... lo que quieras anotar para ti o para el equipo"></textarea>
-        <div class="hint">Esto no crea ningun campo en Notion, es solo un recordatorio para ti.</div>
-      </div>
-
-      <button class="idea-submit-btn" id="idea-submit-btn" onclick="submitIdea()">
-        🚀 CREAR EN NOTION
-      </button>
+      <div class="idea-form-field" style="margin-bottom:14px"><label>Nombre / Idea del video</label><input type="text" id="idea-nombre" placeholder="ej: Tutorial plan de entreno 10K para principiantes" style="font-size:14px;padding:10px 12px"></div>
+      <div class="idea-form-field" style="margin-bottom:14px"><label>Pilar de contenido</label><div class="tag-group">${tagHTML('pilar',pilares,'#bb86fc','#bb86fc18',false,[bc.defaultPilar])}</div></div>
+      <div class="idea-form-field" style="margin-bottom:14px"><label>Perfil</label><div class="tag-group">${tagHTML('perfil',perfiles,'#f39c12','#f39c1218',false,[bc.profile])}</div></div>
+      <div class="idea-form-field" style="margin-bottom:14px"><label>Red Social</label><div class="tag-group">${tagHTML('red',redes,'#5dade2','#5dade218',true,bc.defaultRedes)}</div></div>
+      <div class="idea-form-field" style="margin-bottom:14px"><label>Tipo de contenido</label><div class="tag-group">${tagHTML('tipo',tipos,'#e74c3c','#e74c3c18',true,['Vídeo'])}</div></div>
+      <div class="idea-form-row"><div class="idea-form-field"><label>Fecha publicacion</label><input type="date" id="idea-fecha"></div></div>
+      <div class="context-extras"><label>Comentarios extra <span style="font-weight:400;text-transform:none;color:#444">(no se sube a Notion)</span></label><textarea id="idea-contexto" placeholder="Apuntes, referencias, tono deseado..."></textarea><div class="hint">Solo notas internas, no crea campo en Notion.</div></div>
+      <button class="idea-submit-btn" id="idea-submit-btn" onclick="submitIdea()">Crear en Notion</button>
       <div class="idea-result" id="idea-result"></div>
-    </div>
-  `;
-  document.getElementById('popup-content').innerHTML = html;
+    </div>`;
   document.getElementById('overlay').classList.add('active');
 }
 
@@ -983,166 +675,73 @@ async function submitIdea() {
   const btn = document.getElementById('idea-submit-btn');
   const result = document.getElementById('idea-result');
   const nombre = document.getElementById('idea-nombre').value.trim();
-
-  if (!nombre) {
-    result.className = 'idea-result show error';
-    result.textContent = '❌ Pon un nombre o idea para el video';
-    return;
-  }
-
-  const pilarArr = getTagValues('pilar');
-  const perfilArr = getTagValues('perfil');
-  const redes = getTagValues('red');
-  const tipos = getTagValues('tipo');
+  if (!nombre) { result.className='idea-result show error'; result.textContent='Pon un nombre o idea para el video'; return; }
+  const pilarArr = getTagValues('pilar'), perfilArr = getTagValues('perfil'), redes = getTagValues('red'), tipos = getTagValues('tipo');
   const fecha = document.getElementById('idea-fecha').value;
-
-  if (!pilarArr.length) { result.className = 'idea-result show error'; result.textContent = '❌ Selecciona un pilar de contenido'; return; }
-  if (!perfilArr.length) { result.className = 'idea-result show error'; result.textContent = '❌ Selecciona un perfil'; return; }
-
-  btn.disabled = true;
-  btn.innerHTML = '⏳ Creando en Notion...';
-  result.className = 'idea-result';
-
+  if (!pilarArr.length) { result.className='idea-result show error'; result.textContent='Selecciona un pilar de contenido'; return; }
+  if (!perfilArr.length) { result.className='idea-result show error'; result.textContent='Selecciona un perfil'; return; }
+  btn.disabled = true; btn.textContent = 'Creando en Notion...'; result.className='idea-result';
   const props = {
-    "Nombre": { title: [{ text: { content: nombre } }] },
-    "⚫Perfil (vacío = RunnerPro)": { multi_select: perfilArr.map(n => ({name: n})) },
-    "⚫Red Social": { multi_select: redes.map(n => ({name: n})) },
-    "🟣Tipo de contenido": { multi_select: tipos.map(n => ({name: n})) },
-    "🟣Pilar de contenido": { select: { name: pilarArr[0] } },
-    "⚫Estado": { status: { name: "Idea" } },
+    "Nombre":{title:[{text:{content:nombre}}]},
+    "⚫Perfil (vacío = RunnerPro)":{multi_select:perfilArr.map(n=>({name:n}))},
+    "⚫Red Social":{multi_select:redes.map(n=>({name:n}))},
+    "🟣Tipo de contenido":{multi_select:tipos.map(n=>({name:n}))},
+    "🟣Pilar de contenido":{select:{name:pilarArr[0]}},
+    "⚫Estado":{status:{name:"Idea"}},
   };
-
-  if (fecha) props["⚫Publicación"] = { date: { start: fecha } };
-
+  if (fecha) props["⚫Publicación"] = {date:{start:fecha}};
   try {
-    const res = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + getNotionKey(),
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        parent: { database_id: CALENDARIO_DB },
-        properties: props
-      })
-    });
-
+    const res = await fetch('https://api.notion.com/v1/pages',{method:'POST',headers:{'Authorization':'Bearer '+getNotionKey(),'Notion-Version':'2022-06-28','Content-Type':'application/json'},body:JSON.stringify({parent:{database_id:CALENDARIO_DB},properties:props})});
     const data = await res.json();
-
     if (res.ok) {
-      btn.className = 'idea-submit-btn success';
-      btn.innerHTML = '✅ Creado en Notion!';
-      result.className = 'idea-result show success';
-      result.innerHTML = '✅ <strong>' + nombre + '</strong> — <a href="' + data.url + '" target="_blank" style="color:#27ae60;text-decoration:underline">Abrir en Notion ↗</a>';
-      setTimeout(() => { btn.className = 'idea-submit-btn'; btn.innerHTML = '🚀 CREAR EN NOTION'; btn.disabled = false; }, 4000);
-    } else {
-      throw new Error(data.message || 'Error de Notion');
-    }
-  } catch (err) {
-    btn.className = 'idea-submit-btn error';
-    btn.innerHTML = '❌ Error';
-    result.className = 'idea-result show error';
-    result.textContent = '❌ ' + err.message;
-    setTimeout(() => { btn.className = 'idea-submit-btn'; btn.innerHTML = '🚀 CREAR EN NOTION'; btn.disabled = false; }, 3000);
+      btn.className='idea-submit-btn success'; btn.textContent='Creado en Notion!';
+      result.className='idea-result show success';
+      result.innerHTML = '<strong>'+nombre+'</strong> — <a href="'+data.url+'" target="_blank" style="color:#27ae60;text-decoration:underline">Abrir en Notion</a>';
+      setTimeout(()=>{btn.className='idea-submit-btn';btn.textContent='Crear en Notion';btn.disabled=false;},4000);
+    } else { throw new Error(data.message||'Error de Notion'); }
+  } catch(err) {
+    btn.className='idea-submit-btn error'; btn.textContent='Error';
+    result.className='idea-result show error'; result.textContent=err.message;
+    setTimeout(()=>{btn.className='idea-submit-btn';btn.textContent='Crear en Notion';btn.disabled=false;},3000);
   }
 }
 
-// Close popup on Escape
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closePopup();
+// Escape to close
+document.addEventListener('keydown', e => { if (e.key==='Escape') closePopup(); });
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.brand-dropdown')) {
+    document.getElementById('brand-list').classList.remove('open');
+    document.querySelector('.brand-dropdown-btn').classList.remove('open');
+  }
 });
 
-// ── Auto-reconnect on page load ──
+// Auto-reconnect
 (async function reconnectActive() {
   try {
-    const res = await fetch('/api/cadena/active');
-    const data = await res.json();
-    if (!data.runId) return; // Nothing active
-
-    const endpoint = data.process; // e.g. "guion-ia"
-    // Auto-open the popup for this process
-    openPopup(endpoint);
-
-    // Wait a tick for the popup DOM to render
-    await new Promise(r => setTimeout(r, 100));
-
-    const btn = document.getElementById('btn-' + endpoint);
-    const logDiv = document.getElementById('log-' + endpoint);
-    const cancelBtn = document.getElementById('cancel-' + endpoint);
-    const label = endpoint.replace(/-/g, ' ').toUpperCase();
-
-    if (!btn || !logDiv) return;
-
-    logDiv.innerHTML = '';
-    logDiv.classList.add('active');
-
-    if (data.status === 'running') {
-      // Still running → reconnect SSE (stream replays full history + new lines)
-      logDiv.innerHTML = ''; // SSE will replay all output
-      btn.className = 'execute-btn loading';
-      btn.innerHTML = '⏳ Ejecutando...';
-      if (cancelBtn) cancelBtn.classList.add('active');
-      currentRunId = data.runId;
-
-      addLogLine(logDiv, '🔄 Reconectado al proceso en curso...', 'success');
-
-      if (currentEventSource) currentEventSource.close();
-      currentEventSource = new EventSource('/api/pipeline/stream/' + data.runId);
-
-      currentEventSource.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'log') {
-          const cls = msg.text.includes('❌') || msg.text.includes('[stderr]') ? 'error' :
-                      msg.text.includes('✅') ? 'success' : '';
-          addLogLine(logDiv, msg.text, cls);
-        } else if (msg.type === 'done') {
-          currentEventSource.close();
-          currentEventSource = null;
-          currentRunId = null;
-          if (cancelBtn) cancelBtn.classList.remove('active');
-          if (msg.status === 'completed') {
-            btn.className = 'execute-btn success';
-            btn.innerHTML = '✅ Completado';
-            addLogLine(logDiv, '═══ PROCESO COMPLETADO ═══', 'success');
-          } else {
-            btn.className = 'execute-btn error';
-            btn.innerHTML = '❌ Error (exit ' + msg.exitCode + ')';
-            addLogLine(logDiv, '═══ PROCESO FALLIDO (exit ' + msg.exitCode + ') ═══', 'error');
-          }
-          setTimeout(() => { btn.className = 'execute-btn'; btn.innerHTML = '🚀 EJECUTAR: ' + label; }, 5000);
-        }
-      };
-
-      currentEventSource.onerror = () => {
-        currentEventSource.close();
-        currentEventSource = null;
-        if (cancelBtn) cancelBtn.classList.remove('active');
-        btn.className = 'execute-btn error';
-        btn.innerHTML = '❌ Conexión perdida';
-        setTimeout(() => { btn.className = 'execute-btn'; btn.innerHTML = '🚀 EJECUTAR: ' + label; }, 3000);
-      };
-
+    const res = await fetch('/api/cadena/active'); const data = await res.json();
+    if (!data.runId) return;
+    const endpoint = data.process; openPopup(endpoint);
+    await new Promise(r=>setTimeout(r,100));
+    const btn=document.getElementById('btn-'+endpoint), logDiv=document.getElementById('log-'+endpoint), cancelBtn=document.getElementById('cancel-'+endpoint);
+    const label=endpoint.replace(/-/g,' ').toUpperCase();
+    if (!btn||!logDiv) return;
+    logDiv.innerHTML=''; logDiv.classList.add('active');
+    if (data.status==='running') {
+      btn.className='execute-btn loading'; btn.textContent='Ejecutando...';
+      if(cancelBtn) cancelBtn.classList.add('active');
+      currentRunId=data.runId;
+      addLogLine(logDiv,'Reconectado al proceso en curso...','success');
+      if(currentEventSource) currentEventSource.close();
+      currentEventSource=new EventSource('/api/pipeline/stream/'+data.runId);
+      currentEventSource.onmessage=(event)=>{const msg=JSON.parse(event.data);if(msg.type==='log'){addLogLine(logDiv,msg.text,msg.text.includes('❌')?'error':msg.text.includes('✅')?'success':'');}else if(msg.type==='done'){currentEventSource.close();currentEventSource=null;currentRunId=null;if(cancelBtn)cancelBtn.classList.remove('active');if(msg.status==='completed'){btn.className='execute-btn success';btn.textContent='Completado';addLogLine(logDiv,'PROCESO COMPLETADO','success');}else{btn.className='execute-btn error';btn.textContent='Error (exit '+msg.exitCode+')';addLogLine(logDiv,'PROCESO FALLIDO','error');}setTimeout(()=>{btn.className='execute-btn';btn.textContent='EJECUTAR: '+label;},5000);}};
+      currentEventSource.onerror=()=>{currentEventSource.close();currentEventSource=null;if(cancelBtn)cancelBtn.classList.remove('active');btn.className='execute-btn error';btn.textContent='Conexion perdida';setTimeout(()=>{btn.className='execute-btn';btn.textContent='EJECUTAR: '+label;},3000);};
     } else {
-      // Already finished → replay output and show result
-      (data.output || []).forEach(line => {
-        const cls = line.includes('❌') || line.includes('[stderr]') ? 'error' :
-                    line.includes('✅') ? 'success' : '';
-        addLogLine(logDiv, line, cls);
-      });
-      if (data.exitCode === 0 || data.status === 'completed') {
-        btn.className = 'execute-btn success';
-        btn.innerHTML = '✅ Completado';
-        addLogLine(logDiv, '═══ PROCESO COMPLETADO ═══', 'success');
-      } else {
-        btn.className = 'execute-btn error';
-        btn.innerHTML = '❌ Error (exit ' + (data.exitCode || '?') + ')';
-        addLogLine(logDiv, '═══ PROCESO FALLIDO ═══', 'error');
-      }
-      setTimeout(() => { btn.className = 'execute-btn'; btn.innerHTML = '🚀 EJECUTAR: ' + label; }, 5000);
+      (data.output||[]).forEach(line=>{addLogLine(logDiv,line,line.includes('❌')?'error':line.includes('✅')?'success':'');});
+      if(data.exitCode===0||data.status==='completed'){btn.className='execute-btn success';btn.textContent='Completado';addLogLine(logDiv,'PROCESO COMPLETADO','success');}
+      else{btn.className='execute-btn error';btn.textContent='Error (exit '+(data.exitCode||'?')+')';addLogLine(logDiv,'PROCESO FALLIDO','error');}
+      setTimeout(()=>{btn.className='execute-btn';btn.textContent='EJECUTAR: '+label;},5000);
     }
-  } catch (e) {
-    // Silent fail — no active process or server not reachable
-  }
+  } catch(e){}
 })();
 </script></body></html>
