@@ -398,7 +398,7 @@ body.light .flowchart-container { background: #fafafa; border-color: #e8e5e0; }
   <div class="sidebar-title">Vistas</div>
 
   <!-- Pipeline (expandable) -->
-  <div class="sidebar-item active" data-view="kanban" onclick="showView('kanban')">
+  <div class="sidebar-item active" data-view="kanban" onclick="showView('kanban'); toggleExpand('pipeline')">
     <span class="icon" id="pipeline-arrow" style="font-size:10px;transition:transform 0.15s">&#9660;</span>
     <span class="icon">&#9776;</span> Pipeline
   </div>
@@ -415,7 +415,7 @@ body.light .flowchart-container { background: #fafafa; border-color: #e8e5e0; }
   </div>
 
   <!-- Funnel (expandable) -->
-  <div class="sidebar-item" data-view="funnel" onclick="showView('funnel')">
+  <div class="sidebar-item" data-view="funnel" onclick="showView('funnel'); toggleExpand('funnel')">
     <span class="icon" id="funnel-arrow" style="font-size:10px;transition:transform 0.15s">&#9654;</span>
     <span class="icon">&#9698;</span> Funnel
   </div>
@@ -444,7 +444,7 @@ body.light .flowchart-container { background: #fafafa; border-color: #e8e5e0; }
   </div>
 
   <!-- Bases de datos (expandable) -->
-  <div class="sidebar-item" data-view="databases" onclick="showView('databases')">
+  <div class="sidebar-item" data-view="databases" onclick="showView('databases'); toggleExpand('databases')">
     <span class="icon" id="db-arrow" style="font-size:10px;transition:transform 0.15s">&#9654;</span>
     <span class="icon">&#128451;</span> Bases de datos
   </div>
@@ -466,26 +466,19 @@ body.light .flowchart-container { background: #fafafa; border-color: #e8e5e0; }
     </div>
   </div>
 
-  <div class="sidebar-legend">
-    <div class="sidebar-title" style="padding-left:0">Leyenda</div>
-    <div class="sidebar-legend-item"><span class="sidebar-legend-dot" style="background:#27ae60"></span> Drum (IA)</div>
-    <div class="sidebar-legend-item"><span class="sidebar-legend-dot" style="background:#2980b9"></span> Buffer (Revision)</div>
-    <div class="sidebar-legend-item"><span class="sidebar-legend-dot" style="background:#8e44ad"></span> Reunion</div>
-    <div class="sidebar-legend-item"><span class="sidebar-legend-dot" style="background:#555"></span> En construccion</div>
-  </div>
 </nav>
 
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-title" id="main-title">Pipeline — CEO Media</div>
-    <button class="topbar-btn" onclick="openParrilla()"><span class="btn-icon">&#128197;</span> Parrilla</button>
-    <button class="topbar-btn" onclick="openNuevaIdea()"><span class="btn-icon">&#43;</span> Nueva idea</button>
+    <button class="topbar-btn pipeline-only-btn" id="btn-parrilla" onclick="openParrilla()"><span class="btn-icon">&#128197;</span> Parrilla</button>
+    <button class="topbar-btn pipeline-only-btn" id="btn-nueva-idea" onclick="openNuevaIdea()"><span class="btn-icon">&#43;</span> Nueva idea</button>
     <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">&#9790;</button>
   </div>
   <div class="kanban" id="kanban"></div>
-  <iframe id="funnel-frame" src="vertical-sankey/public/index.html" style="display:none;width:100%;height:calc(100vh - 49px);border:none;"></iframe>
-  <iframe id="db-frame" src="moneyball/moneyball-dashboard.html" style="display:none;width:100%;height:100vh;border:none;"></iframe>
+  <iframe id="funnel-frame" src="vertical-sankey/public/index.html" style="display:none;width:100%;height:calc(100vh - 49px);border:none;" onload="this.contentWindow.postMessage({type:'setTheme',dark:isDark},'*')"></iframe>
+  <iframe id="db-frame" src="moneyball/moneyball-dashboard.html" style="display:none;width:100%;height:calc(100vh - 49px);border:none;"></iframe>
 </div>
 
 <!-- Overlay -->
@@ -570,6 +563,29 @@ let currentView = 'kanban';
 let currentFunnel = 'general';
 let currentDbView = 'overview';
 
+// Expand state for each section (independent)
+const expandState = { pipeline: true, funnel: false, databases: false };
+
+function toggleExpand(section) {
+  expandState[section] = !expandState[section];
+  const map = {
+    pipeline:  { list: 'pipeline-brands', arrow: 'pipeline-arrow' },
+    funnel:    { list: 'funnel-embudos',  arrow: 'funnel-arrow' },
+    databases: { list: 'db-views',        arrow: 'db-arrow' },
+  };
+  const cfg = map[section];
+  if (!cfg) return;
+  const list = document.getElementById(cfg.list);
+  const arrow = document.getElementById(cfg.arrow);
+  if (expandState[section]) {
+    list.style.display = '';
+    arrow.innerHTML = '&#9660;';
+  } else {
+    list.style.display = 'none';
+    arrow.innerHTML = '&#9654;';
+  }
+}
+
 function showView(view) {
   currentView = view;
   document.querySelectorAll('.sidebar-item[data-view]').forEach(i => i.classList.remove('active'));
@@ -579,40 +595,30 @@ function showView(view) {
   const kanban = document.getElementById('kanban');
   const funnel = document.getElementById('funnel-frame');
   const dbFrame = document.getElementById('db-frame');
-  const topbar = document.querySelector('.topbar');
-  const pipelineBrands = document.getElementById('pipeline-brands');
-  const funnelEmbudos = document.getElementById('funnel-embudos');
-  const dbViews = document.getElementById('db-views');
-  const pipelineArrow = document.getElementById('pipeline-arrow');
-  const funnelArrow = document.getElementById('funnel-arrow');
-  const dbArrow = document.getElementById('db-arrow');
+  const title = document.getElementById('main-title');
 
-  // Hide all
+  // Hide all content areas
   kanban.style.display = 'none';
   funnel.style.display = 'none';
   dbFrame.style.display = 'none';
-  topbar.style.display = 'none';
-  pipelineBrands.style.display = 'none';
-  funnelEmbudos.style.display = 'none';
-  dbViews.style.display = 'none';
-  pipelineArrow.innerHTML = '&#9654;';
-  funnelArrow.innerHTML = '&#9654;';
-  dbArrow.innerHTML = '&#9654;';
+
+  // Pipeline-only buttons (Parrilla, Nueva idea)
+  document.querySelectorAll('.pipeline-only-btn').forEach(b => {
+    b.style.display = view === 'kanban' ? '' : 'none';
+  });
 
   if (view === 'kanban') {
     kanban.style.display = '';
-    topbar.style.display = '';
-    pipelineBrands.style.display = '';
-    pipelineArrow.innerHTML = '&#9660;';
+    title.textContent = 'Pipeline — ' + brandConfig[currentBrand].label;
   } else if (view === 'funnel') {
     funnel.style.display = 'block';
-    funnelEmbudos.style.display = '';
-    funnelArrow.innerHTML = '&#9660;';
+    const funnelLabels = { general:'General', ceoMedia:'CEO Media', socialMedia:'Social Media', email:'Email', runClub:'Run Club', metaAds:'Meta Ads', googleAds:'Google Ads' };
+    title.textContent = 'Funnel — ' + (funnelLabels[currentFunnel] || currentFunnel);
     switchFunnel(currentFunnel);
   } else if (view === 'databases') {
     dbFrame.style.display = 'block';
-    dbViews.style.display = '';
-    dbArrow.innerHTML = '&#9660;';
+    const dbLabels = { overview:'Overview', videos:'Videos', scenes:'Scenes', analytics:'Analytics', pipeline:'Pipeline' };
+    title.textContent = 'Bases de datos — ' + (dbLabels[currentDbView] || currentDbView);
     switchDbView(currentDbView);
   }
 }
@@ -622,7 +628,8 @@ function switchFunnel(view) {
   document.querySelectorAll('.funnel-nav').forEach(o => o.classList.remove('selected'));
   const el = document.querySelector(`.funnel-nav[data-funnel="${view}"]`);
   if (el) el.classList.add('selected');
-  // Send message to iframe
+  const funnelLabels = { general:'General', ceoMedia:'CEO Media', socialMedia:'Social Media', email:'Email', runClub:'Run Club', metaAds:'Meta Ads', googleAds:'Google Ads' };
+  document.getElementById('main-title').textContent = 'Funnel — ' + (funnelLabels[view] || view);
   const frame = document.getElementById('funnel-frame');
   if (frame && frame.contentWindow) {
     frame.contentWindow.postMessage({ type: 'setView', view: view }, '*');
@@ -635,6 +642,8 @@ function switchDbView(view) {
   document.querySelectorAll('.db-nav').forEach(o => o.classList.remove('selected'));
   const el = document.querySelector(`.db-nav[data-db="${view}"]`);
   if (el) el.classList.add('selected');
+  const dbLabels = { overview:'Overview', videos:'Videos', scenes:'Scenes', analytics:'Analytics', pipeline:'Pipeline' };
+  document.getElementById('main-title').textContent = 'Bases de datos — ' + (dbLabels[view] || view);
   const frame = document.getElementById('db-frame');
   if (frame && frame.contentWindow) {
     frame.contentWindow.postMessage({ type: 'setView', view: view }, '*');
@@ -721,6 +730,66 @@ function getNextMonday() {
   return d.toISOString().split('T')[0];
 }
 
+// ── Flowchart: auto-generated from script source ──
+function flowchartButtonHTML(processId) {
+  return `<button class="flowchart-btn" onclick="toggleFlowchart('${processId}', this)">&#9654; Ver Proceso</button><div class="flowchart-container" id="flowchart-${processId}"></div>`;
+}
+
+async function toggleFlowchart(processId, btn) {
+  const container = document.getElementById('flowchart-' + processId);
+  if (container.classList.contains('active')) {
+    container.classList.remove('active');
+    btn.innerHTML = '&#9654; Ver Proceso';
+    return;
+  }
+  container.classList.add('active');
+  btn.innerHTML = '&#9660; Ocultar Proceso';
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;font-size:12px">Cargando diagrama...</div>';
+  try {
+    const res = await fetch('/api/cadena/flowchart/' + processId);
+    const data = await res.json();
+    container.innerHTML = renderFlowchartSVG(data.steps);
+  } catch (e) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#e74c3c;font-size:12px">Error cargando diagrama</div>';
+  }
+}
+
+function escapeXML(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderFlowchartSVG(steps) {
+  if (!steps || steps.length === 0) return '<div style="color:#666;font-size:12px;text-align:center">Sin pasos definidos</div>';
+  const nodeW = 280, nodeH = 44, gapY = 20, padX = 40, padY = 30;
+  const totalH = padY * 2 + steps.length * nodeH + (steps.length - 1) * gapY;
+  const totalW = nodeW + padX * 2;
+  const light = document.body.classList.contains('light');
+  const nodeFill = light ? '#ffffff' : '#252525';
+  const nodeStroke = light ? '#d6d3ce' : '#333';
+  const textColor = light ? '#37352f' : '#e0e0e0';
+  const arrowColor = light ? '#c4c1bc' : '#444';
+  let svg = `<svg class="flowchart-svg" viewBox="0 0 ${totalW} ${totalH}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<defs><filter id="fs" x="-4%" y="-10%" width="108%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.15"/></filter></defs>`;
+  steps.forEach((step, i) => {
+    const x = padX, y = padY + i * (nodeH + gapY);
+    const isFirst = i === 0, isLast = i === steps.length - 1;
+    const accent = isFirst ? '#27ae60' : isLast ? '#e74c3c' : nodeStroke;
+    svg += `<rect x="${x}" y="${y}" width="${nodeW}" height="${nodeH}" rx="6" fill="${nodeFill}" stroke="${accent}" stroke-width="${isFirst||isLast?2:1}" filter="url(#fs)"/>`;
+    const cx = x + 20, cy = y + nodeH / 2;
+    svg += `<circle cx="${cx}" cy="${cy}" r="11" fill="${accent}" opacity="0.15"/>`;
+    svg += `<text x="${cx}" y="${cy+1}" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="${accent}">${escapeXML(step.id)}</text>`;
+    let label = step.label; if (label.length > 38) label = label.substring(0, 36) + '\u2026';
+    svg += `<text x="${cx+21}" y="${cy+1}" dominant-baseline="central" font-size="11.5" font-weight="500" fill="${textColor}" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">${escapeXML(label)}</text>`;
+    if (i < steps.length - 1) {
+      const ay1 = y + nodeH, ay2 = ay1 + gapY, ax = x + nodeW / 2;
+      svg += `<line x1="${ax}" y1="${ay1}" x2="${ax}" y2="${ay2-4}" stroke="${arrowColor}" stroke-width="1.5"/>`;
+      svg += `<polygon points="${ax-4},${ay2-6} ${ax+4},${ay2-6} ${ax},${ay2}" fill="${arrowColor}"/>`;
+    }
+  });
+  svg += '</svg>';
+  return svg;
+}
+
 function executeButtonHTML(apiEndpoint, label, showContext) {
   const defaultDate = getNextMonday();
   let contextHTML = '';
@@ -736,15 +805,15 @@ function executeButtonHTML(apiEndpoint, label, showContext) {
 }
 
 const popups = {
-"crea-idea": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Crea Idea — ${brandConfig[currentBrand].label}</div><div class="popup-header-sub">40+ piezas/semana</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal — distribucion de formatos, frecuencias y plataformas"},{emoji:"🎙️",text:"Embeddings BBDD Historico — videos propios publicados"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes — busqueda semantica en 20K+ escenas"},{emoji:"📊",text:"Excel Moneyball por Creador — patrones ganadores con % exito"},{emoji:"🎯",text:"Estrategia — objetivo de cada tipo de video y posicionamiento de marca"},])}${sectionHTML("PROCESO","#bb86fc",[])}${executeButtonHTML("crea-idea","CREA IDEA",true)}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📝",text:"Por cada hueco de la parrilla, la IA genera una primera idea de contenido con hook, semantica, probabilidad de exito y un comentario de por que es ganadora."},])}</div>`,
+"crea-idea": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Crea Idea — ${brandConfig[currentBrand].label}</div><div class="popup-header-sub">40+ piezas/semana</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal — distribucion de formatos, frecuencias y plataformas"},{emoji:"🎙️",text:"Embeddings BBDD Historico — videos propios publicados"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes — busqueda semantica en 20K+ escenas"},{emoji:"📊",text:"Excel Moneyball por Creador — patrones ganadores con % exito"},{emoji:"🎯",text:"Estrategia — objetivo de cada tipo de video y posicionamiento de marca"},])}${sectionHTML("PROCESO","#bb86fc",[])}${flowchartButtonHTML("crea-idea")}${executeButtonHTML("crea-idea","CREA IDEA",true)}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📝",text:"Por cada hueco de la parrilla, la IA genera una primera idea de contenido con hook, semantica, probabilidad de exito y un comentario de por que es ganadora."},])}</div>`,
 "lucia-revisa": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Revisa Ideas</div><div class="popup-header-sub">Revision previa a la reunion</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🤖",text:"Ideas generadas por Runni en el Calendario Social Media de Notion"},{emoji:"📅",text:"Calendario de la semana con los huecos ya asignados"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"👀",text:"Lucia revisa cada idea generada por la IA"},{emoji:"✍️",text:"Anade comentarios en Notion sobre cada idea"},{emoji:"💡",text:"Apunta ideas propias que se le ocurran al revisar"},{emoji:"⚠️",text:"Marca las ideas que ve mas flojas"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📋",text:"Calendario con comentarios de Lucia — listo para la reu de validacion"},{emoji:"💡",text:"Lista de ideas propias como alternativas o complementos"},])}</div>`,
 "reu-validacion": () => `<div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)"><div><div class="popup-header-title">Reu Validacion Ideas</div><div class="popup-header-sub">Maximo 30 minutos</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🤖",text:"Ideas de Runni ya escritas en el Calendario"},{emoji:"✍️",text:"Comentarios de Lucia en cada idea"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🗣️",text:"Reu de maximo 30 minutos"},{emoji:"✅",text:"Por cada idea: aprobar, modificar o descartar con razon concreta"},{emoji:"📝",text:"Se apuntan cambios directos y contexto especifico"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎙️",text:"Reunion transcrita automaticamente"},{emoji:"📋",text:"Lista de cambios concisos sobre cada idea"},])}</div>`,
 "lucia-aplica": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Aplica Cambios</div><div class="popup-header-sub">Transcripcion de reu → IA aplica → Lucia revisa</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎙️",text:"Transcripcion de la reunion de validacion"},{emoji:"📅",text:"Calendario Social Media actual"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🤖",text:"Notion Prompt recibe la transcripcion + calendario → aplica cambios"},{emoji:"👀",text:"Lucia revisa los cambios aplicados por la IA"},{emoji:"✏️",text:"Ajustes finales manuales si algo no cuadra"},{emoji:"🚀",text:"Activar Notion Prompt para fase CREACION",link:"https://www.notion.so/Guion-IA-CEO-Media-303a67fd29b280188115cd8bd2fb4c87"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📅",text:"Calendario de la semana cerrado con ideas finales"},{emoji:"🤖",text:"Runni empieza a rodar — genera automaticamente Guion IA"},{emoji:"🔒",text:"Ciclo IDEA cerrado → las ideas pasan a CREACION"},])}</div>`,
-"guion-ia": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Guion IA</div><div class="popup-header-sub">6 inputs → Runni genera guion completo</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal"},{emoji:"🎙️",text:"Embeddings BBDD Historico"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes"},{emoji:"📊",text:"Excel Moneyball por Creador"},{emoji:"🎯",text:"Estrategia — objetivo de cada tipo de video"},{emoji:"💡",text:"Ideas y Comentarios del Calendario Notion"},])}${sectionHTML("PROCESO","#bb86fc",[])}${executeButtonHTML("guion-ia","GUION IA")}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📝",text:"En cada pagina de Notion: guion completo del video con hook detallado + guion narrativo"},{emoji:"📋",text:"Descripcion de la publicacion"},])}</div>`,
+"guion-ia": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Guion IA</div><div class="popup-header-sub">6 inputs → Runni genera guion completo</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal"},{emoji:"🎙️",text:"Embeddings BBDD Historico"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes"},{emoji:"📊",text:"Excel Moneyball por Creador"},{emoji:"🎯",text:"Estrategia — objetivo de cada tipo de video"},{emoji:"💡",text:"Ideas y Comentarios del Calendario Notion"},])}${sectionHTML("PROCESO","#bb86fc",[])}${flowchartButtonHTML("guion-ia")}${executeButtonHTML("guion-ia","GUION IA")}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📝",text:"En cada pagina de Notion: guion completo del video con hook detallado + guion narrativo"},{emoji:"📋",text:"Descripcion de la publicacion"},])}</div>`,
 "lucia-revisa-guiones": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Revisa Guiones</div><div class="popup-header-sub">Revision de cada guion generado</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📝",text:"Guiones de Runni escritos en cada pagina de Notion"},{emoji:"📅",text:"Calendario semanal con las ideas validadas"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"👁️",text:"Lucia lee cada guion y compara con la idea original"},{emoji:"💬",text:"Anade comentarios en Notion"},{emoji:"⚠️",text:"Marca los guiones que necesitan cambios fuertes"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📋",text:"Guiones con comentarios listos para la reu de validacion"},])}</div>`,
 "reu-validacion-guiones": () => `<div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)"><div><div class="popup-header-title">Reu Validacion Guiones</div><div class="popup-header-sub">Maximo 30 minutos</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📝",text:"Guiones generados por Runni con comentarios"},{emoji:"💬",text:"Comentarios de Lucia en cada guion"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🗣️",text:"Reu de maximo 30 minutos"},{emoji:"✅",text:"Por cada guion: aprobar, modificar o descartar"},{emoji:"📝",text:"Se apuntan cambios directos"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎙️",text:"Reunion transcrita automaticamente"},{emoji:"📋",text:"Lista de cambios concisos sobre cada guion"},])}</div>`,
 "lucia-aplica-guiones": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Aplica Cambios Guiones</div><div class="popup-header-sub">Aplica los cambios de la reu en los guiones</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎙️",text:"Transcripcion de la reu de validacion de guiones"},{emoji:"📝",text:"Guiones actuales en Notion"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🤖",text:"Notion Prompt recibe transcripcion + guiones → aplica cambios"},{emoji:"👁️",text:"Lucia revisa los cambios aplicados"},{emoji:"✏️",text:"Ajustes manuales si es necesario"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"✅",text:"Guiones cerrados y listos para crear Visual IA"},{emoji:"🤖",text:"Runni empieza a rodar — genera automaticamente Visual IA"},])}</div>`,
-"visual-ia": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Visual IA</div><div class="popup-header-sub">Guion cerrado → storyboard → PDF</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal"},{emoji:"🎙️",text:"Embeddings BBDD Historico"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes — 20K+ escenas"},{emoji:"📊",text:"Excel Moneyball por Creador"},{emoji:"📝",text:"Guion de cada video (viene de CREACION GUION)"},])}${sectionHTML("PROCESO","#bb86fc",[])}${executeButtonHTML("visual-ia","VISUAL IA")}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎬",text:"Google Doc con Visual y Storyboard subido a Drive, linkeado en Notion"},])}</div>`,
+"visual-ia": () => `<div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)"><div><div class="popup-header-title">Visual IA</div><div class="popup-header-sub">Guion cerrado → storyboard → PDF</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"📅",text:"Parrilla Semanal"},{emoji:"🎙️",text:"Embeddings BBDD Historico"},{emoji:"🔍",text:"Embeddings BBDD Creadores Referentes — 20K+ escenas"},{emoji:"📊",text:"Excel Moneyball por Creador"},{emoji:"📝",text:"Guion de cada video (viene de CREACION GUION)"},])}${sectionHTML("PROCESO","#bb86fc",[])}${flowchartButtonHTML("visual-ia")}${executeButtonHTML("visual-ia","VISUAL IA")}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎬",text:"Google Doc con Visual y Storyboard subido a Drive, linkeado en Notion"},])}</div>`,
 "revisa-visuales": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Revisa Visuales</div><div class="popup-header-sub">Revision de storyboards visuales</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎬",text:"Storyboards visuales PDF generados por Visual IA"},{emoji:"📝",text:"Guiones cerrados de Notion como referencia"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"👁️",text:"Revisa cada storyboard y compara con el guion cerrado"},{emoji:"💬",text:"Anade comentarios sobre planos, transiciones, overlays"},{emoji:"⚠️",text:"Marca los que necesitan cambios fuertes"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"📋",text:"Storyboards con comentarios listos para la reu"},])}</div>`,
 "reu-validacion-visuales": () => `<div class="popup-header" style="background:linear-gradient(90deg,#7d3c98,#8e44ad)"><div><div class="popup-header-title">Reu Validacion Visuales</div><div class="popup-header-sub">Maximo 30 minutos</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎬",text:"Storyboards visuales con comentarios de la revision"},{emoji:"💬",text:"Notas y ajustes propuestos"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"🗣️",text:"Reu de maximo 30 minutos"},{emoji:"✅",text:"Por cada visual: aprobar, modificar o descartar"},{emoji:"📝",text:"Se apuntan cambios directos"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"🎙️",text:"Reunion transcrita automaticamente"},{emoji:"📋",text:"Lista de cambios concisos sobre cada storyboard"},])}</div>`,
 "aplica-visuales": () => `<div class="popup-header" style="background:linear-gradient(90deg,#2471a3,#2980b9)"><div><div class="popup-header-title">Aplica Cambios Visuales</div><div class="popup-header-sub">Aplica los cambios de la reu en los storyboards</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div><div class="popup-body">${sectionHTML("INPUT","#3498db",[{emoji:"🎙️",text:"Transcripcion de la reu de validacion visual"},{emoji:"🎬",text:"Storyboards actuales con los comentarios previos"},])}${sectionHTML("PROCESO","#bb86fc",[{emoji:"✏️",text:"Aplica cambios manuales en los storyboards segun la reu"},{emoji:"👁️",text:"Revision final de coherencia guion ↔ visual"},])}${sectionHTML("OUTPUT","#27ae60",[{emoji:"✅",text:"Storyboards cerrados y listos para grabar"},{emoji:"🔒",text:"Ciclo CREACION cerrado → pasan a GRABACION"},])}</div>`,
