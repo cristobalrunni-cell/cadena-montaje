@@ -207,25 +207,46 @@ border-radius: 6px; font-size: 11px; font-weight: 600;
 .context-box textarea::placeholder { color: #555; font-style: italic; }
 .context-box .context-hint { font-size: 10px; color: #666; margin-top: 4px; }
 /* Nueva idea form */
-.idea-form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.idea-form-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .idea-form-field { flex: 1; min-width: 180px; }
-.idea-form-field label { display: block; font-size: 10px; font-weight: 700; color: #bb86fc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.idea-form-field input, .idea-form-field select, .idea-form-field textarea {
-  width: 100%; background: #1a1f25; color: #e8e8e8; border: 1px solid #bb86fc44; border-radius: 6px;
-  padding: 8px 10px; font-size: 12px; font-family: inherit;
+.idea-form-field label { display: block; font-size: 10px; font-weight: 700; color: #bb86fc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.idea-form-field input, .idea-form-field textarea {
+  width: 100%; background: #1a1f25; color: #e8e8e8; border: 1px solid #bb86fc44; border-radius: 8px;
+  padding: 10px 12px; font-size: 13px; font-family: inherit;
 }
 .idea-form-field textarea { min-height: 60px; resize: vertical; }
-.idea-form-field select { cursor: pointer; }
 .idea-form-field input::placeholder, .idea-form-field textarea::placeholder { color: #555; font-style: italic; }
+/* Tag selector */
+.tag-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-pill {
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; user-select: none;
+  border: 1.5px solid #333; background: #1a1f25; color: #888;
+}
+.tag-pill:hover { border-color: #bb86fc88; color: #ccc; }
+.tag-pill.selected { border-color: var(--tag-color, #bb86fc); background: var(--tag-bg, #bb86fc18); color: var(--tag-color, #bb86fc); font-weight: 700; }
+/* Context extras */
+.context-extras {
+  margin-top: 16px; padding: 14px; border-radius: 10px;
+  background: #ffffff06; border: 1px dashed #444;
+}
+.context-extras label { display: block; font-size: 10px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.context-extras textarea {
+  width: 100%; min-height: 50px; background: #0f1419; color: #999; border: 1px solid #333; border-radius: 8px;
+  padding: 10px 12px; font-size: 12px; font-family: inherit; resize: vertical; font-style: italic;
+}
+.context-extras textarea::placeholder { color: #444; }
+.context-extras .hint { font-size: 9px; color: #555; margin-top: 4px; }
+/* Submit */
 .idea-submit-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 12px; margin-top: 8px;
-  border: 2px solid #27ae60; border-radius: 10px;
+  width: 100%; padding: 14px; margin-top: 14px;
+  border: 2px solid #27ae60; border-radius: 12px;
   background: linear-gradient(135deg, #0a2e1a, #1a4a2e);
-  color: #27ae60; font-size: 13px; font-weight: 800;
+  color: #27ae60; font-size: 14px; font-weight: 800;
   cursor: pointer; transition: all 0.3s;
 }
-.idea-submit-btn:hover { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; transform: scale(1.02); }
+.idea-submit-btn:hover { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; transform: scale(1.02); box-shadow: 0 0 20px #27ae6044; }
 .idea-submit-btn:disabled { opacity: 0.5; pointer-events: none; }
 .idea-submit-btn.success { border-color: #27ae60; background: #27ae60; color: #fff; }
 .idea-submit-btn.error { border-color: #e74c3c; color: #e74c3c; background: linear-gradient(135deg, #2e0a0a, #4a1a1a); }
@@ -758,102 +779,79 @@ function getNotionKey() {
   return key;
 }
 
+function tagHTML(group, values, color, bg, multi, preselected) {
+  return values.map(v => {
+    const sel = preselected && preselected.includes(v) ? ' selected' : '';
+    return `<span class="tag-pill${sel}" data-group="${group}" data-value="${v}" data-multi="${multi}" style="--tag-color:${color};--tag-bg:${bg}" onclick="toggleTag(this)">${v}</span>`;
+  }).join('');
+}
+
+function toggleTag(el) {
+  const multi = el.dataset.multi === 'true';
+  if (multi) {
+    el.classList.toggle('selected');
+  } else {
+    document.querySelectorAll(`.tag-pill[data-group="${el.dataset.group}"]`).forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+}
+
+function getTagValues(group) {
+  return Array.from(document.querySelectorAll(`.tag-pill[data-group="${group}"].selected`)).map(t => t.dataset.value);
+}
+
 function openNuevaIdea() {
+  const pilares = ['🏃🏻 Educación','❤️‍🔥 Community','📱⚡ Producto','⚡branding','trendyyy','Mario Mola','🗓️ Lifestyle (Sport+Work)','🏟️ Comunidad','📣 Educar','🟠 WHY','❤️‍🔥 Inspiracion','📹 VLOG','🎬 Andrea','⚡ Beltrán','📝 Script','🎯 Víctor Heras','🐍 Veneno','📸 Post Personal','📖 Stories','❤️🔥 Community'];
+  const perfiles = ['cristobal running','RunnerPro','cristobal redondo','Runclub','Meta ADS','Mono Blanco','Raul IA','Lucia IA'];
+  const redes = ['Instagram','TikTok','YouTube','LinkedIn','X','Threads','Cristóbal','Podcast','Strava','Stories','Meta ADS'];
+  const tipos = ['Guion','Script','Vídeo','Historia','Carrusel','LinkedIn Post','Texto','Cortos'];
+
   const html = `
     <div class="popup-header" style="background:linear-gradient(90deg,#1a6b3c,#27ae60)">
       <div>
         <div class="popup-header-title">➕ NUEVA IDEA DE VIDEO</div>
-        <div class="popup-header-sub">Crea una entrada directamente en el Calendario Social Media de Notion</div>
+        <div class="popup-header-sub">Crea una entrada en el Calendario Social Media de Notion</div>
       </div>
       <button class="popup-close" onclick="closePopup()">✕</button>
     </div>
     <div class="popup-body">
-      <div class="idea-form-row">
-        <div class="idea-form-field" style="flex:2">
-          <label>📝 Nombre / Idea del video</label>
-          <input type="text" id="idea-nombre" placeholder="ej: Tutorial plan de entreno 10K para principiantes">
-        </div>
+
+      <div class="idea-form-field" style="margin-bottom:14px">
+        <label>📝 Nombre / Idea del video</label>
+        <input type="text" id="idea-nombre" placeholder="ej: Tutorial plan de entreno 10K para principiantes" style="font-size:15px;padding:12px 14px">
       </div>
-      <div class="idea-form-row">
-        <div class="idea-form-field">
-          <label>🟣 Pilar de contenido (Referente)</label>
-          <select id="idea-pilar">
-            <option value="🏃🏻 Educación">🏃🏻 Educación</option>
-            <option value="❤️‍🔥 Community">❤️‍🔥 Community</option>
-            <option value="📱⚡ Producto">📱⚡ Producto</option>
-            <option value="⚡branding">⚡ Branding</option>
-            <option value="trendyyy">trendyyy</option>
-            <option value="Mario Mola">Mario Mola</option>
-            <option value="🗓️ Lifestyle (Sport+Work)">🗓️ Lifestyle (Sport+Work)</option>
-            <option value="🏟️ Comunidad">🏟️ Comunidad</option>
-            <option value="📣 Educar">📣 Educar</option>
-            <option value="🟠 WHY">🟠 WHY</option>
-            <option value="❤️‍🔥 Inspiracion">❤️‍🔥 Inspiracion</option>
-            <option value="📹 VLOG">📹 VLOG</option>
-            <option value="🎬 Andrea">🎬 Andrea</option>
-            <option value="⚡ Beltrán">⚡ Beltrán</option>
-            <option value="📝 Script">📝 Script</option>
-            <option value="🎯 Víctor Heras">🎯 Víctor Heras</option>
-            <option value="🐍 Veneno">🐍 Veneno</option>
-            <option value="📸 Post Personal">📸 Post Personal</option>
-            <option value="📖 Stories">📖 Stories</option>
-            <option value="❤️🔥 Community">❤️🔥 Community</option>
-          </select>
-        </div>
-        <div class="idea-form-field">
-          <label>👤 Perfil (donde se publica)</label>
-          <select id="idea-perfil">
-            <option value="cristobal running">cristobal running</option>
-            <option value="RunnerPro">RunnerPro</option>
-            <option value="cristobal redondo">cristobal redondo</option>
-            <option value="Runclub">Runclub</option>
-            <option value="Meta ADS">Meta ADS</option>
-            <option value="Mono Blanco">Mono Blanco</option>
-            <option value="Raul IA">Raul IA</option>
-            <option value="Lucia IA">Lucia IA</option>
-          </select>
-        </div>
+
+      <div class="idea-form-field" style="margin-bottom:14px">
+        <label>🟣 Pilar de contenido (Referente)</label>
+        <div class="tag-group">${tagHTML('pilar', pilares, '#bb86fc', '#bb86fc18', false, ['🏃🏻 Educación'])}</div>
       </div>
+
+      <div class="idea-form-field" style="margin-bottom:14px">
+        <label>👤 Perfil (donde se publica)</label>
+        <div class="tag-group">${tagHTML('perfil', perfiles, '#f39c12', '#f39c1218', false, ['cristobal running'])}</div>
+      </div>
+
+      <div class="idea-form-field" style="margin-bottom:14px">
+        <label>📱 Red Social</label>
+        <div class="tag-group">${tagHTML('red', redes, '#00f2ea', '#00f2ea18', true, ['Instagram','TikTok'])}</div>
+      </div>
+
+      <div class="idea-form-field" style="margin-bottom:14px">
+        <label>🎬 Tipo de contenido</label>
+        <div class="tag-group">${tagHTML('tipo', tipos, '#e74c3c', '#e74c3c18', true, ['Vídeo'])}</div>
+      </div>
+
       <div class="idea-form-row">
-        <div class="idea-form-field">
-          <label>📱 Red Social</label>
-          <select id="idea-red" multiple style="min-height:80px">
-            <option value="Instagram" selected>Instagram</option>
-            <option value="TikTok" selected>TikTok</option>
-            <option value="YouTube">YouTube</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="X">X</option>
-            <option value="Threads">Threads</option>
-            <option value="Cristóbal">Cristóbal</option>
-            <option value="Podcast">Podcast</option>
-            <option value="Strava">Strava</option>
-            <option value="Stories">Stories</option>
-            <option value="Meta ADS">Meta ADS</option>
-          </select>
-        </div>
-        <div class="idea-form-field">
-          <label>🎬 Tipo de contenido</label>
-          <select id="idea-tipo" multiple style="min-height:80px">
-            <option value="Guion">Guion</option>
-            <option value="Script">Script</option>
-            <option value="Vídeo" selected>Vídeo</option>
-            <option value="Historia">Historia</option>
-            <option value="Carrusel">Carrusel</option>
-            <option value="LinkedIn Post">LinkedIn Post</option>
-            <option value="Texto">Texto</option>
-            <option value="Cortos">Cortos</option>
-          </select>
-        </div>
         <div class="idea-form-field">
           <label>📅 Fecha publicacion</label>
           <input type="date" id="idea-fecha">
         </div>
       </div>
-      <div class="idea-form-row">
-        <div class="idea-form-field" style="flex:1">
-          <label>💬 Contexto del proceso</label>
-          <textarea id="idea-contexto" placeholder="Contexto extra para que la IA o el equipo entienda mejor la idea: referencias, tono, objetivo, lo que quieras..."></textarea>
-        </div>
+
+      <div class="context-extras">
+        <label>💬 Comentarios extra <span style="font-weight:400;text-transform:none;color:#555">(no se sube a Notion — solo notas internas)</span></label>
+        <textarea id="idea-contexto" placeholder="Apuntes, referencias, tono deseado, enlace de inspiracion... lo que quieras anotar para ti o para el equipo"></textarea>
+        <div class="hint">Esto no crea ningun campo en Notion, es solo un recordatorio para ti.</div>
       </div>
 
       <button class="idea-submit-btn" id="idea-submit-btn" onclick="submitIdea()">
@@ -877,28 +875,29 @@ async function submitIdea() {
     return;
   }
 
+  const pilarArr = getTagValues('pilar');
+  const perfilArr = getTagValues('perfil');
+  const redes = getTagValues('red');
+  const tipos = getTagValues('tipo');
+  const fecha = document.getElementById('idea-fecha').value;
+
+  if (!pilarArr.length) { result.className = 'idea-result show error'; result.textContent = '❌ Selecciona un pilar de contenido'; return; }
+  if (!perfilArr.length) { result.className = 'idea-result show error'; result.textContent = '❌ Selecciona un perfil'; return; }
+
   btn.disabled = true;
   btn.innerHTML = '⏳ Creando en Notion...';
   result.className = 'idea-result';
 
-  const redes = Array.from(document.getElementById('idea-red').selectedOptions).map(o => ({name: o.value}));
-  const tipos = Array.from(document.getElementById('idea-tipo').selectedOptions).map(o => ({name: o.value}));
-  const perfil = document.getElementById('idea-perfil').value;
-  const pilar = document.getElementById('idea-pilar').value;
-  const fecha = document.getElementById('idea-fecha').value;
-  const contexto = document.getElementById('idea-contexto').value.trim();
-
   const props = {
     "Nombre": { title: [{ text: { content: nombre } }] },
-    "⚫Perfil (vacío = RunnerPro)": { multi_select: [{ name: perfil }] },
-    "⚫Red Social": { multi_select: redes },
-    "🟣Tipo de contenido": { multi_select: tipos },
-    "🟣Pilar de contenido": { select: { name: pilar } },
+    "⚫Perfil (vacío = RunnerPro)": { multi_select: perfilArr.map(n => ({name: n})) },
+    "⚫Red Social": { multi_select: redes.map(n => ({name: n})) },
+    "🟣Tipo de contenido": { multi_select: tipos.map(n => ({name: n})) },
+    "🟣Pilar de contenido": { select: { name: pilarArr[0] } },
     "⚫Estado": { status: { name: "Idea" } },
   };
 
   if (fecha) props["⚫Publicación"] = { date: { start: fecha } };
-  if (contexto) props["🔴Descripción"] = { rich_text: [{ text: { content: contexto } }] };
 
   try {
     const res = await fetch('https://api.notion.com/v1/pages', {
@@ -920,12 +919,8 @@ async function submitIdea() {
       btn.className = 'idea-submit-btn success';
       btn.innerHTML = '✅ Creado en Notion!';
       result.className = 'idea-result show success';
-      result.innerHTML = '✅ Idea creada: <strong>' + nombre + '</strong> — <a href="' + data.url + '" target="_blank" style="color:#27ae60">Abrir en Notion</a>';
-      setTimeout(() => {
-        btn.className = 'idea-submit-btn';
-        btn.innerHTML = '🚀 CREAR EN NOTION';
-        btn.disabled = false;
-      }, 3000);
+      result.innerHTML = '✅ <strong>' + nombre + '</strong> — <a href="' + data.url + '" target="_blank" style="color:#27ae60;text-decoration:underline">Abrir en Notion ↗</a>';
+      setTimeout(() => { btn.className = 'idea-submit-btn'; btn.innerHTML = '🚀 CREAR EN NOTION'; btn.disabled = false; }, 4000);
     } else {
       throw new Error(data.message || 'Error de Notion');
     }
@@ -934,11 +929,7 @@ async function submitIdea() {
     btn.innerHTML = '❌ Error';
     result.className = 'idea-result show error';
     result.textContent = '❌ ' + err.message;
-    setTimeout(() => {
-      btn.className = 'idea-submit-btn';
-      btn.innerHTML = '🚀 CREAR EN NOTION';
-      btn.disabled = false;
-    }, 3000);
+    setTimeout(() => { btn.className = 'idea-submit-btn'; btn.innerHTML = '🚀 CREAR EN NOTION'; btn.disabled = false; }, 3000);
   }
 }
 
