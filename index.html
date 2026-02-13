@@ -33,38 +33,65 @@ body {
 .sidebar-item.active { background: #2a2a2a; color: #e0e0e0; }
 .sidebar-item .icon { font-size: 14px; width: 20px; text-align: center; }
 
-/* Brand dropdown */
-.brand-dropdown {
-  position: relative; margin: 0 6px;
-}
-.brand-dropdown-btn {
-  display: flex; align-items: center; justify-content: space-between;
-  width: 100%; padding: 7px 10px; border-radius: 4px;
-  background: transparent; border: none; color: #e0e0e0;
-  font-size: 13px; font-family: inherit; cursor: pointer;
-  transition: background 0.15s;
-}
-.brand-dropdown-btn:hover { background: #2a2a2a; }
-.brand-dropdown-btn .arrow { font-size: 10px; color: #6b6b6b; transition: transform 0.2s; }
-.brand-dropdown-btn.open .arrow { transform: rotate(180deg); }
-.brand-dropdown-list {
-  display: none; padding: 2px 0; margin-top: 2px;
-}
-.brand-dropdown-list.open { display: block; }
+/* Brand list (always visible) */
+.brand-list { margin: 0 4px; }
 .brand-option {
   display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px 6px 28px; border-radius: 4px; cursor: pointer;
+  padding: 6px 10px; border-radius: 4px; cursor: pointer;
   font-size: 13px; color: #8a8a8a; transition: all 0.15s;
 }
 .brand-option:hover { background: #2a2a2a; color: #e0e0e0; }
-.brand-option.selected { color: #e0e0e0; }
-.brand-option.selected::before {
-  content: ''; width: 6px; height: 6px; border-radius: 50%;
-  background: currentColor; margin-left: -16px; margin-right: 2px;
+.brand-option.selected { background: #2a2a2a; color: #e0e0e0; font-weight: 600; }
+.brand-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Theme toggle */
+.theme-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 4px; background: transparent;
+  border: 1px solid #333; color: #9a9a9a; font-size: 14px;
+  cursor: pointer; transition: all 0.15s;
 }
-.brand-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
+.theme-btn:hover { background: #2a2a2a; color: #e0e0e0; border-color: #444; }
+
+/* Light theme */
+body.light { background: #ffffff; color: #37352f; }
+body.light .sidebar { background: #f7f6f3; border-color: #e8e5e0; }
+body.light .sidebar-title { color: #9a9a9a; }
+body.light .sidebar-item { color: #6b6b6b; }
+body.light .sidebar-item:hover, body.light .sidebar-item.active { background: #eae8e4; color: #37352f; }
+body.light .brand-option { color: #6b6b6b; }
+body.light .brand-option:hover { background: #eae8e4; color: #37352f; }
+body.light .brand-option.selected { background: #eae8e4; color: #37352f; }
+body.light .sidebar-legend-item { color: #9a9a9a; }
+body.light .main { background: #ffffff; }
+body.light .topbar { background: #f7f6f3; border-color: #e8e5e0; }
+body.light .topbar-title { color: #37352f; }
+body.light .topbar-btn { border-color: #d6d3ce; color: #6b6b6b; }
+body.light .topbar-btn:hover { background: #eae8e4; color: #37352f; border-color: #c4c1bc; }
+body.light .theme-btn { border-color: #d6d3ce; color: #6b6b6b; }
+body.light .theme-btn:hover { background: #eae8e4; color: #37352f; }
+body.light .kanban-column + .kanban-column { border-color: #e8e5e0; }
+body.light .kanban-col-title { color: #6b6b6b; }
+body.light .kanban-col-count { background: #eae8e4; color: #9a9a9a; }
+body.light .kanban-card { background: #ffffff; border-color: #e8e5e0; }
+body.light .kanban-card:hover { background: #f7f6f3; }
+body.light .kanban-card-name { color: #37352f; }
+body.light .kanban-card-owner { color: #9a9a9a; }
+body.light .kanban-construction { color: #c4c1bc; }
+body.light .tag-drum { background: #27ae6018; color: #1e8449; }
+body.light .tag-buffer { background: #2980b918; color: #2471a3; }
+body.light .tag-reu { background: #8e44ad18; color: #7d3c98; }
+body.light .overlay { background: rgba(0,0,0,0.4); }
+body.light .popup { background: #ffffff; border-color: #e8e5e0; }
+body.light .popup-header { color: #fff; }
+body.light .popup-body { color: #37352f; }
+body.light .section-item-text { color: #555; }
+body.light .parrilla-table th { background: #f7f6f3; border-color: #e8e5e0; color: #6b6b6b; }
+body.light .parrilla-table td { border-color: #eae8e4; color: #37352f; }
+body.light .parrilla-table tr:hover { background: #f7f6f3; }
+body.light .parrilla-total { background: #f7f6f3; color: #37352f; }
+body.light .parrilla-table input { background: #fff; color: #37352f; border-color: #d6d3ce; }
+body.light .parrilla-table select { background: #fff; color: #37352f; border-color: #d6d3ce; }
 
 /* Sidebar legend */
 .sidebar-legend { padding: 8px 10px; margin-top: auto; }
@@ -242,6 +269,29 @@ body {
   font-size: 10px; font-weight: 600;
 }
 .parrilla-total { font-weight: 700; color: #e0e0e0; background: #2a2a2a; }
+/* Editable parrilla */
+.parrilla-table td input, .parrilla-table td select {
+  background: transparent; color: inherit; border: 1px solid transparent;
+  border-radius: 3px; padding: 4px 6px; font-size: 12px; font-family: inherit;
+  width: 100%; transition: border-color 0.15s;
+}
+.parrilla-table td input:hover, .parrilla-table td select:hover { border-color: #444; }
+.parrilla-table td input:focus, .parrilla-table td select:focus { border-color: #bb86fc; outline: none; background: #2a2a2a; }
+.parrilla-add-row {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 12px; margin-top: 8px; border-radius: 4px;
+  background: transparent; border: 1px dashed #444; color: #6b6b6b;
+  font-size: 12px; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.parrilla-add-row:hover { border-color: #888; color: #e0e0e0; }
+.parrilla-del {
+  background: none; border: none; color: #555; cursor: pointer;
+  font-size: 14px; padding: 2px 4px; border-radius: 3px; transition: color 0.15s;
+}
+.parrilla-del:hover { color: #e74c3c; }
+.parrilla-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+.parrilla-status.ready { background: #27ae6022; color: #57d48f; }
+.parrilla-status.pending { background: #f39c1222; color: #f39c12; }
 
 /* Nueva idea form */
 .idea-form-field { flex: 1; min-width: 180px; }
@@ -296,21 +346,15 @@ body {
   </div>
 
   <div class="sidebar-title">Redes Sociales</div>
-  <div class="brand-dropdown">
-    <button class="brand-dropdown-btn" onclick="toggleBrandDropdown()">
-      <span id="brand-label">CEO Media</span>
-      <span class="arrow">&#9662;</span>
-    </button>
-    <div class="brand-dropdown-list" id="brand-list">
-      <div class="brand-option selected" data-brand="ceomedia" onclick="switchBrand('ceomedia')">
-        <span class="brand-dot" style="background:#bb86fc"></span> CEO Media
-      </div>
-      <div class="brand-option" data-brand="runclub" onclick="switchBrand('runclub')">
-        <span class="brand-dot" style="background:#00f2ea"></span> Runclub
-      </div>
-      <div class="brand-option" data-brand="runnerpro" onclick="switchBrand('runnerpro')">
-        <span class="brand-dot" style="background:#f39c12"></span> RunnerPro
-      </div>
+  <div class="brand-list">
+    <div class="brand-option selected" data-brand="ceomedia" onclick="switchBrand('ceomedia')">
+      <span class="brand-dot" style="background:#bb86fc"></span> CEO Media
+    </div>
+    <div class="brand-option" data-brand="runclub" onclick="switchBrand('runclub')">
+      <span class="brand-dot" style="background:#00f2ea"></span> Runclub
+    </div>
+    <div class="brand-option" data-brand="runnerpro" onclick="switchBrand('runnerpro')">
+      <span class="brand-dot" style="background:#f39c12"></span> RunnerPro
     </div>
   </div>
 
@@ -335,6 +379,7 @@ body {
     <div class="topbar-title" id="main-title">Pipeline — CEO Media</div>
     <button class="topbar-btn" onclick="openParrilla()"><span class="btn-icon">&#128197;</span> Parrilla</button>
     <button class="topbar-btn" onclick="openNuevaIdea()"><span class="btn-icon">&#43;</span> Nueva idea</button>
+    <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">&#9790;</button>
   </div>
   <div class="kanban" id="kanban"></div>
 </div>
@@ -417,27 +462,26 @@ const typeLabels = { drum: "DRUM", buffer: "BUFFER", reu: "REU" };
 const typeTags = { drum: "tag-drum", buffer: "tag-buffer", reu: "tag-reu" };
 
 // ── Brand switching ──
-function toggleBrandDropdown() {
-  const list = document.getElementById('brand-list');
-  const btn = document.querySelector('.brand-dropdown-btn');
-  list.classList.toggle('open');
-  btn.classList.toggle('open');
-}
-
 function switchBrand(brand) {
   currentBrand = brand;
-  document.getElementById('brand-label').textContent = brandConfig[brand].label;
   document.getElementById('main-title').textContent = 'Pipeline — ' + brandConfig[brand].label;
-  // Update selected state
   document.querySelectorAll('.brand-option').forEach(o => o.classList.remove('selected'));
   document.querySelector(`.brand-option[data-brand="${brand}"]`).classList.add('selected');
-  // Close dropdown
-  document.getElementById('brand-list').classList.remove('open');
-  document.querySelector('.brand-dropdown-btn').classList.remove('open');
   renderKanban();
 }
 
-function showView() { /* future views */ }
+// ── Theme toggle ──
+let isDark = localStorage.getItem('theme') !== 'light';
+function applyTheme() {
+  document.body.classList.toggle('light', !isDark);
+  document.getElementById('theme-toggle').textContent = isDark ? '\u263E' : '\u2600';
+}
+function toggleTheme() {
+  isDark = !isDark;
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  applyTheme();
+}
+applyTheme();
 
 // ── Kanban render ──
 function renderKanban() {
@@ -546,7 +590,8 @@ async function executeProcess(endpoint, btn) {
   btn.className = 'execute-btn loading'; btn.textContent = 'Ejecutando...';
   logDiv.innerHTML = ''; logDiv.classList.add('active'); cancelBtn.classList.add('active');
   try {
-    const res = await fetch('/api/cadena/run', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({process:endpoint,semana,context}) });
+    const parrilla = getParrillaForScript();
+    const res = await fetch('/api/cadena/run', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({process:endpoint,semana,context,parrilla,brand:currentBrand}) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error desconocido');
     currentRunId = data.runId;
@@ -584,48 +629,108 @@ async function cancelProcess(endpoint) {
   try { await fetch('/api/pipeline/cancel/'+currentRunId,{method:'POST'}); addLogLine(document.getElementById('log-'+endpoint),'Cancelado por el usuario','error'); } catch(e){}
 }
 
-// ── Parrilla ──
-const brandParrillas = {
-  ceomedia: {
-    sub:"40+ piezas/semana",
-    rows:[
-      {ref:"Veneno",qty:"15",tiktok:"7 nativos",ig:"5 reels + 3 resubidas",yt:"—",intencion:"Alcance + Viralizacion"},
-      {ref:"Victor Heras",qty:"14",tiktok:"5 nativos",ig:"3 reels + 2 resubidas",yt:"3 shorts + 1 long",intencion:"Autoridad + Educacion + SEO"},
-      {ref:"Andrea",qty:"7",tiktok:"4 nativos",ig:"2 reels + 1 resubida",yt:"—",intencion:"Lifestyle + Conexion"},
-      {ref:"Post Personal",qty:"2",tiktok:"—",ig:"1 carrusel + 1 estatico",yt:"—",intencion:"Educacion + Guardados"},
-      {ref:"Stories",qty:"5-7",tiktok:"—",ig:"5-7 stories diarias",yt:"—",intencion:"Cercania + Dia a dia"},
-    ],
-    total:{qty:"40+",tiktok:"~16",ig:"~18-20",yt:"~4"},
-  },
-  runclub: {
-    sub:"Parrilla por definir",
-    rows:[
-      {ref:"Comunidad",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Comunidad + Engagement"},
-      {ref:"Entrenos",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Educacion + Valor"},
-      {ref:"Eventos",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Difusion + Captacion"},
-    ],
-    total:{qty:"Por definir",tiktok:"—",ig:"—",yt:"—"},
-  },
-  runnerpro: {
-    sub:"Parrilla por definir",
-    rows:[
-      {ref:"Educacion",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Educacion + SEO"},
-      {ref:"Producto",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Conversion + Features"},
-      {ref:"Comunidad",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Community + Engagement"},
-    ],
-    total:{qty:"Por definir",tiktok:"—",ig:"—",yt:"—"},
-  },
+// ── Parrilla (editable, localStorage, pilar-based) ──
+const notionPilares = ['🏃🏻 Educación','❤️‍🔥 Community','📱⚡ Producto','⚡branding','trendyyy','Mario Mola','🗓️ Lifestyle (Sport+Work)','🏟️ Comunidad','📣 Educar','🟠 WHY','❤️‍🔥 Inspiracion','📹 VLOG','🎬 Andrea','⚡ Beltrán','📝 Script','🎯 Víctor Heras','🐍 Veneno','📸 Post Personal','📖 Stories','❤️🔥 Community'];
+
+// Pilares that have their own workflow/script
+const pilaresConFlujo = ['🐍 Veneno','🎯 Víctor Heras','🎬 Andrea','📸 Post Personal','📖 Stories'];
+
+const defaultParrillas = {
+  ceomedia: [
+    {pilar:"🐍 Veneno",qty:"15",tiktok:"7 nativos",ig:"5 reels + 3 resubidas",yt:"—",intencion:"Alcance + Viralizacion"},
+    {pilar:"🎯 Víctor Heras",qty:"14",tiktok:"5 nativos",ig:"3 reels + 2 resubidas",yt:"3 shorts + 1 long",intencion:"Autoridad + Educacion + SEO"},
+    {pilar:"🎬 Andrea",qty:"7",tiktok:"4 nativos",ig:"2 reels + 1 resubida",yt:"—",intencion:"Lifestyle + Conexion"},
+    {pilar:"📸 Post Personal",qty:"2",tiktok:"—",ig:"1 carrusel + 1 estatico",yt:"—",intencion:"Educacion + Guardados"},
+    {pilar:"📖 Stories",qty:"5-7",tiktok:"—",ig:"5-7 stories diarias",yt:"—",intencion:"Cercania + Dia a dia"},
+  ],
+  runclub: [
+    {pilar:"🏟️ Comunidad",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Comunidad + Engagement"},
+    {pilar:"🏃🏻 Educación",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Educacion + Valor"},
+  ],
+  runnerpro: [
+    {pilar:"🏃🏻 Educación",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Educacion + SEO"},
+    {pilar:"📱⚡ Producto",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Conversion + Features"},
+  ],
 };
 
+function getParrilla(brand) {
+  const key = 'parrilla_' + brand;
+  const saved = localStorage.getItem(key);
+  if (saved) { try { return JSON.parse(saved); } catch(e){} }
+  return JSON.parse(JSON.stringify(defaultParrillas[brand] || []));
+}
+function saveParrilla(brand, rows) {
+  localStorage.setItem('parrilla_' + brand, JSON.stringify(rows));
+}
+
 function openParrilla() {
-  const p = brandParrillas[currentBrand];
   const bl = brandConfig[currentBrand].label;
-  const rowsHTML = p.rows.map(r => `<tr><td style="font-weight:600">${r.ref}</td><td style="text-align:center;font-weight:600">${r.qty}</td><td style="text-align:center${r.tiktok==='—'?';color:#555':''}">${r.tiktok}</td><td style="text-align:center${r.ig==='—'?';color:#555':''}">${r.ig}</td><td style="text-align:center${r.yt==='—'?';color:#555':''}">${r.yt}</td><td>${r.intencion}</td></tr>`).join('');
+  const rows = getParrilla(currentBrand);
+
+  const pilarOptions = notionPilares.map(p => `<option value="${p}">${p}</option>`).join('');
+
+  const rowsHTML = rows.map((r, i) => {
+    const hasFlujo = pilaresConFlujo.includes(r.pilar);
+    const statusHTML = hasFlujo
+      ? '<span class="parrilla-status ready">Flujo activo</span>'
+      : '<span class="parrilla-status pending">Por crear</span>';
+    return `<tr data-idx="${i}">
+      <td><select class="p-pilar" onchange="parillaChanged()">${notionPilares.map(p => `<option value="${p}"${p===r.pilar?' selected':''}>${p}</option>`).join('')}</select></td>
+      <td><input class="p-qty" value="${r.qty}" onchange="parillaChanged()" style="text-align:center;width:60px"></td>
+      <td><input class="p-tiktok" value="${r.tiktok}" onchange="parillaChanged()" style="text-align:center"></td>
+      <td><input class="p-ig" value="${r.ig}" onchange="parillaChanged()" style="text-align:center"></td>
+      <td><input class="p-yt" value="${r.yt}" onchange="parillaChanged()" style="text-align:center"></td>
+      <td><input class="p-intencion" value="${r.intencion}" onchange="parillaChanged()"></td>
+      <td style="text-align:center">${statusHTML}</td>
+      <td><button class="parrilla-del" onclick="parrillaDeleteRow(${i})" title="Eliminar fila">&#10005;</button></td>
+    </tr>`;
+  }).join('');
+
   document.getElementById('popup-content').innerHTML = `
-    <div class="popup-header" style="background:#2a2a2a"><div><div class="popup-header-title">Parrilla — ${bl}</div><div class="popup-header-sub">${p.sub}</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div>
-    <div class="popup-body" style="overflow-x:auto"><table class="parrilla-table"><tr><th>Referente</th><th style="text-align:center">Qty/Sem</th><th style="text-align:center">TikTok</th><th style="text-align:center">Instagram</th><th style="text-align:center">YouTube</th><th>Intencion</th></tr>${rowsHTML}<tr class="parrilla-total"><td>TOTAL</td><td style="text-align:center">${p.total.qty}</td><td style="text-align:center">${p.total.tiktok}</td><td style="text-align:center">${p.total.ig}</td><td style="text-align:center">${p.total.yt}</td><td></td></tr></table></div>`;
+    <div class="popup-header" style="background:#2a2a2a"><div><div class="popup-header-title">Parrilla — ${bl}</div><div class="popup-header-sub">Edita inline · Se guarda automaticamente · Ligada a pilares de Notion</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div>
+    <div class="popup-body" style="overflow-x:auto">
+      <table class="parrilla-table" id="parrilla-table">
+        <tr><th>Pilar de contenido</th><th style="text-align:center;width:70px">Qty/Sem</th><th style="text-align:center">TikTok</th><th style="text-align:center">Instagram</th><th style="text-align:center">YouTube</th><th>Intencion</th><th style="width:80px;text-align:center">Estado</th><th style="width:30px"></th></tr>
+        ${rowsHTML}
+      </table>
+      <button class="parrilla-add-row" onclick="parrillaAddRow()">+ Anadir pilar</button>
+    </div>`;
   document.getElementById('overlay').classList.add('active');
 }
+
+function parillaChanged() {
+  const table = document.getElementById('parrilla-table');
+  const trs = table.querySelectorAll('tr[data-idx]');
+  const rows = [];
+  trs.forEach(tr => {
+    rows.push({
+      pilar: tr.querySelector('.p-pilar').value,
+      qty: tr.querySelector('.p-qty').value,
+      tiktok: tr.querySelector('.p-tiktok').value,
+      ig: tr.querySelector('.p-ig').value,
+      yt: tr.querySelector('.p-yt').value,
+      intencion: tr.querySelector('.p-intencion').value,
+    });
+  });
+  saveParrilla(currentBrand, rows);
+}
+
+function parrillaAddRow() {
+  const rows = getParrilla(currentBrand);
+  rows.push({pilar: notionPilares[0], qty:"—", tiktok:"—", ig:"—", yt:"—", intencion:""});
+  saveParrilla(currentBrand, rows);
+  openParrilla();
+}
+
+function parrillaDeleteRow(idx) {
+  const rows = getParrilla(currentBrand);
+  rows.splice(idx, 1);
+  saveParrilla(currentBrand, rows);
+  openParrilla();
+}
+
+// Get parrilla data for scripts (used by executeProcess)
+function getParrillaForScript() { return getParrilla(currentBrand); }
 
 // ── Nueva Idea ──
 const CALENDARIO_DB = '13da67fd-29b2-801f-bac3-c72d4fb45bf2';
@@ -708,13 +813,6 @@ async function submitIdea() {
 
 // Escape to close
 document.addEventListener('keydown', e => { if (e.key==='Escape') closePopup(); });
-// Close dropdown on outside click
-document.addEventListener('click', e => {
-  if (!e.target.closest('.brand-dropdown')) {
-    document.getElementById('brand-list').classList.remove('open');
-    document.querySelector('.brand-dropdown-btn').classList.remove('open');
-  }
-});
 
 // Auto-reconnect
 (async function reconnectActive() {
