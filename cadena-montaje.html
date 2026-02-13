@@ -89,6 +89,7 @@ color: #fff; font-size: 8px; font-weight: 900;
 letter-spacing: 0.5px; padding: 1px 6px; border-radius: 8px;
 }
 .step-name { font-size: 11px; font-weight: 700; color: #fff; line-height: 1.3; margin-top: 2px; }
+.step-owner { font-size: 9px; color: #aaa; margin-top: 3px; opacity: 0.8; }
 .step-connector { display: flex; justify-content: center; padding: 4px 0; }
 .step-connector-line { width: 2px; height: 16px; }
 .chain-connector { display: flex; align-items: center; padding: 0 2px; align-self: center; }
@@ -235,26 +236,29 @@ border-radius: 6px; font-size: 11px; font-weight: 600;
 </div>  <script>    // Data
 const phases = [      {
 id: "idea", emoji: "💡", title: "IDEA", color: "#1B4F72",
-steps: [          { name: "Crea Idea", type: "drum", popupId: "crea-idea" },
-{ name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa" },
-{ name: "Reu Validacion Ideas", type: "reu", popupId: "reu-validacion" },
-{ name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica" },
+steps: [
+  { name: "Crea Idea", type: "drum", popupId: "crea-idea", owner: "👩 Lucia · 🤖 Runni" },
+  { name: "Revisa Ideas", type: "buffer", popupId: "lucia-revisa", owner: "👩 Lucia" },
+  { name: "Reu Validacion Ideas", type: "reu", popupId: "reu-validacion", owner: "👩 Lucia · 👩‍💼 Carmen · 👨 Cristobal" },
+  { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica", owner: "👩 Lucia" },
 ]
 },
 {
 id: "creation", emoji: "✍️", title: "CREACION GUION", color: "#7D3C98",
-steps: [          { name: "Guion IA", type: "drum", popupId: "guion-ia" },
-{ name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones" },
-{ name: "Reu Validacion Guiones", type: "reu", popupId: "reu-validacion-guiones" },
-{ name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones" },
+steps: [
+  { name: "Guion IA", type: "drum", popupId: "guion-ia", owner: "👩 Lucia · 🤖 Runni" },
+  { name: "Revisa Guiones", type: "buffer", popupId: "lucia-revisa-guiones", owner: "👩 Lucia" },
+  { name: "Reu Validacion Guiones", type: "reu", popupId: "reu-validacion-guiones", owner: "👩 Lucia · 👩‍💼 Carmen" },
+  { name: "Aplica Cambios", type: "buffer", popupId: "lucia-aplica-guiones", owner: "👩 Lucia" },
 ]
 },
 {
 id: "traction", emoji: "🎬", title: "CREACION VISUAL", color: "#D35400",
-steps: [          { name: "Visual IA", type: "drum", popupId: "visual-ia" },
-{ name: "Revisa Visuales", type: "buffer", popupId: "revisa-visuales" },
-{ name: "Reu Validacion Visuales", type: "reu", popupId: "reu-validacion-visuales" },
-{ name: "Aplica Cambios", type: "buffer", popupId: "aplica-visuales" },
+steps: [
+  { name: "Visual IA", type: "drum", popupId: "visual-ia", owner: "👩 Lucia · 🤖 Runni" },
+  { name: "Revisa Visuales", type: "buffer", popupId: "revisa-visuales", owner: "👩 Lucia" },
+  { name: "Reu Validacion Visuales", type: "reu", popupId: "reu-validacion-visuales", owner: "👩 Lucia · 👩‍💼 Carmen" },
+  { name: "Aplica Cambios", type: "buffer", popupId: "aplica-visuales", owner: "👩 Lucia" },
 ]
 },
 { id: "recording", emoji: "📷", title: "GRABACION", color: "#1E8449", construction: true, steps: [] },
@@ -305,7 +309,7 @@ stepEl.style.borderColor = st.border;
 stepEl.style.boxShadow = `0 0 8px ${st.accent}11`;
 stepEl.style.transform = 'scale(1)';
 };
-stepEl.innerHTML = `            <div class="step-badge" style="background:${st.accent}">${st.label}</div>            <div class="step-name">${st.icon} ${step.name}</div>          `;
+stepEl.innerHTML = `<div class="step-badge" style="background:${st.accent}">${st.label}</div><div class="step-name">${st.icon} ${step.name}</div>${step.owner ? `<div class="step-owner">${step.owner}</div>` : ''}`;
 stepsDiv.appendChild(stepEl);
 if (si < phase.steps.length - 1) {
 const conn = document.createElement('div');
