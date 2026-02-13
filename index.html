@@ -189,7 +189,7 @@ body.light .parrilla-table select { background: #fff; color: #37352f; border-col
 .overlay.active { display: flex; }
 .popup {
   background: #252525; border-radius: 8px; border: 1px solid #333;
-  max-width: 860px; width: 100%; max-height: 90vh; overflow-y: auto;
+  max-width: 1100px; width: 100%; max-height: 90vh; overflow-y: auto;
 }
 .popup-header {
   padding: 16px 24px; border-radius: 8px 8px 0 0;
@@ -272,9 +272,11 @@ body.light .parrilla-table select { background: #fff; color: #37352f; border-col
 /* Editable parrilla */
 .parrilla-table td input, .parrilla-table td select {
   background: transparent; color: inherit; border: 1px solid transparent;
-  border-radius: 3px; padding: 4px 6px; font-size: 12px; font-family: inherit;
+  border-radius: 3px; padding: 4px 6px; font-size: 13px; font-family: inherit;
   width: 100%; transition: border-color 0.15s;
 }
+.p-pilar { min-width: 200px; font-size: 13px !important; }
+.p-intencion { min-width: 200px; font-size: 13px !important; }
 .parrilla-table td input:hover, .parrilla-table td select:hover { border-color: #444; }
 .parrilla-table td input:focus, .parrilla-table td select:focus { border-color: #bb86fc; outline: none; background: #2a2a2a; }
 .parrilla-add-row {
@@ -295,8 +297,8 @@ body.light .parrilla-table select { background: #fff; color: #37352f; border-col
 /* Day toggles */
 .day-toggles { display: flex; gap: 2px; }
 .day-tog {
-  width: 22px; height: 22px; border-radius: 3px; border: 1px solid #333;
-  background: transparent; color: #555; font-size: 9px; font-weight: 700;
+  width: 26px; height: 26px; border-radius: 3px; border: 1px solid #333;
+  background: transparent; color: #555; font-size: 10px; font-weight: 700;
   cursor: pointer; transition: all 0.15s; font-family: inherit;
   display: flex; align-items: center; justify-content: center;
 }
@@ -306,8 +308,20 @@ body.light .day-tog { border-color: #d6d3ce; color: #bbb; }
 body.light .day-tog:hover { border-color: #999; color: #666; }
 body.light .day-tog.on { background: #7d3c9818; border-color: #7d3c9855; color: #7d3c98; }
 /* Number inputs */
-.p-num { width: 50px !important; text-align: center; }
+.p-num { width: 55px !important; text-align: center; }
 .p-num-auto { color: #6b6b6b; font-style: italic; }
+/* Save button */
+.parrilla-save-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 20px; margin-top: 8px; margin-left: 12px; border-radius: 4px;
+  background: #27ae6018; border: 1px solid #27ae6055;
+  color: #27ae60; font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: all 0.2s;
+}
+.parrilla-save-btn:hover { background: #27ae60; color: #fff; border-color: #27ae60; }
+.parrilla-save-btn.saved { background: #27ae60; color: #fff; pointer-events: none; }
+body.light .parrilla-save-btn { background: #27ae6010; border-color: #27ae6044; color: #1e8449; }
+body.light .parrilla-save-btn:hover { background: #27ae60; color: #fff; }
 
 /* Nueva idea form */
 .idea-form-field { flex: 1; min-width: 180px; }
@@ -671,7 +685,17 @@ const defaultParrillas = {
 function getParrilla(brand) {
   const key = 'parrilla_' + brand;
   const saved = localStorage.getItem(key);
-  if (saved) { try { return JSON.parse(saved); } catch(e){} }
+  if (saved) {
+    try {
+      const rows = JSON.parse(saved);
+      // Ensure dias array exists on every row (migrate old data)
+      const defaults = defaultParrillas[brand] || [];
+      rows.forEach((r, i) => {
+        if (!r.dias) r.dias = (defaults[i] && defaults[i].dias) ? [...defaults[i].dias] : [0,0,0,0,0,0,0];
+      });
+      return rows;
+    } catch(e){}
+  }
   return JSON.parse(JSON.stringify(defaultParrillas[brand] || []));
 }
 function saveParrilla(brand, rows) {
@@ -714,14 +738,14 @@ function openParrilla() {
     <div class="popup-body" style="overflow-x:auto">
       <table class="parrilla-table" id="parrilla-table">
         <tr>
-          <th>Pilar</th>
-          <th style="text-align:center;width:65px">Qty/Sem</th>
-          <th style="text-align:center;width:65px">TikTok</th>
-          <th style="text-align:center;width:65px">Insta</th>
-          <th style="text-align:center;width:65px">YouTube</th>
-          <th style="width:170px">Dias</th>
-          <th>Intencion</th>
-          <th style="width:70px;text-align:center">Estado</th>
+          <th style="min-width:200px">Pilar</th>
+          <th style="text-align:center;width:70px">Qty/Sem</th>
+          <th style="text-align:center;width:70px">TikTok</th>
+          <th style="text-align:center;width:70px">Insta</th>
+          <th style="text-align:center;width:70px">YouTube</th>
+          <th style="width:210px">Dias</th>
+          <th style="min-width:200px">Intencion</th>
+          <th style="width:80px;text-align:center">Estado</th>
           <th style="width:28px"></th>
         </tr>
         ${rowsHTML}
@@ -734,7 +758,10 @@ function openParrilla() {
           <td colspan="4"></td>
         </tr>
       </table>
-      <button class="parrilla-add-row" onclick="parrillaAddRow()">+ Anadir pilar</button>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+        <button class="parrilla-add-row" onclick="parrillaAddRow()" style="margin-top:0">+ Anadir pilar</button>
+        <button class="parrilla-save-btn" id="parrilla-save-btn" onclick="parrillaGuardar()">&#10003; Guardar</button>
+      </div>
     </div>`;
   document.getElementById('overlay').classList.add('active');
 }
@@ -800,16 +827,17 @@ function parrillaChanged() {
 function readParrillaFromDOM() {
   const table = document.getElementById('parrilla-table');
   const trs = table.querySelectorAll('tr[data-idx]');
-  const saved = getParrilla(currentBrand); // for dias
   const rows = [];
   trs.forEach((tr, i) => {
+    const dayBtns = tr.querySelectorAll('.day-tog');
+    const dias = Array.from(dayBtns).map(b => b.classList.contains('on') ? 1 : 0);
     rows.push({
       pilar: tr.querySelector('.p-pilar').value,
       qty: parseInt(tr.querySelector('.p-qty').value) || 0,
       tiktok: parseInt(tr.querySelector('.p-tiktok').value) || 0,
       ig: parseInt(tr.querySelector('.p-ig').value) || 0,
       yt: parseInt(tr.querySelector('.p-yt').value) || 0,
-      dias: saved[i] ? saved[i].dias : [0,0,0,0,0,0,0],
+      dias: dias.length === 7 ? dias : [0,0,0,0,0,0,0],
       intencion: tr.querySelector('.p-intencion').value,
     });
   });
@@ -838,6 +866,15 @@ function parrillaDeleteRow(idx) {
   rows.splice(idx, 1);
   saveParrilla(currentBrand, rows);
   openParrilla();
+}
+
+function parrillaGuardar() {
+  const rows = readParrillaFromDOM();
+  saveParrilla(currentBrand, rows);
+  const btn = document.getElementById('parrilla-save-btn');
+  btn.classList.add('saved');
+  btn.innerHTML = '&#10003; Guardado';
+  setTimeout(() => { btn.classList.remove('saved'); btn.innerHTML = '&#10003; Guardar'; }, 2000);
 }
 
 function getParrillaForScript() { return getParrilla(currentBrand); }
