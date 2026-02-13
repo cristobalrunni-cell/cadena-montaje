@@ -289,9 +289,25 @@ body.light .parrilla-table select { background: #fff; color: #37352f; border-col
   font-size: 14px; padding: 2px 4px; border-radius: 3px; transition: color 0.15s;
 }
 .parrilla-del:hover { color: #e74c3c; }
-.parrilla-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+.parrilla-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
 .parrilla-status.ready { background: #27ae6022; color: #57d48f; }
 .parrilla-status.pending { background: #f39c1222; color: #f39c12; }
+/* Day toggles */
+.day-toggles { display: flex; gap: 2px; }
+.day-tog {
+  width: 22px; height: 22px; border-radius: 3px; border: 1px solid #333;
+  background: transparent; color: #555; font-size: 9px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+}
+.day-tog:hover { border-color: #666; color: #aaa; }
+.day-tog.on { background: #bb86fc22; border-color: #bb86fc55; color: #bb86fc; }
+body.light .day-tog { border-color: #d6d3ce; color: #bbb; }
+body.light .day-tog:hover { border-color: #999; color: #666; }
+body.light .day-tog.on { background: #7d3c9818; border-color: #7d3c9855; color: #7d3c98; }
+/* Number inputs */
+.p-num { width: 50px !important; text-align: center; }
+.p-num-auto { color: #6b6b6b; font-style: italic; }
 
 /* Nueva idea form */
 .idea-form-field { flex: 1; min-width: 180px; }
@@ -629,27 +645,26 @@ async function cancelProcess(endpoint) {
   try { await fetch('/api/pipeline/cancel/'+currentRunId,{method:'POST'}); addLogLine(document.getElementById('log-'+endpoint),'Cancelado por el usuario','error'); } catch(e){}
 }
 
-// ── Parrilla (editable, localStorage, pilar-based) ──
+// ── Parrilla (editable, localStorage, pilar-based, auto-recalc) ──
 const notionPilares = ['🏃🏻 Educación','❤️‍🔥 Community','📱⚡ Producto','⚡branding','trendyyy','Mario Mola','🗓️ Lifestyle (Sport+Work)','🏟️ Comunidad','📣 Educar','🟠 WHY','❤️‍🔥 Inspiracion','📹 VLOG','🎬 Andrea','⚡ Beltrán','📝 Script','🎯 Víctor Heras','🐍 Veneno','📸 Post Personal','📖 Stories','❤️🔥 Community'];
-
-// Pilares that have their own workflow/script
 const pilaresConFlujo = ['🐍 Veneno','🎯 Víctor Heras','🎬 Andrea','📸 Post Personal','📖 Stories'];
+const dayNames = ['L','M','X','J','V','S','D'];
 
 const defaultParrillas = {
   ceomedia: [
-    {pilar:"🐍 Veneno",qty:"15",tiktok:"7 nativos",ig:"5 reels + 3 resubidas",yt:"—",intencion:"Alcance + Viralizacion"},
-    {pilar:"🎯 Víctor Heras",qty:"14",tiktok:"5 nativos",ig:"3 reels + 2 resubidas",yt:"3 shorts + 1 long",intencion:"Autoridad + Educacion + SEO"},
-    {pilar:"🎬 Andrea",qty:"7",tiktok:"4 nativos",ig:"2 reels + 1 resubida",yt:"—",intencion:"Lifestyle + Conexion"},
-    {pilar:"📸 Post Personal",qty:"2",tiktok:"—",ig:"1 carrusel + 1 estatico",yt:"—",intencion:"Educacion + Guardados"},
-    {pilar:"📖 Stories",qty:"5-7",tiktok:"—",ig:"5-7 stories diarias",yt:"—",intencion:"Cercania + Dia a dia"},
+    {pilar:"🐍 Veneno",qty:15,tiktok:7,ig:5,yt:0,dias:[1,1,1,1,1,1,1],intencion:"Alcance + Viralizacion"},
+    {pilar:"🎯 Víctor Heras",qty:14,tiktok:5,ig:5,yt:4,dias:[1,1,1,1,1,0,0],intencion:"Autoridad + Educacion + SEO"},
+    {pilar:"🎬 Andrea",qty:7,tiktok:4,ig:3,yt:0,dias:[1,0,1,0,1,0,0],intencion:"Lifestyle + Conexion"},
+    {pilar:"📸 Post Personal",qty:2,tiktok:0,ig:2,yt:0,dias:[0,1,0,0,1,0,0],intencion:"Educacion + Guardados"},
+    {pilar:"📖 Stories",qty:7,tiktok:0,ig:7,yt:0,dias:[1,1,1,1,1,1,1],intencion:"Cercania + Dia a dia"},
   ],
   runclub: [
-    {pilar:"🏟️ Comunidad",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Comunidad + Engagement"},
-    {pilar:"🏃🏻 Educación",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Educacion + Valor"},
+    {pilar:"🏟️ Comunidad",qty:0,tiktok:0,ig:0,yt:0,dias:[0,0,0,0,0,0,0],intencion:"Comunidad + Engagement"},
+    {pilar:"🏃🏻 Educación",qty:0,tiktok:0,ig:0,yt:0,dias:[0,0,0,0,0,0,0],intencion:"Educacion + Valor"},
   ],
   runnerpro: [
-    {pilar:"🏃🏻 Educación",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Educacion + SEO"},
-    {pilar:"📱⚡ Producto",qty:"—",tiktok:"—",ig:"—",yt:"—",intencion:"Conversion + Features"},
+    {pilar:"🏃🏻 Educación",qty:0,tiktok:0,ig:0,yt:0,dias:[0,0,0,0,0,0,0],intencion:"Educacion + SEO"},
+    {pilar:"📱⚡ Producto",qty:0,tiktok:0,ig:0,yt:0,dias:[0,0,0,0,0,0,0],intencion:"Conversion + Features"},
   ],
 };
 
@@ -667,57 +682,153 @@ function openParrilla() {
   const bl = brandConfig[currentBrand].label;
   const rows = getParrilla(currentBrand);
 
-  const pilarOptions = notionPilares.map(p => `<option value="${p}">${p}</option>`).join('');
-
   const rowsHTML = rows.map((r, i) => {
     const hasFlujo = pilaresConFlujo.includes(r.pilar);
     const statusHTML = hasFlujo
       ? '<span class="parrilla-status ready">Flujo activo</span>'
       : '<span class="parrilla-status pending">Por crear</span>';
+    const diasHTML = dayNames.map((d, di) =>
+      `<button class="day-tog${r.dias && r.dias[di] ? ' on' : ''}" data-row="${i}" data-day="${di}" onclick="parrillaToggleDay(${i},${di})">${d}</button>`
+    ).join('');
     return `<tr data-idx="${i}">
-      <td><select class="p-pilar" onchange="parillaChanged()">${notionPilares.map(p => `<option value="${p}"${p===r.pilar?' selected':''}>${p}</option>`).join('')}</select></td>
-      <td><input class="p-qty" value="${r.qty}" onchange="parillaChanged()" style="text-align:center;width:60px"></td>
-      <td><input class="p-tiktok" value="${r.tiktok}" onchange="parillaChanged()" style="text-align:center"></td>
-      <td><input class="p-ig" value="${r.ig}" onchange="parillaChanged()" style="text-align:center"></td>
-      <td><input class="p-yt" value="${r.yt}" onchange="parillaChanged()" style="text-align:center"></td>
-      <td><input class="p-intencion" value="${r.intencion}" onchange="parillaChanged()"></td>
+      <td><select class="p-pilar" onchange="parrillaChanged()">${notionPilares.map(p => `<option value="${p}"${p===r.pilar?' selected':''}>${p}</option>`).join('')}</select></td>
+      <td><input type="number" class="p-qty p-num" value="${r.qty}" min="0" onchange="parrillaQtyChanged(${i})" oninput="parrillaQtyChanged(${i})"></td>
+      <td><input type="number" class="p-tiktok p-num" value="${r.tiktok}" min="0" onchange="parrillaNetChanged(${i},'tiktok')" oninput="parrillaNetChanged(${i},'tiktok')"></td>
+      <td><input type="number" class="p-ig p-num" value="${r.ig}" min="0" onchange="parrillaNetChanged(${i},'ig')" oninput="parrillaNetChanged(${i},'ig')"></td>
+      <td><input type="number" class="p-yt p-num" value="${r.yt}" min="0" onchange="parrillaNetChanged(${i},'yt')" oninput="parrillaNetChanged(${i},'yt')"></td>
+      <td><div class="day-toggles">${diasHTML}</div></td>
+      <td><input class="p-intencion" value="${r.intencion}" onchange="parrillaChanged()"></td>
       <td style="text-align:center">${statusHTML}</td>
       <td><button class="parrilla-del" onclick="parrillaDeleteRow(${i})" title="Eliminar fila">&#10005;</button></td>
     </tr>`;
   }).join('');
 
+  // Totals
+  const totQty = rows.reduce((s,r) => s + (parseInt(r.qty)||0), 0);
+  const totTk = rows.reduce((s,r) => s + (parseInt(r.tiktok)||0), 0);
+  const totIg = rows.reduce((s,r) => s + (parseInt(r.ig)||0), 0);
+  const totYt = rows.reduce((s,r) => s + (parseInt(r.yt)||0), 0);
+
   document.getElementById('popup-content').innerHTML = `
-    <div class="popup-header" style="background:#2a2a2a"><div><div class="popup-header-title">Parrilla — ${bl}</div><div class="popup-header-sub">Edita inline · Se guarda automaticamente · Ligada a pilares de Notion</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div>
+    <div class="popup-header" style="background:#2a2a2a"><div><div class="popup-header-title">Parrilla — ${bl}</div><div class="popup-header-sub">Edita cantidades · Se recalcula automaticamente · Guardado en tu navegador</div></div><button class="popup-close" onclick="closePopup()">&#10005;</button></div>
     <div class="popup-body" style="overflow-x:auto">
       <table class="parrilla-table" id="parrilla-table">
-        <tr><th>Pilar de contenido</th><th style="text-align:center;width:70px">Qty/Sem</th><th style="text-align:center">TikTok</th><th style="text-align:center">Instagram</th><th style="text-align:center">YouTube</th><th>Intencion</th><th style="width:80px;text-align:center">Estado</th><th style="width:30px"></th></tr>
+        <tr>
+          <th>Pilar</th>
+          <th style="text-align:center;width:65px">Qty/Sem</th>
+          <th style="text-align:center;width:65px">TikTok</th>
+          <th style="text-align:center;width:65px">Insta</th>
+          <th style="text-align:center;width:65px">YouTube</th>
+          <th style="width:170px">Dias</th>
+          <th>Intencion</th>
+          <th style="width:70px;text-align:center">Estado</th>
+          <th style="width:28px"></th>
+        </tr>
         ${rowsHTML}
+        <tr class="parrilla-total">
+          <td>TOTAL</td>
+          <td style="text-align:center">${totQty}</td>
+          <td style="text-align:center">${totTk}</td>
+          <td style="text-align:center">${totIg}</td>
+          <td style="text-align:center">${totYt}</td>
+          <td colspan="4"></td>
+        </tr>
       </table>
       <button class="parrilla-add-row" onclick="parrillaAddRow()">+ Anadir pilar</button>
     </div>`;
   document.getElementById('overlay').classList.add('active');
 }
 
-function parillaChanged() {
+// When qty changes: redistribute tiktok/ig keeping yt, tiktok gets half (rounded), ig gets the rest
+function parrillaQtyChanged(idx) {
+  const rows = readParrillaFromDOM();
+  const r = rows[idx];
+  const qty = parseInt(r.qty) || 0;
+  const yt = parseInt(r.yt) || 0;
+  const remaining = Math.max(0, qty - yt);
+  r.tiktok = Math.round(remaining / 2);
+  r.ig = remaining - r.tiktok;
+  saveParrilla(currentBrand, rows);
+  // Update DOM inputs without full re-render
+  const tr = document.querySelector(`tr[data-idx="${idx}"]`);
+  tr.querySelector('.p-tiktok').value = r.tiktok;
+  tr.querySelector('.p-ig').value = r.ig;
+  updateParrillaTotals(rows);
+}
+
+// When tiktok, ig, or yt changes: recalculate the other (ig = qty - tiktok - yt)
+function parrillaNetChanged(idx, field) {
+  const rows = readParrillaFromDOM();
+  const r = rows[idx];
+  const qty = parseInt(r.qty) || 0;
+  const tk = parseInt(r.tiktok) || 0;
+  const ig = parseInt(r.ig) || 0;
+  const yt = parseInt(r.yt) || 0;
+
+  if (field === 'tiktok') {
+    r.ig = Math.max(0, qty - tk - yt);
+    document.querySelector(`tr[data-idx="${idx}"] .p-ig`).value = r.ig;
+  } else if (field === 'ig') {
+    r.tiktok = Math.max(0, qty - ig - yt);
+    document.querySelector(`tr[data-idx="${idx}"] .p-tiktok`).value = r.tiktok;
+  } else if (field === 'yt') {
+    const remaining = Math.max(0, qty - yt);
+    r.tiktok = Math.round(remaining / 2);
+    r.ig = remaining - r.tiktok;
+    document.querySelector(`tr[data-idx="${idx}"] .p-tiktok`).value = r.tiktok;
+    document.querySelector(`tr[data-idx="${idx}"] .p-ig`).value = r.ig;
+  }
+  saveParrilla(currentBrand, rows);
+  updateParrillaTotals(rows);
+}
+
+function parrillaToggleDay(rowIdx, dayIdx) {
+  const rows = readParrillaFromDOM();
+  if (!rows[rowIdx].dias) rows[rowIdx].dias = [0,0,0,0,0,0,0];
+  rows[rowIdx].dias[dayIdx] = rows[rowIdx].dias[dayIdx] ? 0 : 1;
+  saveParrilla(currentBrand, rows);
+  const btn = document.querySelector(`button.day-tog[data-row="${rowIdx}"][data-day="${dayIdx}"]`);
+  btn.classList.toggle('on');
+}
+
+function parrillaChanged() {
+  const rows = readParrillaFromDOM();
+  saveParrilla(currentBrand, rows);
+  updateParrillaTotals(rows);
+}
+
+function readParrillaFromDOM() {
   const table = document.getElementById('parrilla-table');
   const trs = table.querySelectorAll('tr[data-idx]');
+  const saved = getParrilla(currentBrand); // for dias
   const rows = [];
-  trs.forEach(tr => {
+  trs.forEach((tr, i) => {
     rows.push({
       pilar: tr.querySelector('.p-pilar').value,
-      qty: tr.querySelector('.p-qty').value,
-      tiktok: tr.querySelector('.p-tiktok').value,
-      ig: tr.querySelector('.p-ig').value,
-      yt: tr.querySelector('.p-yt').value,
+      qty: parseInt(tr.querySelector('.p-qty').value) || 0,
+      tiktok: parseInt(tr.querySelector('.p-tiktok').value) || 0,
+      ig: parseInt(tr.querySelector('.p-ig').value) || 0,
+      yt: parseInt(tr.querySelector('.p-yt').value) || 0,
+      dias: saved[i] ? saved[i].dias : [0,0,0,0,0,0,0],
       intencion: tr.querySelector('.p-intencion').value,
     });
   });
-  saveParrilla(currentBrand, rows);
+  return rows;
+}
+
+function updateParrillaTotals(rows) {
+  const totalRow = document.querySelector('.parrilla-total');
+  if (!totalRow) return;
+  const tds = totalRow.querySelectorAll('td');
+  tds[1].textContent = rows.reduce((s,r) => s + (parseInt(r.qty)||0), 0);
+  tds[2].textContent = rows.reduce((s,r) => s + (parseInt(r.tiktok)||0), 0);
+  tds[3].textContent = rows.reduce((s,r) => s + (parseInt(r.ig)||0), 0);
+  tds[4].textContent = rows.reduce((s,r) => s + (parseInt(r.yt)||0), 0);
 }
 
 function parrillaAddRow() {
   const rows = getParrilla(currentBrand);
-  rows.push({pilar: notionPilares[0], qty:"—", tiktok:"—", ig:"—", yt:"—", intencion:""});
+  rows.push({pilar: notionPilares[0], qty:0, tiktok:0, ig:0, yt:0, dias:[0,0,0,0,0,0,0], intencion:""});
   saveParrilla(currentBrand, rows);
   openParrilla();
 }
@@ -729,7 +840,6 @@ function parrillaDeleteRow(idx) {
   openParrilla();
 }
 
-// Get parrilla data for scripts (used by executeProcess)
 function getParrillaForScript() { return getParrilla(currentBrand); }
 
 // ── Nueva Idea ──
