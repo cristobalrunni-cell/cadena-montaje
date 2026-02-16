@@ -847,44 +847,19 @@ body {
     <span class="icon">&#128451;</span> Bases de datos
   </div>
   <div class="brand-list" id="db-views" style="padding-left:28px;display:none">
-    <!-- Videos (Orgánico) -->
-    <div class="sidebar-sub-label" style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-tertiary);padding:8px 0 4px 4px;margin-top:2px">Videos</div>
-    <div class="brand-option db-nav selected" data-db="overview" data-mode="organico" onclick="switchDbView('overview','organico')">
+    <div class="brand-option db-nav selected" data-db="overview" onclick="switchDbView('overview')">
       <span class="brand-dot" style="background:#27ae60"></span> Overview
     </div>
-    <div class="brand-option db-nav" data-db="videos" data-mode="organico" onclick="switchDbView('videos','organico')">
+    <div class="brand-option db-nav" data-db="videos" onclick="switchDbView('videos')">
       <span class="brand-dot" style="background:#3498db"></span> Videos
     </div>
-    <div class="brand-option db-nav" data-db="scenes" data-mode="organico" onclick="switchDbView('scenes','organico')">
+    <div class="brand-option db-nav" data-db="scenes" onclick="switchDbView('scenes')">
       <span class="brand-dot" style="background:#8e44ad"></span> Scenes
     </div>
-    <div class="brand-option db-nav" data-db="analytics" data-mode="organico" onclick="switchDbView('analytics','organico')">
+    <div class="brand-option db-nav" data-db="analytics" onclick="switchDbView('analytics')">
       <span class="brand-dot" style="background:#e67e22"></span> Analytics
     </div>
-    <div class="brand-option db-nav" data-db="compare" data-mode="organico" onclick="switchDbView('compare','organico')">
-      <span class="brand-dot" style="background:#1abc9c"></span> Compare
-    </div>
-    <div class="brand-option db-nav" data-db="activity" data-mode="organico" onclick="switchDbView('activity','organico')">
-      <span class="brand-dot" style="background:#9b59b6"></span> Activity
-    </div>
-    <div class="brand-option db-nav" data-db="pipeline" data-mode="organico" onclick="switchDbView('pipeline','organico')">
-      <span class="brand-dot" style="background:#e74c3c"></span> Pipeline
-    </div>
-    <!-- Meta Ads -->
-    <div class="sidebar-sub-label" style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-tertiary);padding:10px 0 4px 4px;border-top:1px solid var(--border-default);margin-top:6px">Meta Ads</div>
-    <div class="brand-option db-nav" data-db="overview" data-mode="meta_ads" onclick="switchDbView('overview','meta_ads')">
-      <span class="brand-dot" style="background:#27ae60"></span> Overview
-    </div>
-    <div class="brand-option db-nav" data-db="videos" data-mode="meta_ads" onclick="switchDbView('videos','meta_ads')">
-      <span class="brand-dot" style="background:#3498db"></span> Ads
-    </div>
-    <div class="brand-option db-nav" data-db="analytics" data-mode="meta_ads" onclick="switchDbView('analytics','meta_ads')">
-      <span class="brand-dot" style="background:#e67e22"></span> Analytics
-    </div>
-    <div class="brand-option db-nav" data-db="compare" data-mode="meta_ads" onclick="switchDbView('compare','meta_ads')">
-      <span class="brand-dot" style="background:#1abc9c"></span> Compare
-    </div>
-    <div class="brand-option db-nav" data-db="pipeline" data-mode="meta_ads" onclick="switchDbView('pipeline','meta_ads')">
+    <div class="brand-option db-nav" data-db="pipeline" onclick="switchDbView('pipeline')">
       <span class="brand-dot" style="background:#e74c3c"></span> Pipeline
     </div>
   </div>
@@ -892,6 +867,34 @@ body {
   <!-- Calendario -->
   <div class="sidebar-item" data-view="calendario" onclick="showView('calendario')">
     <span class="icon">&#128197;</span> Calendario
+  </div>
+
+  <div class="sidebar-title">Operacional</div>
+
+  <!-- Dashboards (expandable) -->
+  <div class="sidebar-item" data-view="dashboards" onclick="showView('dashboards'); toggleExpand('dashboards')">
+    <span class="icon" id="dash-arrow" style="font-size:10px;transition:transform 0.15s">&#9654;</span>
+    <span class="icon">&#128202;</span> Dashboards
+  </div>
+  <div class="brand-list" id="dash-views" style="padding-left:28px;display:none">
+    <div class="brand-option dash-nav selected" data-opdash="acquisition" onclick="switchOpDash('acquisition')">
+      <span class="brand-dot" style="background:#e74c3c"></span> Adquisicion & Trial
+    </div>
+    <div class="brand-option dash-nav" data-opdash="retention" onclick="switchOpDash('retention')">
+      <span class="brand-dot" style="background:#f39c12"></span> Retencion & Churn
+    </div>
+    <div class="brand-option dash-nav" data-opdash="flow" onclick="switchOpDash('flow')">
+      <span class="brand-dot" style="background:#529CCA"></span> Flujo Mensual
+    </div>
+    <div class="brand-option dash-nav" data-opdash="clients" onclick="switchOpDash('clients')">
+      <span class="brand-dot" style="background:#9ca3af"></span> Base Clientes
+    </div>
+    <div class="brand-option dash-nav" data-opdash="revenue" onclick="switchOpDash('revenue')">
+      <span class="brand-dot" style="background:#6b7280"></span> Revenue
+    </div>
+    <div class="brand-option dash-nav" data-opdash="trial" onclick="switchOpDash('trial')">
+      <span class="brand-dot" style="background:#10b981"></span> Trial
+    </div>
   </div>
 
 </nav>
@@ -956,8 +959,9 @@ body {
       <div class="strategy-funnel-card" id="strategy-funnel"></div>
     </div>
   </div>
-  <iframe id="funnel-frame" src="vertical-sankey/public/index.html" style="display:none;width:100%;height:calc(100vh - 49px);border:none;" onload="this.contentWindow.postMessage({type:'setTheme',dark:isDark},'*')"></iframe>
-  <iframe id="db-frame" src="moneyball/moneyball-dashboard.html" style="display:none;width:100%;height:calc(100vh - 49px);border:none;"></iframe>
+  <iframe id="funnel-frame" src="/vertical-sankey/public/index.html" style="display:none;width:100%;height:calc(100vh - 49px);border:none;" onload="this.contentWindow.postMessage({type:'setTheme',dark:isDark},'*')"></iframe>
+  <iframe id="db-frame" src="/dashboard" style="display:none;width:100%;height:calc(100vh - 49px);border:none;"></iframe>
+  <iframe id="opdash-frame" src="/operational-dashboards?embed=1" style="display:none;width:100%;height:calc(100vh - 49px);border:none;" onload="this.contentWindow.postMessage({type:'setTheme',dark:isDark},'*')"></iframe>
   <div class="cal-container" id="cal-view" style="display:none">
     <div class="ndb-view-tabs" id="ndb-view-tabs"></div>
     <div class="cal-header-row" id="cal-header"></div>
@@ -1059,13 +1063,15 @@ let currentFunnel = 'general';
 let currentDbView = 'overview';
 
 // Expand state for each section (independent)
-const expandState = { pipeline: true, funnel: false, databases: false };
+const expandState = { pipeline: true, funnel: false, databases: false, dashboards: false };
+let currentOpDash = 'acquisition';
 
 function toggleExpand(section) {
   const map = {
-    pipeline:  { list: 'pipeline-brands', arrow: 'pipeline-arrow' },
-    funnel:    { list: 'funnel-embudos',  arrow: 'funnel-arrow' },
-    databases: { list: 'db-views',        arrow: 'db-arrow' },
+    pipeline:   { list: 'pipeline-brands', arrow: 'pipeline-arrow' },
+    funnel:     { list: 'funnel-embudos',  arrow: 'funnel-arrow' },
+    databases:  { list: 'db-views',        arrow: 'db-arrow' },
+    dashboards: { list: 'dash-views',      arrow: 'dash-arrow' },
   };
   const wasOpen = expandState[section];
   // Accordion: collapse all first
@@ -1097,6 +1103,7 @@ function showView(view) {
   const pipelineDash = document.getElementById('pipeline-dashboard');
   const funnel = document.getElementById('funnel-frame');
   const dbFrame = document.getElementById('db-frame');
+  const opdashFrame = document.getElementById('opdash-frame');
   const title = document.getElementById('main-title');
 
   const calView = document.getElementById('cal-view');
@@ -1105,6 +1112,7 @@ function showView(view) {
   pipelineDash.style.display = 'none';
   funnel.style.display = 'none';
   dbFrame.style.display = 'none';
+  opdashFrame.style.display = 'none';
   calView.style.display = 'none';
 
   // Pipeline-only buttons (Parrilla, Nueva idea)
@@ -1126,7 +1134,14 @@ function showView(view) {
     switchFunnel(currentFunnel);
   } else if (view === 'databases') {
     dbFrame.style.display = 'block';
-    switchDbView(currentDbView, currentDbMode);
+    const dbLabels = { overview:'Overview', videos:'Videos', scenes:'Scenes', analytics:'Analytics', pipeline:'Pipeline' };
+    title.textContent = 'Bases de datos — ' + (dbLabels[currentDbView] || currentDbView);
+    switchDbView(currentDbView);
+  } else if (view === 'dashboards') {
+    opdashFrame.style.display = 'block';
+    const opLabels = { acquisition:'Adquisicion & Trial', retention:'Retencion & Churn', flow:'Flujo Mensual', clients:'Base Clientes', revenue:'Revenue', trial:'Trial' };
+    title.textContent = 'Dashboards — ' + (opLabels[currentOpDash] || currentOpDash);
+    switchOpDash(currentOpDash);
   } else if (view === 'calendario') {
     calView.style.display = 'flex';
     title.textContent = 'Calendario';
@@ -1148,24 +1163,32 @@ function switchFunnel(view) {
   if (currentView !== 'funnel') showView('funnel');
 }
 
-let currentDbMode = 'organico';
-function switchDbView(view, mode) {
+function switchDbView(view) {
   currentDbView = view;
-  if (mode) currentDbMode = mode;
   document.querySelectorAll('.db-nav').forEach(o => o.classList.remove('selected'));
-  const el = document.querySelector(`.db-nav[data-db="${view}"][data-mode="${currentDbMode}"]`);
+  const el = document.querySelector(`.db-nav[data-db="${view}"]`);
   if (el) el.classList.add('selected');
-  const modeLabel = currentDbMode === 'meta_ads' ? 'Meta Ads' : 'Videos';
-  const dbLabels = { overview:'Overview', videos: currentDbMode === 'meta_ads' ? 'Ads' : 'Videos', scenes:'Scenes', analytics:'Analytics', compare:'Compare', activity:'Activity', pipeline:'Pipeline' };
-  document.getElementById('main-title').textContent = modeLabel + ' — ' + (dbLabels[view] || view);
+  const dbLabels = { overview:'Overview', videos:'Videos', scenes:'Scenes', analytics:'Analytics', pipeline:'Pipeline' };
+  document.getElementById('main-title').textContent = 'Bases de datos — ' + (dbLabels[view] || view);
   const frame = document.getElementById('db-frame');
   if (frame && frame.contentWindow) {
-    frame.contentWindow.postMessage({ type: 'setMode', mode: currentDbMode }, '*');
-    setTimeout(() => {
-      frame.contentWindow.postMessage({ type: 'setView', view: view }, '*');
-    }, 50);
+    frame.contentWindow.postMessage({ type: 'setView', view: view }, '*');
   }
   if (currentView !== 'databases') showView('databases');
+}
+
+function switchOpDash(view) {
+  currentOpDash = view;
+  document.querySelectorAll('.dash-nav').forEach(o => o.classList.remove('selected'));
+  const el = document.querySelector(`.dash-nav[data-opdash="${view}"]`);
+  if (el) el.classList.add('selected');
+  const opLabels = { acquisition:'Adquisicion & Trial', retention:'Retencion & Churn', flow:'Flujo Mensual', clients:'Base Clientes', revenue:'Revenue', trial:'Trial' };
+  document.getElementById('main-title').textContent = 'Dashboards — ' + (opLabels[view] || view);
+  const frame = document.getElementById('opdash-frame');
+  if (frame && frame.contentWindow) {
+    frame.contentWindow.postMessage({ type: 'setView', view: view }, '*');
+  }
+  if (currentView !== 'dashboards') showView('dashboards');
 }
 
 // ── Brand switching ──
@@ -1192,7 +1215,7 @@ function toggleTheme() {
   localStorage.setItem('theme', isDark ? 'dark' : 'light');
   applyTheme();
   // Sync theme to all iframes
-  ['funnel-frame', 'db-frame'].forEach(id => {
+  ['funnel-frame', 'db-frame', 'opdash-frame'].forEach(id => {
     const frame = document.getElementById(id);
     if (frame && frame.contentWindow) {
       frame.contentWindow.postMessage({ type: 'setTheme', dark: isDark }, '*');
@@ -2081,7 +2104,6 @@ async function executeProcess(endpoint, btn) {
   btn.className = 'execute-btn loading'; btn.textContent = 'Ejecutando...';
   logDiv.innerHTML = ''; logDiv.classList.add('active'); cancelBtn.classList.add('active');
   try {
-    if (window.location.protocol === 'file:') throw new Error('Servidor no disponible — ejecuta: cd moneyball && node server.js');
     const parrilla = getParrillaForScript();
     const res = await fetch('/api/cadena/run', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({process:endpoint,semana,context,parrilla,brand:currentBrand}) });
     const data = await res.json();
@@ -2441,7 +2463,6 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') closePopup(); 
 // Auto-reconnect
 (async function reconnectActive() {
   try {
-    if (window.location.protocol === 'file:') return;
     const res = await fetch('/api/cadena/active'); const data = await res.json();
     if (!data.runId) return;
     const endpoint = data.process; openPopup(endpoint);

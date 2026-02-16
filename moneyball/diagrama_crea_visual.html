@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipeline CEO Media — crea_visual.js</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; padding: 40px 20px; }
+
+    h1 { text-align: center; font-size: 2em; margin-bottom: 8px; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { text-align: center; color: #888; font-size: 0.95em; margin-bottom: 50px; }
+
+    /* ====== PIPELINE OVERVIEW ====== */
+    .pipeline-overview {
+      display: flex; justify-content: center; align-items: center; gap: 0;
+      margin: 0 auto 60px; max-width: 900px; flex-wrap: wrap;
+    }
+    .pipeline-step {
+      text-align: center; padding: 16px 24px; border-radius: 12px; position: relative;
+      min-width: 200px; transition: transform 0.2s;
+    }
+    .pipeline-step:hover { transform: translateY(-4px); }
+    .pipeline-step .step-num { font-size: 0.7em; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; margin-bottom: 4px; }
+    .pipeline-step .step-name { font-size: 1.1em; font-weight: 700; }
+    .pipeline-step .step-file { font-size: 0.75em; opacity: 0.6; font-family: monospace; margin-top: 4px; }
+    .pipeline-step .step-state { font-size: 0.7em; margin-top: 6px; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+
+    .step-idea { background: linear-gradient(135deg, #1a1a3e, #2d1b69); border: 1px solid #5b4a9e; }
+    .step-idea .step-state { background: #5b4a9e33; color: #a78bfa; border: 1px solid #5b4a9e; }
+    .step-guion { background: linear-gradient(135deg, #1a2e1a, #1b6933); border: 1px solid #22c55e; }
+    .step-guion .step-state { background: #22c55e22; color: #4ade80; border: 1px solid #22c55e55; }
+    .step-visual { background: linear-gradient(135deg, #2e1a1a, #b91c1c44); border: 2px solid #ef4444; box-shadow: 0 0 30px #ef444422; }
+    .step-visual .step-state { background: #ef444422; color: #f87171; border: 1px solid #ef444455; }
+
+    .pipeline-arrow { font-size: 1.8em; color: #555; margin: 0 -4px; }
+
+    /* ====== MAIN FLOW ====== */
+    .section-title {
+      text-align: center; font-size: 1.3em; font-weight: 700; margin: 50px 0 30px;
+      color: #f87171; position: relative;
+    }
+    .section-title::after {
+      content: ''; display: block; width: 60px; height: 3px; background: #ef4444; margin: 10px auto 0; border-radius: 2px;
+    }
+
+    .flow-container { max-width: 1100px; margin: 0 auto; position: relative; }
+
+    /* Vertical line */
+    .flow-container::before {
+      content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 3px;
+      background: linear-gradient(180deg, #ef444400, #ef4444, #ef4444, #ef444400); transform: translateX(-50%);
+    }
+
+    .flow-step {
+      display: flex; align-items: flex-start; margin-bottom: 30px; position: relative; overflow: visible;
+    }
+    .flow-step:nth-child(odd) { flex-direction: row; }
+    .flow-step:nth-child(even) { flex-direction: row-reverse; }
+
+    .flow-node {
+      width: 36%; padding: 20px 14px; border-radius: 14px; position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .flow-node:hover { transform: scale(1.02); }
+
+    .flow-step:nth-child(odd) .flow-node { margin-right: auto; }
+    .flow-step:nth-child(even) .flow-node { margin-left: auto; }
+
+    .flow-dot {
+      position: absolute; left: 50%; top: 30px; width: 20px; height: 20px;
+      border-radius: 50%; transform: translateX(-50%); z-index: 2;
+      display: flex; align-items: center; justify-content: center; font-size: 0.65em; font-weight: 700;
+    }
+
+    .flow-node h3 { font-size: 1em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .flow-node h3 .emoji { font-size: 1.2em; }
+    .flow-node p { font-size: 0.82em; opacity: 0.8; line-height: 1.5; }
+    .flow-node .tech-badges {
+      position: absolute; top: 10px; display: flex; flex-direction: column; gap: 4px; width: 130px;
+    }
+    .flow-step:nth-child(odd) .tech-badges { left: calc(100% + 10px); }
+    .flow-step:nth-child(even) .tech-badges { right: calc(100% + 10px); }
+    .flow-node .tech-badge {
+      display: block; padding: 2px 8px; border-radius: 6px; font-size: 0.65em;
+      font-family: monospace; white-space: nowrap; text-align: center;
+    }
+
+    /* Fase 0 */
+    .fase0 { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid #334155; }
+    .fase0-dot { background: #334155; border: 3px solid #64748b; color: #e2e8f0; }
+    .fase0 .tech-badge { background: #33415544; color: #94a3b8; border: 1px solid #47556966; }
+
+    /* Fase 1 - Biblia */
+    .fase1 { background: linear-gradient(135deg, #1e1b4b, #312e81); border: 1px solid #6366f1; box-shadow: 0 4px 20px #6366f122; }
+    .fase1-dot { background: #4f46e5; border: 3px solid #818cf8; color: white; }
+    .fase1 .tech-badge { background: #4f46e522; color: #a5b4fc; border: 1px solid #6366f155; }
+
+    /* Fase 2 - Escenas */
+    .fase2 { background: linear-gradient(135deg, #0c4a6e, #164e63); border: 1px solid #22d3ee; box-shadow: 0 4px 20px #22d3ee11; }
+    .fase2-dot { background: #0891b2; border: 3px solid #22d3ee; color: white; }
+    .fase2 .tech-badge { background: #0891b222; color: #67e8f9; border: 1px solid #22d3ee44; }
+
+    /* Fase 3 - Imagen */
+    .fase3 { background: linear-gradient(135deg, #4a1d96, #6d28d9); border: 1px solid #a78bfa; box-shadow: 0 4px 20px #a78bfa22; }
+    .fase3-dot { background: #7c3aed; border: 3px solid #c4b5fd; color: white; }
+    .fase3 .tech-badge { background: #7c3aed22; color: #c4b5fd; border: 1px solid #a78bfa44; }
+
+    /* Fase 4 - PDF */
+    .fase4 { background: linear-gradient(135deg, #7f1d1d, #991b1b); border: 1px solid #f87171; box-shadow: 0 4px 20px #f8717122; }
+    .fase4-dot { background: #dc2626; border: 3px solid #f87171; color: white; }
+    .fase4 .tech-badge { background: #dc262622; color: #fca5a5; border: 1px solid #f8717144; }
+
+    /* Fase 5 - Drive */
+    .fase5 { background: linear-gradient(135deg, #14532d, #166534); border: 1px solid #4ade80; box-shadow: 0 4px 20px #4ade8011; }
+    .fase5-dot { background: #16a34a; border: 3px solid #4ade80; color: white; }
+    .fase5 .tech-badge { background: #16a34a22; color: #86efac; border: 1px solid #4ade8044; }
+
+    /* Fase 6 - Notion */
+    .fase6 { background: linear-gradient(135deg, #713f12, #92400e); border: 1px solid #fbbf24; box-shadow: 0 4px 20px #fbbf2411; }
+    .fase6-dot { background: #d97706; border: 3px solid #fbbf24; color: white; }
+    .fase6 .tech-badge { background: #d9770622; color: #fde68a; border: 1px solid #fbbf2444; }
+
+    /* ====== DETAIL SECTION: Inside each scene ====== */
+    .scene-detail {
+      max-width: 900px; margin: 50px auto; background: linear-gradient(135deg, #1a1a2e, #0f172a);
+      border: 1px solid #334155; border-radius: 16px; padding: 30px; position: relative; overflow: hidden;
+    }
+    .scene-detail::before {
+      content: 'POR CADA BEAT'; position: absolute; top: 0; right: 0; background: #ef4444;
+      color: white; padding: 4px 16px; font-size: 0.7em; font-weight: 700; letter-spacing: 1px; border-radius: 0 16px 0 8px;
+    }
+    .scene-detail h3 { color: #f87171; margin-bottom: 20px; font-size: 1.1em; }
+
+    .scene-steps { display: flex; flex-direction: column; gap: 16px; }
+    .scene-step-row { display: flex; align-items: center; gap: 12px; }
+    .scene-step-icon {
+      width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 0.9em; flex-shrink: 0; font-weight: 700;
+    }
+    .scene-step-content { flex: 1; }
+    .scene-step-content strong { font-size: 0.85em; }
+    .scene-step-content p { font-size: 0.78em; color: #94a3b8; margin-top: 2px; }
+    .scene-arrow { text-align: center; color: #475569; font-size: 1.2em; margin-left: 12px; }
+
+    .icon-search { background: #0891b2; }
+    .icon-adapt { background: #6366f1; }
+    .icon-image { background: #7c3aed; }
+
+    /* ====== MODELS TABLE ====== */
+    .models-section { max-width: 700px; margin: 50px auto; }
+    .models-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .model-card {
+      background: linear-gradient(135deg, #1a1a2e, #1e1b4b); border: 1px solid #4f46e555;
+      border-radius: 12px; padding: 16px; text-align: center; transition: transform 0.2s;
+    }
+    .model-card:hover { transform: translateY(-3px); }
+    .model-card .model-name { font-family: monospace; font-size: 0.8em; color: #a5b4fc; margin-bottom: 6px; }
+    .model-card .model-use { font-size: 0.75em; color: #94a3b8; }
+    .model-card .model-icon { font-size: 1.6em; margin-bottom: 8px; }
+
+    /* ====== OUTPUT SECTION ====== */
+    .output-section { max-width: 800px; margin: 50px auto; text-align: center; }
+    .output-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
+    .output-card {
+      background: linear-gradient(135deg, #1a2e1a, #14532d); border: 1px solid #22c55e55;
+      border-radius: 12px; padding: 20px 28px; text-align: center; min-width: 180px;
+    }
+    .output-card .out-icon { font-size: 2em; margin-bottom: 8px; }
+    .output-card .out-label { font-weight: 700; font-size: 0.9em; color: #4ade80; }
+    .output-card .out-desc { font-size: 0.75em; color: #86efac; margin-top: 4px; opacity: 0.8; }
+
+    /* ====== ESTILOS SECTION ====== */
+    .estilos-section { max-width: 900px; margin: 50px auto; }
+    .estilos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .estilo-card {
+      border-radius: 14px; padding: 20px; text-align: center; transition: transform 0.2s;
+    }
+    .estilo-card:hover { transform: translateY(-3px); }
+    .estilo-card h4 { font-size: 1em; margin-bottom: 8px; }
+    .estilo-card p { font-size: 0.78em; opacity: 0.85; line-height: 1.4; }
+    .estilo-card .estilo-tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.68em; margin-top: 8px; }
+    .estilo-vh { background: linear-gradient(135deg, #7f1d1d, #991b1b); border: 1px solid #f87171; }
+    .estilo-vh .estilo-tag { background: #ef444433; color: #fca5a5; }
+    .estilo-ven { background: linear-gradient(135deg, #1e3a5f, #1e40af); border: 1px solid #60a5fa; }
+    .estilo-ven .estilo-tag { background: #3b82f633; color: #93c5fd; }
+    .estilo-np { background: linear-gradient(135deg, #1a1a2e, #111827); border: 1px solid #9ca3af; }
+    .estilo-np .estilo-tag { background: #6b728033; color: #d1d5db; }
+
+    /* ====== CLI ====== */
+    .cli-section { max-width: 700px; margin: 50px auto; background: #111827; border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+    .cli-bar { background: #1f2937; padding: 8px 16px; display: flex; gap: 6px; }
+    .cli-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .cli-red { background: #ef4444; }
+    .cli-yellow { background: #eab308; }
+    .cli-green { background: #22c55e; }
+    .cli-body { padding: 20px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82em; line-height: 1.8; }
+    .cli-body .comment { color: #6b7280; }
+    .cli-body .cmd { color: #4ade80; }
+    .cli-body .flag { color: #fbbf24; }
+    .cli-body .val { color: #a78bfa; }
+  </style>
+</head>
+<body>
+
+  <h1>Pipeline CEO Media</h1>
+  <p class="subtitle">Sistema automatico de contenido: Idea &rarr; Guion &rarr; Visual</p>
+
+  <!-- ====== PIPELINE OVERVIEW ====== -->
+  <div class="pipeline-overview">
+    <div class="pipeline-step step-idea">
+      <div class="step-num">Paso 1</div>
+      <div class="step-name">Idea IA</div>
+      <div class="step-file">crea_idea.js</div>
+      <div class="step-state">Plantilla &rarr; Idea</div>
+    </div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step step-guion">
+      <div class="step-num">Paso 2</div>
+      <div class="step-name">Guion IA</div>
+      <div class="step-file">crea_guion_ceo_media.js</div>
+      <div class="step-state">Idea &rarr; Guion</div>
+    </div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step step-visual">
+      <div class="step-num">Paso 3</div>
+      <div class="step-name">Visual IA</div>
+      <div class="step-file">crea_visual.js</div>
+      <div class="step-state">Guion &rarr; Visual</div>
+    </div>
+  </div>
+
+  <!-- ====== SECTION: FLUJO CREA_VISUAL ====== -->
+  <div class="section-title">Flujo de crea_visual.js</div>
+
+  <div class="flow-container">
+
+    <!-- FASE 0 -->
+    <div class="flow-step">
+      <div class="flow-node fase0">
+        <h3><span class="emoji">0</span> Query Notion</h3>
+        <p>Busca en el Calendario Social Media todas las paginas con <strong>Estado = "Guion"</strong> para la semana objetivo. Filtra por perfil y rango de fechas.</p>
+        <div class="tech-badges">
+          <span class="tech-badge">Notion API</span>
+          <span class="tech-badge">Estado: Guion</span>
+        </div>
+      </div>
+      <div class="flow-dot fase0-dot">0</div>
+    </div>
+
+    <!-- FASE 1 -->
+    <div class="flow-step">
+      <div class="flow-node fase0" style="border-color: #64748b;">
+        <h3><span class="emoji">1</span> Leer Guion + Estilo</h3>
+        <p>Lee el guion narrativo completo de la pagina Notion. Extrae los <strong>beats</strong> (escenas). Determina el <strong>pilar</strong> y carga el <strong>Manual de Estilo</strong> del creador referente.</p>
+        <div class="tech-badges">
+          <span class="tech-badge">Notion Blocks API</span>
+          <span class="tech-badge">ESTILO_*.md</span>
+        </div>
+      </div>
+      <div class="flow-dot fase0-dot">1</div>
+    </div>
+
+    <!-- FASE 2 - BIBLIA -->
+    <div class="flow-step">
+      <div class="flow-node fase1">
+        <h3><span class="emoji">2</span> Biblia Visual</h3>
+        <p>Envia todos los beats a Gemini para generar un JSON con el <strong>contexto global</strong>: protagonista (edad, look), localizaciones, paleta de colores, iluminacion, estilo de edicion y tono.</p>
+        <div class="tech-badges">
+          <span class="tech-badge">gemini-2.0-flash</span>
+          <span class="tech-badge">JSON output</span>
+        </div>
+      </div>
+      <div class="flow-dot fase1-dot">2</div>
+    </div>
+
+    <!-- FASE 3 - ESCENAS (loop) -->
+    <div class="flow-step">
+      <div class="flow-node fase2">
+        <h3><span class="emoji">3</span> Procesar Escenas</h3>
+        <p>Para <strong>cada beat</strong> del guion: busqueda semantica en la BBDD de 22K+ escenas, adaptacion visual con contexto global, y generacion de storyboard AI. <em>Ver detalle abajo.</em></p>
+        <div class="tech-badges">
+          <span class="tech-badge">SQLite 22K+ escenas</span>
+          <span class="tech-badge">Embeddings</span>
+          <span class="tech-badge">gemini-2.5-flash-image</span>
+        </div>
+      </div>
+      <div class="flow-dot fase2-dot">3</div>
+    </div>
+
+    <!-- FASE 4 - PDF -->
+    <div class="flow-step">
+      <div class="flow-node fase4">
+        <h3><span class="emoji">4</span> Generar PDF</h3>
+        <p>Genera un HTML completo con la Biblia Visual + todas las escenas (guion, frames de referencia, que grabar, edicion, elementos visuales, storyboard AI). Convierte a PDF con <strong>Puppeteer</strong>.</p>
+        <div class="tech-badges">
+          <span class="tech-badge">Puppeteer</span>
+          <span class="tech-badge">HTML &rarr; PDF A4</span>
+        </div>
+      </div>
+      <div class="flow-dot fase4-dot">4</div>
+    </div>
+
+    <!-- FASE 5 - DRIVE -->
+    <div class="flow-step">
+      <div class="flow-node fase5">
+        <h3><span class="emoji">5</span> Subir a Drive</h3>
+        <p>Sube el PDF a Google Drive en la carpeta <code>CEO Media/Storyboards/YYYY-MM</code>. Crea carpetas si no existen. Genera link publico.</p>
+        <div class="tech-badges">
+          <span class="tech-badge">Google Drive API</span>
+          <span class="tech-badge">Service Account</span>
+        </div>
+      </div>
+      <div class="flow-dot fase5-dot">5</div>
+    </div>
+
+    <!-- FASE 6 - NOTION -->
+    <div class="flow-step">
+      <div class="flow-node fase6">
+        <h3><span class="emoji">6</span> Actualizar Notion</h3>
+        <p>Escribe el link del PDF en la pagina Notion (debajo del guion). Cambia el estado de <strong>"Guion" &rarr; "Visual"</strong>.</p>
+        <div class="tech-badges">
+          <span class="tech-badge">Notion API PATCH</span>
+          <span class="tech-badge">Estado: Visual</span>
+        </div>
+      </div>
+      <div class="flow-dot fase6-dot">6</div>
+    </div>
+
+  </div>
+
+  <!-- ====== DETALLE: POR CADA BEAT ====== -->
+  <div class="scene-detail">
+    <h3>Detalle Fase 3 — Por cada beat del guion</h3>
+    <div class="scene-steps">
+
+      <div class="scene-step-row">
+        <div class="scene-step-icon icon-search">1</div>
+        <div class="scene-step-content">
+          <strong>Busqueda Semantica en BBDD</strong>
+          <p>Genera embedding del texto del beat con <code>gemini-embedding-001</code>. Busca la escena mas similar del creador referente (cosine similarity). Filtra por posicion (hook/medio/final). Deduplicacion: max 2 usos, sin repetir consecutivas.</p>
+        </div>
+      </div>
+
+      <div class="scene-arrow">&darr;</div>
+
+      <div class="scene-step-row">
+        <div class="scene-step-icon" style="background: #475569;">F</div>
+        <div class="scene-step-content">
+          <strong>Obtener Frames de Referencia</strong>
+          <p>Busca en <code>escenas_frames/video_XXX/</code> los fotogramas reales de la escena encontrada (hasta 4 frames). Se incluyen en el PDF como referencia visual.</p>
+        </div>
+      </div>
+
+      <div class="scene-arrow">&darr;</div>
+
+      <div class="scene-step-row">
+        <div class="scene-step-icon icon-adapt">2</div>
+        <div class="scene-step-content">
+          <strong>Adaptacion de Escena</strong>
+          <p>Gemini 2.0 Flash adapta la escena de referencia al guion actual usando la <strong>Biblia Visual</strong> + <strong>Manual de Estilo</strong>. Output JSON: localizacion, accion, encuadre, cortes, elementos visuales (tipo, contenido, animacion).</p>
+        </div>
+      </div>
+
+      <div class="scene-arrow">&darr;</div>
+
+      <div class="scene-step-row">
+        <div class="scene-step-icon icon-image">3</div>
+        <div class="scene-step-content">
+          <strong>Generar Storyboard AI</strong>
+          <p>Gemini 2.5 Flash Image genera una imagen de storyboard: formato 16:9 con <strong>4 paneles verticales 9:16</strong> (sketch a lapiz B&N). Subtitulos progresivos con keywords destacadas en color.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====== ESTILOS ====== -->
+  <div class="section-title">Estilos de Edicion</div>
+  <div class="estilos-section">
+    <div class="estilos-grid">
+      <div class="estilo-card estilo-vh">
+        <h4>Victor Heras</h4>
+        <p>Keywords visuales (1-5 palabras). NO subtitulos literales. Grafismos, iconos, contadores. Sans-serif blanco. Animacion sincronizada.</p>
+        <div class="estilo-tag">~1000 escenas</div>
+      </div>
+      <div class="estilo-card estilo-ven">
+        <h4>Veneno</h4>
+        <p>Subtitulos COMPLETOS del dialogo. Blanco, inferior centrado. Pantalla dividida 50/50. Ritmo lento y conversacional. Glitch en tension.</p>
+        <div class="estilo-tag">2,153 escenas</div>
+      </div>
+      <div class="estilo-card estilo-np">
+        <h4>Nude Project</h4>
+        <p>Texto GRANDE bold (1-4 palabras). Cortes ultra-rapidos (&lt;2s). Loading bars, typing effect. Estetica premium. Muchas escenas SIN texto.</p>
+        <div class="estilo-tag">3,089 escenas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== MODELOS IA ====== -->
+  <div class="section-title">Modelos de IA</div>
+  <div class="models-section">
+    <div class="models-grid">
+      <div class="model-card">
+        <div class="model-icon">🔍</div>
+        <div class="model-name">gemini-embedding-001</div>
+        <div class="model-use">Embeddings para busqueda semantica de escenas similares en BBDD</div>
+      </div>
+      <div class="model-card">
+        <div class="model-icon">🧠</div>
+        <div class="model-name">gemini-2.0-flash</div>
+        <div class="model-use">Biblia Visual (JSON) + Adaptacion de escenas con manual de estilo</div>
+      </div>
+      <div class="model-card">
+        <div class="model-icon">🎨</div>
+        <div class="model-name">gemini-2.5-flash-image</div>
+        <div class="model-use">Generacion de storyboards (4 paneles sketch B&N con keywords)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== OUTPUT ====== -->
+  <div class="section-title">Output Final</div>
+  <div class="output-section">
+    <div class="output-grid">
+      <div class="output-card">
+        <div class="out-icon">📄</div>
+        <div class="out-label">PDF Storyboard</div>
+        <div class="out-desc">Biblia Visual + escenas con frames, edicion y storyboard AI</div>
+      </div>
+      <div class="output-card">
+        <div class="out-icon">☁️</div>
+        <div class="out-label">Google Drive</div>
+        <div class="out-desc">CEO Media / Storyboards / YYYY-MM</div>
+      </div>
+      <div class="output-card">
+        <div class="out-icon">📝</div>
+        <div class="out-label">Notion Actualizado</div>
+        <div class="out-desc">Link PDF + Estado &rarr; "Visual"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== CLI ====== -->
+  <div class="section-title">Uso</div>
+  <div class="cli-section">
+    <div class="cli-bar">
+      <div class="cli-dot cli-red"></div>
+      <div class="cli-dot cli-yellow"></div>
+      <div class="cli-dot cli-green"></div>
+    </div>
+    <div class="cli-body">
+      <span class="comment"># Semana por defecto (proximo lunes)</span><br>
+      <span class="cmd">node crea_visual.js</span><br><br>
+      <span class="comment"># Semana especifica</span><br>
+      <span class="cmd">node crea_visual.js</span> <span class="flag">--semana=</span><span class="val">2026-02-24</span><br><br>
+      <span class="comment"># Solo un pilar</span><br>
+      <span class="cmd">node crea_visual.js</span> <span class="flag">--pilar=</span><span class="val">veneno</span><br><br>
+      <span class="comment"># Modo preview sin cambios</span><br>
+      <span class="cmd">node crea_visual.js</span> <span class="flag">--dry-run</span><br><br>
+      <span class="comment"># Con contexto adicional</span><br>
+      <span class="cmd">node crea_visual.js</span> <span class="flag">--context=</span><span class="val">"enfoque cinematografico"</span>
+    </div>
+  </div>
+
+</body>
+</html>

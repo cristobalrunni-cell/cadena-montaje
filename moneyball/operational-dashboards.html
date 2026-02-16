@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunnerPro Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Design System: Notion-style (same as Cadena de Montaje) ── */
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+  --bg-primary: #191919;
+  --bg-secondary: #202020;
+  --bg-tertiary: #252525;
+  --bg-hover: #2a2a2a;
+  --bg-active: #2e2e2e;
+  --bg-input: #1e1e1e;
+  --text-primary: #ebebeb;
+  --text-secondary: #9a9a9a;
+  --text-tertiary: #6b6b6b;
+  --text-placeholder: #555;
+  --text-heading: #d0d0d0;
+  --text-link: #529CCA;
+  --border-default: #2a2a2a;
+  --border-strong: #333;
+  --border-hover: #444;
+  --accent: #529CCA;
+  --accent-hover: #6ab0d6;
+  --accent-bg: rgba(82,156,202,0.08);
+  --accent-bg-strong: rgba(82,156,202,0.15);
+  --accent-border: rgba(82,156,202,0.35);
+  --success: #2ecc71;
+  --success-dark: #27ae60;
+  --error: #e74c3c;
+  --warning: #f39c12;
+  --info: #5dade2;
+  --shadow-sm: 0 0 0 1px var(--border-default), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-md: 0 0 0 1px var(--border-default), 0 3px 6px rgba(0,0,0,0.25), 0 9px 24px rgba(0,0,0,0.35);
+  --shadow-lg: 0 0 0 1px var(--border-default), 0 8px 24px rgba(0,0,0,0.45);
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --transition-fast: 60ms ease;
+  --transition-base: 100ms ease;
+  --transition-slow: 200ms ease;
+  --overlay-bg: rgba(15,15,15,0.6);
+}
+
+body.light {
+  --bg-primary: #ffffff; --bg-secondary: #f7f6f3; --bg-tertiary: #ffffff;
+  --bg-hover: #efefee; --bg-active: #e8e5e0; --bg-input: #f7f6f3;
+  --text-primary: #37352f; --text-secondary: #787774; --text-tertiary: #9b9a97;
+  --text-placeholder: #c4c1bc; --text-heading: #37352f; --text-link: #2383E2;
+  --border-default: #e8e5e0; --border-strong: #d6d3ce; --border-hover: #c4c1bc;
+  --accent: #2383E2; --accent-hover: #1a6dbe;
+  --accent-bg: rgba(35,131,226,0.08); --accent-bg-strong: rgba(35,131,226,0.15);
+  --accent-border: rgba(35,131,226,0.35);
+  --shadow-sm: 0 0 0 1px var(--border-default), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-md: 0 0 0 1px var(--border-default), 0 3px 6px rgba(0,0,0,0.06), 0 9px 24px rgba(0,0,0,0.1);
+  --shadow-lg: 0 0 0 1px var(--border-default), 0 8px 24px rgba(0,0,0,0.12);
+  --overlay-bg: rgba(15,15,15,0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+*:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+body {
+  font-family: var(--font-sans); background: var(--bg-primary);
+  min-height: 100vh; color: var(--text-primary); display: flex;
+  overflow-x: clip;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 240px; min-height: 100vh; background: var(--bg-secondary);
+  border-right: 1px solid var(--border-default); padding: 16px 10px;
+  display: flex; flex-direction: column; gap: 4px;
+  position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+}
+.sidebar-title {
+  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px 6px; margin-top: 8px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 13px; color: var(--text-secondary); transition: all var(--transition-base);
+}
+.sidebar-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.sidebar-item.active { background: var(--bg-hover); color: var(--text-primary); }
+.sidebar-item .icon { font-size: 14px; width: 20px; text-align: center; }
+.sidebar-item .priority {
+  margin-left: auto; font-size: 9px; font-weight: 700; padding: 1px 5px;
+  border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.3px;
+}
+.p-p1 { background: #e74c3c22; color: #e74c3c; }
+.p-p2 { background: #f39c1222; color: #f39c12; }
+.p-p3 { background: #529CCA22; color: #529CCA; }
+.p-p4 { background: #6b728022; color: #9ca3af; }
+.p-p5 { background: #6b728022; color: #6b7280; }
+.p-p6 { background: #10b98122; color: #10b981; }
+
+.theme-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: var(--radius-sm); background: transparent;
+  border: 1px solid var(--border-strong); color: var(--text-secondary); font-size: 14px;
+  cursor: pointer; transition: all var(--transition-base);
+}
+.theme-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-hover); }
+
+/* ── EMBED MODE (inside iframe) ── */
+.embed-mode .sidebar { display: none !important; }
+.embed-mode .main { margin-left: 0 !important; max-width: 100vw !important; }
+
+/* ── MAIN ── */
+.main {
+  margin-left: 240px; flex: 1; min-height: 100vh;
+  display: flex; flex-direction: column;
+  overflow-x: clip; max-width: calc(100vw - 240px);
+}
+.topbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-bottom: 1px solid var(--border-default);
+  background: var(--bg-secondary); position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-right: auto; }
+.topbar-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: var(--radius-sm);
+  background: transparent; border: 1px solid var(--border-strong);
+  color: var(--text-secondary); font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all var(--transition-base); font-weight: 500;
+}
+.topbar-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-hover); }
+
+/* Date range picker */
+.date-range-picker {
+  display: flex; align-items: center; gap: 4px;
+}
+.date-input {
+  background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); padding: 5px 8px; font-size: 11px; font-family: inherit;
+  transition: border-color var(--transition-base);
+}
+.date-input:focus { border-color: var(--accent); outline: none; }
+.date-input::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+
+/* Funnel store filter buttons */
+.funnel-store-btn {
+  background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  color: var(--text-tertiary); padding: 4px 10px; font-size: 10px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all var(--transition-base); white-space: nowrap;
+}
+.funnel-store-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-hover); }
+.funnel-store-btn.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-border); }
+
+/* Funnel compare layout */
+.funnel-compare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.funnel-compare-col {
+  border: 1px solid var(--border-default); border-radius: var(--radius-md);
+  padding: 12px; background: var(--bg-primary);
+}
+.funnel-compare-header {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center; gap: 6px;
+}
+.funnel-compare-header.appstore { color: #529CCA; }
+.funnel-compare-header.playstore { color: #2ecc71; }
+
+/* Cohort mode toggle */
+.cohort-mode-btn {
+  background: transparent; border: 1px solid var(--border-strong);
+  color: var(--text-tertiary); padding: 5px 12px; font-size: 10px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all var(--transition-base);
+}
+.cohort-mode-btn:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); border-right: none; }
+.cohort-mode-btn:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.cohort-mode-btn.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-border); }
+.cohort-mode-btn:hover:not(.active) { background: var(--bg-hover); color: var(--text-primary); }
+
+/* ── DASHBOARD CONTENT ── */
+.dash-content { padding: 24px; flex: 1; overflow-x: clip; }
+.dash-view { display: none; }
+.dash-view.active { display: block; }
+
+/* KPI Cards */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.kpi-card {
+  background: var(--bg-tertiary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 16px 20px;
+  transition: background var(--transition-base);
+}
+.kpi-card:hover { background: var(--bg-hover); }
+.kpi-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.kpi-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+.kpi-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+.kpi-up { color: var(--success); }
+.kpi-down { color: var(--error); }
+.kpi-neutral { color: var(--text-tertiary); }
+
+/* Section headers */
+.section-title {
+  font-size: 13px; font-weight: 700; color: var(--text-heading);
+  margin-bottom: 12px; margin-top: 20px; display: flex; align-items: center; gap: 8px;
+}
+.section-title:first-child { margin-top: 0; }
+
+/* Chart containers */
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.chart-row.single { grid-template-columns: 1fr; }
+.chart-box {
+  background: var(--bg-tertiary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 16px; min-height: 260px;
+  display: flex; flex-direction: column;
+}
+.chart-box-title {
+  font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+}
+.chart-area { flex: 1; position: relative; }
+
+/* Tables */
+.dash-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.dash-table th {
+  padding: 8px 12px; text-align: left; color: var(--text-secondary);
+  font-weight: 600; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.5px; border-bottom: 1px solid var(--border-strong);
+  background: var(--bg-secondary); position: sticky; top: 0;
+}
+.dash-table td {
+  padding: 8px 12px; border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary); font-size: 12px;
+}
+.dash-table tr:hover { background: var(--bg-hover); }
+.dash-table .highlight { font-weight: 700; }
+
+/* Cohort heatmap */
+.cohort-scroll { overflow: auto; max-height: 420px; border: 1px solid var(--border-default); border-radius: var(--radius-md); max-width: 100%; }
+.cohort-table { font-size: 11px; }
+.cohort-table th { padding: 6px 4px; font-size: 9px; white-space: nowrap; min-width: 58px; position: sticky; top: 0; z-index: 2; }
+.cohort-table td { text-align: center; font-size: 10px; font-weight: 600; min-width: 58px; padding: 5px 3px; }
+.cohort-table td:first-child, .cohort-table th:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-secondary); min-width: 75px; }
+.cohort-table td:nth-child(2), .cohort-table th:nth-child(2) { position: sticky; left: 75px; z-index: 1; background: var(--bg-secondary); min-width: 52px; }
+.cohort-table th:first-child, .cohort-table th:nth-child(2) { z-index: 3; }
+.cohort-cell { border-radius: var(--radius-sm); padding: 3px 5px; display: inline-block; min-width: 38px; }
+
+/* Donut / Pie */
+.donut-container { display: flex; align-items: center; gap: 20px; height: 100%; }
+.donut-svg { flex-shrink: 0; }
+.donut-legend { display: flex; flex-direction: column; gap: 6px; }
+.donut-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+.donut-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+/* Funnel */
+.funnel-container { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; }
+.funnel-step { display: flex; align-items: center; gap: 12px; }
+.funnel-bar-wrap { flex: 1; position: relative; height: 36px; }
+.funnel-bar {
+  height: 100%; border-radius: var(--radius-sm); display: flex;
+  align-items: center; padding: 0 12px; font-size: 12px; font-weight: 600; color: #fff;
+  transition: width 0.6s ease;
+}
+.funnel-step-label { width: 140px; font-size: 11px; color: var(--text-secondary); text-align: right; flex-shrink: 0; }
+.funnel-pct { width: 50px; font-size: 10px; color: var(--text-tertiary); font-weight: 600; text-align: center; }
+.funnel-pct-total { color: var(--accent); }
+
+/* Waterfall */
+.waterfall-container { display: flex; align-items: flex-end; gap: 4px; height: 200px; padding: 0 8px; }
+.waterfall-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+.waterfall-bar { width: 100%; max-width: 50px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: height 0.5s ease; }
+.waterfall-bar.connector { border-radius: 0; }
+.waterfall-label { font-size: 9px; color: var(--text-tertiary); text-align: center; margin-top: 6px; line-height: 1.2; max-width: 60px; }
+.waterfall-value { font-size: 10px; font-weight: 700; margin-bottom: 4px; }
+.wf-positive { color: var(--success); }
+.wf-negative { color: var(--error); }
+.wf-neutral { color: var(--accent); }
+
+/* Bar chart (horizontal) */
+.hbar-container { display: flex; flex-direction: column; gap: 8px; }
+.hbar-row { display: flex; align-items: center; gap: 10px; }
+.hbar-label { width: 120px; font-size: 11px; color: var(--text-secondary); text-align: right; flex-shrink: 0; }
+.hbar-track { flex: 1; height: 20px; background: var(--bg-hover); border-radius: var(--radius-sm); overflow: hidden; }
+.hbar-fill { height: 100%; border-radius: var(--radius-sm); transition: width 0.5s ease; }
+.hbar-value { width: 50px; font-size: 11px; font-weight: 600; color: var(--text-primary); }
+
+/* Line chart (CSS-based sparkline) */
+.line-chart-wrap { position: relative; height: 180px; border-bottom: 1px solid var(--border-default); border-left: 1px solid var(--border-default); }
+.line-chart-svg { width: 100%; height: 100%; }
+
+/* Stacked bar */
+.sbar-container { display: flex; align-items: flex-end; gap: 8px; height: 180px; }
+.sbar-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+.sbar-segment { width: 100%; max-width: 30px; transition: height 0.5s ease; }
+.sbar-segment:first-child { border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.sbar-label { font-size: 9px; color: var(--text-tertiary); margin-top: 4px; }
+
+/* Sankey-like flow table */
+.flow-table { width: 100%; border-collapse: collapse; }
+.flow-table th {
+  padding: 6px 10px; text-align: left; font-size: 10px; font-weight: 600;
+  color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-strong); background: var(--bg-secondary);
+}
+.flow-table td {
+  padding: 6px 10px; border-bottom: 1px solid var(--border-default);
+  font-size: 12px; color: var(--text-primary);
+}
+.flow-table tr:hover { background: var(--bg-hover); }
+.flow-arrow { color: var(--text-placeholder); }
+.flow-up { color: var(--success); font-weight: 600; }
+.flow-down { color: var(--error); font-weight: 600; }
+
+/* Attribution table actions */
+.attr-select {
+  background: var(--bg-input); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  padding: 3px 6px; font-size: 11px; font-family: inherit;
+}
+.attr-select:focus { border-color: var(--accent); outline: none; }
+.attr-btn {
+  background: var(--accent-bg); border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm); color: var(--accent); padding: 3px 10px;
+  font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: all var(--transition-base);
+}
+.attr-btn:hover { background: var(--accent); color: #fff; }
+
+/* Filters bar */
+.filters-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 12px 0; margin-bottom: 16px; border-bottom: 1px solid var(--border-default);
+}
+#trial-filters {
+  position: sticky; top: 53px; z-index: 10; background: var(--bg-primary);
+  padding: 10px 0; margin: -24px -24px 12px -24px; padding: 10px 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+.filter-select {
+  background: var(--bg-input); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  padding: 5px 10px; font-size: 11px; font-family: inherit;
+}
+.filter-select:focus { border-color: var(--accent); outline: none; }
+.filter-label { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.3px; }
+
+/* Badge / tag */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm);
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.badge-green { background: #27ae6022; color: #57d48f; }
+.badge-red { background: #e74c3c22; color: #f87171; }
+.badge-yellow { background: #f39c1222; color: var(--warning); }
+.badge-blue { background: #529CCA22; color: #529CCA; }
+.badge-gray { background: #6b728022; color: #9ca3af; }
+
+/* Tooltip */
+[data-tooltip] { position: relative; }
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip); position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%); background: var(--bg-active); color: var(--text-primary);
+  padding: 4px 8px; border-radius: var(--radius-sm); font-size: 10px; white-space: nowrap;
+  box-shadow: var(--shadow-sm); z-index: 10; pointer-events: none;
+}
+
+/* Export button */
+.export-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 12px; border-radius: var(--radius-sm);
+  background: transparent; border: 1px solid var(--border-strong);
+  color: var(--text-secondary); font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: all var(--transition-base); font-family: inherit;
+}
+.export-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .chart-row { grid-template-columns: 1fr; }
+  .chart-row.triple { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div style="padding:6px 10px;margin-bottom:8px">
+    <div style="font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:6px">
+      <span style="font-size:16px">&#127939;</span> RunnerPro
+    </div>
+    <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">Operational Dashboards</div>
+  </div>
+
+  <div class="sidebar-title">Dashboards</div>
+
+  <div class="sidebar-item active" data-dash="acquisition" onclick="showDash('acquisition')">
+    <span class="icon">&#128200;</span> Adquisicion & Trial
+    <span class="priority p-p1">P1</span>
+  </div>
+  <div class="sidebar-item" data-dash="retention" onclick="showDash('retention')">
+    <span class="icon">&#128257;</span> Retencion & Churn
+    <span class="priority p-p2">P2</span>
+  </div>
+  <div class="sidebar-item" data-dash="flow" onclick="showDash('flow')">
+    <span class="icon">&#128202;</span> Flujo Mensual
+    <span class="priority p-p3">P3</span>
+  </div>
+  <div class="sidebar-item" data-dash="clients" onclick="showDash('clients')">
+    <span class="icon">&#128101;</span> Base Clientes
+    <span class="priority p-p4">P4</span>
+  </div>
+  <div class="sidebar-item" data-dash="revenue" onclick="showDash('revenue')">
+    <span class="icon">&#128176;</span> Revenue
+    <span class="priority p-p5">P5</span>
+  </div>
+  <div class="sidebar-item" data-dash="trial" onclick="showDash('trial')">
+    <span class="icon">&#9201;</span> Trial
+    <span class="priority p-p6">P6</span>
+  </div>
+
+  <div style="margin-top:auto;padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+    <div style="font-size:10px;color:var(--text-placeholder)">Datos: Febrero 2026</div>
+    <button class="theme-btn" onclick="document.body.classList.toggle('light')">
+      &#9788; Tema
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Adquisicion, Atribucion & Trial Funnel</span>
+    <div class="date-range-picker">
+      <label class="filter-label" style="margin-right:4px">Periodo:</label>
+      <input type="date" class="date-input" id="date-from" value="2026-02-01">
+      <span style="color:var(--text-tertiary);font-size:11px;margin:0 4px">&ndash;</span>
+      <input type="date" class="date-input" id="date-to" value="2026-02-28">
+      <button class="topbar-btn" onclick="applyDateFilter()" style="margin-left:4px"><span class="btn-icon">&#128197;</span> Aplicar</button>
+    </div>
+    <button class="topbar-btn" onclick="exportCSV()"><span class="btn-icon">&#128196;</span> Exportar CSV</button>
+  </div>
+
+  <div class="dash-content">
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- DASHBOARD 3: ACQUISITION & TRIAL (P1)      -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="dash-view active" id="dash-acquisition">
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Trials nuevos (mes)</div>
+          <div class="kpi-value">187</div>
+          <div class="kpi-sub"><span class="kpi-up">&#9650; 23%</span> vs. mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Conversion Trial &rarr; Pago</div>
+          <div class="kpi-value">24.6%</div>
+          <div class="kpi-sub"><span class="kpi-up">&#9650; 3.2pp</span> vs. mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Nuevos</div>
+          <div class="kpi-value">46</div>
+          <div class="kpi-sub"><span class="kpi-up">&#9650; +12</span> vs. mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">CAC Medio</div>
+          <div class="kpi-value">62&euro;</div>
+          <div class="kpi-sub"><span class="kpi-down">&#9660; -8&euro;</span> vs. mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">% Sin atribucion</div>
+          <div class="kpi-value">14%</div>
+          <div class="kpi-sub"><span class="kpi-down">&#9660; -5pp</span> vs. mes anterior</div>
+        </div>
+      </div>
+
+      <!-- New Clients by Channel -->
+      <div class="section-title">&#128202; Nuevos clientes por canal</div>
+      <div class="chart-row single">
+        <div class="chart-box">
+          <div class="chart-box-title">Nuevos clientes por canal (ordenado por volumen)</div>
+          <div class="chart-area">
+            <div class="hbar-container" id="channel-bars"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Funnel -->
+      <div class="section-title">&#128681; Funnel del Trial</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:280px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="chart-box-title" style="margin-bottom:0">Visitas Store &rarr; Descargas &rarr; Trial &rarr; Conversion</div>
+            <div class="funnel-filter" style="display:flex;align-items:center;gap:4px">
+              <button class="funnel-store-btn active" data-store="both" onclick="switchFunnelStore('both')">&#128200; Comparar</button>
+              <button class="funnel-store-btn" data-store="appstore" onclick="switchFunnelStore('appstore')">&#63743; App Store</button>
+              <button class="funnel-store-btn" data-store="playstore" onclick="switchFunnelStore('playstore')">&#9654; Play Store</button>
+            </div>
+          </div>
+          <div class="chart-area" id="trial-funnel"></div>
+        </div>
+      </div>
+
+      <!-- Web Analytics -->
+      <div class="section-title">&#127760; Analitica web</div>
+      <div class="chart-row">
+        <div class="chart-box">
+          <div class="chart-box-title">Metricas web del mes</div>
+          <div class="chart-area" id="web-analytics-chart"></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title">Origen de nuevos clientes: Trial (App) vs Web</div>
+          <div class="chart-area">
+            <div class="donut-container" id="trial-vs-web-donut"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Channel Comparison Table -->
+      <div class="section-title">&#128203; Comparativa de canales</div>
+      <div style="overflow-x:auto">
+        <table class="dash-table" id="channel-table">
+          <thead>
+            <tr>
+              <th>Canal</th><th>Trials</th><th>Conversiones</th><th>Conv. %</th>
+              <th>CAC</th><th>LTV:CAC</th><th>Churn canal</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Attribution Management -->
+      <div class="section-title" style="margin-top:28px">&#9997; Gestion de atribucion manual</div>
+      <div class="kpi-row" style="margin-bottom:16px">
+        <div class="kpi-card">
+          <div class="kpi-label">Atribucion resuelta</div>
+          <div class="kpi-value">86%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Pendientes de atribuir</div>
+          <div class="kpi-value">26</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="dash-table" id="attribution-table">
+          <thead>
+            <tr><th>Cliente</th><th>Email</th><th>Fecha alta</th><th>Canal actual</th><th>Asignar canal</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- DASHBOARD 2: RETENTION & CHURN (P2)        -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="dash-view" id="dash-retention">
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Churn Rate Mensual</div>
+          <div class="kpi-value">11.2%</div>
+          <div class="kpi-sub"><span class="kpi-down">&#9650; +0.8pp</span> vs. mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Churn Absoluto</div>
+          <div class="kpi-value">62</div>
+          <div class="kpi-sub">38 voluntarias + 24 fallo pago</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Reactivaciones</div>
+          <div class="kpi-value">8</div>
+          <div class="kpi-sub"><span class="kpi-up">&#9650; +3</span> vs. mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Antiguedad Media</div>
+          <div class="kpi-value">6.3 m</div>
+          <div class="kpi-sub"><span class="kpi-neutral">= estable</span></div>
+        </div>
+      </div>
+
+      <!-- Cohort Retention Table -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:12px">
+        <div class="section-title" style="margin:0">&#128200; Tabla de retencion por cohortes</div>
+        <div style="display:flex;align-items:center;gap:0">
+          <button class="cohort-mode-btn active" data-mode="pct" onclick="switchCohortMode('pct')">% Porcentaje</button>
+          <button class="cohort-mode-btn" data-mode="abs" onclick="switchCohortMode('abs')"># Numeros</button>
+        </div>
+      </div>
+      <div class="cohort-scroll">
+        <table class="dash-table cohort-table" id="cohort-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Churn timeline (monthly + rolling annual average) -->
+      <div class="section-title">&#128200; Evolucion churn rate</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:180px">
+          <div class="chart-box-title" style="font-size:9px">Mensual vs Media anualizada (rolling 12m)</div>
+          <div class="chart-area">
+            <svg class="line-chart-svg" id="churn-timeline-svg" viewBox="0 0 500 140" preserveAspectRatio="none"></svg>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:6px;font-size:9px">
+            <span style="color:#e74c3c">&#9632; Churn mensual</span>
+            <span style="color:#529CCA">&#9632; Media anualizada</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan Migration -->
+      <div class="section-title">&#128260; Migracion entre planes</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Flujos de migracion este mes (base: 550 clientes)</div>
+          <table class="flow-table">
+            <thead><tr><th>Origen</th><th></th><th>Destino</th><th>Clientes</th><th>% Base</th><th>Impacto MRR</th></tr></thead>
+            <tbody id="migration-flows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- DASHBOARD 5: MONTHLY FLOW (P3)             -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="dash-view" id="dash-flow">
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Net New MRR</div>
+          <div class="kpi-value" style="color:var(--success)">+2.340&euro;</div>
+          <div class="kpi-sub"><span class="kpi-up">&#9650; mejor que ene</span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Net New Clientes</div>
+          <div class="kpi-value" style="color:var(--success)">+27</div>
+          <div class="kpi-sub">81 altas - 54 bajas</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Altas nuevas</div>
+          <div class="kpi-value">73</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Reactivaciones</div>
+          <div class="kpi-value">8</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Bajas voluntarias</div>
+          <div class="kpi-value" style="color:var(--error)">38</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Bajas fallo pago</div>
+          <div class="kpi-value" style="color:var(--error)">16</div>
+        </div>
+      </div>
+
+      <!-- MRR Waterfall -->
+      <div class="section-title">&#128202; Cascada de MRR (Waterfall)</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:280px">
+          <div class="chart-box-title">MRR Inicio &rarr; Componentes &rarr; MRR Final</div>
+          <div class="chart-area" id="waterfall-chart"></div>
+        </div>
+      </div>
+
+      <!-- Client movements -->
+      <div class="section-title">&#128101; Movimiento de clientes</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:auto">
+          <table class="dash-table">
+            <thead><tr><th>Componente</th><th>Clientes</th><th>Impacto MRR</th></tr></thead>
+            <tbody>
+              <tr><td class="highlight">Clientes inicio de mes</td><td>550</td><td>15.950&euro;</td></tr>
+              <tr><td><span style="color:var(--success)">+</span> Altas nuevas</td><td style="color:var(--success)">+73</td><td style="color:var(--success)">+2.117&euro;</td></tr>
+              <tr><td><span style="color:var(--success)">+</span> Reactivaciones</td><td style="color:var(--success)">+8</td><td style="color:var(--success)">+232&euro;</td></tr>
+              <tr><td><span style="color:var(--success)">+</span> Expansion (upgrades)</td><td style="color:var(--success)">+18 moves</td><td style="color:var(--success)">+1.247&euro;</td></tr>
+              <tr><td><span style="color:var(--error)">&minus;</span> Bajas voluntarias</td><td style="color:var(--error)">-38</td><td style="color:var(--error)">-944&euro;</td></tr>
+              <tr><td><span style="color:var(--error)">&minus;</span> Bajas fallo de pago</td><td style="color:var(--error)">-16</td><td style="color:var(--error)">-464&euro;</td></tr>
+              <tr><td><span style="color:var(--error)">&minus;</span> Contraccion (downgrades)</td><td style="color:var(--error)">-7 moves</td><td style="color:var(--error)">-312&euro;</td></tr>
+              <tr style="background:var(--bg-active);font-weight:700"><td>= Clientes final de mes</td><td>577</td><td>17.826&euro;</td></tr>
+              <tr style="background:var(--accent-bg);font-weight:700"><td>= Net New</td><td style="color:var(--success)">+27</td><td style="color:var(--success)">+1.876&euro;</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Plan change details -->
+      <div class="section-title">&#128260; Detalle cambios de plan este mes</div>
+      <div class="chart-row">
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Upgrades</div>
+          <table class="flow-table">
+            <thead><tr><th>De</th><th></th><th>A</th><th>#</th><th>&Delta; MRR</th></tr></thead>
+            <tbody>
+              <tr><td>Mensual</td><td class="flow-arrow">&rarr;</td><td>Trimestral</td><td>8</td><td class="flow-up">+347&euro;</td></tr>
+              <tr><td>Mensual</td><td class="flow-arrow">&rarr;</td><td>Anual</td><td>5</td><td class="flow-up">+510&euro;</td></tr>
+              <tr><td>Trimestral</td><td class="flow-arrow">&rarr;</td><td>Anual</td><td>5</td><td class="flow-up">+390&euro;</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Downgrades</div>
+          <table class="flow-table">
+            <thead><tr><th>De</th><th></th><th>A</th><th>#</th><th>&Delta; MRR</th></tr></thead>
+            <tbody>
+              <tr><td>Anual</td><td class="flow-arrow">&rarr;</td><td>Trimestral</td><td>3</td><td class="flow-down">-132&euro;</td></tr>
+              <tr><td>Trimestral</td><td class="flow-arrow">&rarr;</td><td>Mensual</td><td>2</td><td class="flow-down">-84&euro;</td></tr>
+              <tr><td>Anual</td><td class="flow-arrow">&rarr;</td><td>Mensual</td><td>2</td><td class="flow-down">-96&euro;</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Net New MRR timeline -->
+      <div class="section-title">&#128200; Net New MRR (tendencia 12 meses)</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:200px">
+          <div class="chart-area">
+            <svg class="line-chart-svg" id="net-mrr-timeline-svg" viewBox="0 0 500 160" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- DASHBOARD 1: CLIENT BASE (P4)              -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="dash-view" id="dash-clients">
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Clientes Activos</div>
+          <div class="kpi-value">550</div>
+          <div class="kpi-sub"><span class="kpi-up">&#9650; +27</span> vs. mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Trials Activos</div>
+          <div class="kpi-value">43</div>
+          <div class="kpi-sub">D1-3: 15 | D4-7: 16 | D8-14: 12</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Conversion Trial</div>
+          <div class="kpi-value">24.6%</div>
+          <div class="kpi-sub"><span class="kpi-up">&#9650; 3.2pp</span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Attach Rate Nutricion</div>
+          <div class="kpi-value">18.5%</div>
+          <div class="kpi-sub">102 de 550 clientes</div>
+        </div>
+      </div>
+
+      <!-- Plan distribution & Product distribution -->
+      <div class="chart-row">
+        <div class="chart-box">
+          <div class="chart-box-title">Distribucion por tipo de plan</div>
+          <div class="chart-area">
+            <div class="donut-container" id="plan-donut"></div>
+          </div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title">Distribucion por producto</div>
+          <div class="chart-area">
+            <div class="donut-container" id="product-donut"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Client evolution -->
+      <div class="section-title">&#128200; Evolucion clientes activos (12 meses)</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:200px">
+          <div class="chart-area">
+            <svg class="line-chart-svg" id="clients-timeline-svg" viewBox="0 0 500 160" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Client detail table -->
+      <div class="section-title">&#128203; Detalle de clientes</div>
+      <div class="filters-bar">
+        <span class="filter-label">Filtros:</span>
+        <select class="filter-select" id="filter-plan">
+          <option value="">Todos los planes</option>
+          <option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option>
+        </select>
+        <select class="filter-select" id="filter-product">
+          <option value="">Todos los productos</option>
+          <option>Entrenamiento</option><option>Nutricion</option><option>Bundle</option>
+        </select>
+        <select class="filter-select" id="filter-gateway">
+          <option value="">Todas las pasarelas</option>
+          <option>App Store</option><option>Google Play</option><option>Stripe</option><option>Shopify</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="dash-table" id="clients-table">
+          <thead>
+            <tr><th>Nombre</th><th>Email</th><th>Plan</th><th>Producto</th><th>Alta</th><th>Canal</th><th>Pasarela</th><th>Estado</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- DASHBOARD 4: REVENUE (P5)                  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="dash-view" id="dash-revenue">
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">MRR</div>
+          <div class="kpi-value">15.950&euro;</div>
+          <div class="kpi-sub"><span class="kpi-up">&#9650; +12%</span> vs. mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">ARR</div>
+          <div class="kpi-value">191.4K&euro;</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">ARPU</div>
+          <div class="kpi-value">29&euro;</div>
+          <div class="kpi-sub"><span class="kpi-neutral">= estable</span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">% Descuento medio</div>
+          <div class="kpi-value">8.2%</div>
+          <div class="kpi-sub"><span class="kpi-down">&#9650; +1.3pp</span></div>
+        </div>
+      </div>
+
+      <!-- MRR evolution -->
+      <div class="section-title">&#128200; Evolucion MRR (12 meses)</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:200px">
+          <div class="chart-area">
+            <svg class="line-chart-svg" id="mrr-timeline-svg" viewBox="0 0 500 160" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ticket comparison & Gateway donut -->
+      <div class="chart-row">
+        <div class="chart-box">
+          <div class="chart-box-title">Ticket medio: lista vs final vs ARPU</div>
+          <div class="chart-area" id="ticket-bars"></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title">Revenue por pasarela de pago</div>
+          <div class="chart-area">
+            <div class="donut-container" id="gateway-donut"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LTV by channel -->
+      <div class="section-title">&#128203; LTV por canal de captacion</div>
+      <div style="overflow-x:auto">
+        <table class="dash-table" id="ltv-table">
+          <thead>
+            <tr><th>Canal</th><th>LTV</th><th>CAC</th><th>LTV:CAC</th><th>Status</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Revenue breakdown -->
+      <div class="section-title">&#128176; Desglose revenue por producto</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:200px">
+          <div class="chart-box-title">Revenue entrenamiento vs nutricion vs otros (12 meses)</div>
+          <div class="chart-area" id="revenue-stacked"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- DASHBOARD 6: TRIAL (P6)                     -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="dash-view" id="dash-trial">
+      <!-- Trial Filters (canal + plataforma only, periodo uses global topbar) -->
+      <div class="filters-bar" id="trial-filters">
+        <span class="filter-label">Canal:</span>
+        <select class="filter-select" id="trial-canal" onchange="renderAllTrialCharts()">
+          <option>Todos los canales</option><option>Organico Cristobal</option><option>Organico RunnerPro</option><option>Meta Ads</option><option>TikTok Ads</option><option>Apple Search Ads</option><option>ASO Organico</option><option>Partnerships</option><option>Referidos</option><option>Sin atribucion</option>
+        </select>
+        <span class="filter-label" style="margin-left:8px">Plataforma:</span>
+        <select class="filter-select" id="trial-platform">
+          <option>Todas</option><option>iOS</option><option>Android</option>
+        </select>
+        <span class="filter-label" style="margin-left:12px">Comparar con:</span>
+        <select class="filter-select" id="trial-compare" onchange="renderAllTrialCharts()">
+          <option value="none">Sin comparacion</option>
+          <option value="prev">Periodo anterior</option>
+          <option value="year">Mismo periodo año anterior</option>
+        </select>
+      </div>
+
+      <!-- KPIs (5 cards) — rendered dynamically -->
+      <div class="kpi-row" id="trial-kpis-main" style="grid-template-columns:repeat(5,1fr)"></div>
+
+      <!-- Section 1: Funnel Completo -->
+      <div class="section-title">&#128681; Funnel completo del Trial</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Impresiones App Store &rarr; Conversion a pago (pasos 5-8 paralelos sobre paso 4)</div>
+          <div class="chart-area" id="trial-full-funnel"></div>
+          <div id="trial-funnel-alert" style="margin-top:12px;padding:10px 14px;border-radius:var(--radius-md);background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.25);font-size:11px;color:var(--warning);display:flex;align-items:flex-start;gap:8px">
+            <span style="font-size:14px">&#9888;</span>
+            <span id="trial-funnel-alert-text"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Curva de Supervivencia -->
+      <div class="section-title">&#128200; Curva de supervivencia del trial (15 dias)</div>
+      <div class="chart-row single">
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">% Trials activos por dia &mdash; numero absoluto debajo</div>
+          <div class="chart-area" id="trial-survival-bars"></div>
+          <div id="trial-survival-alert" style="margin-top:8px;padding:8px 12px;border-radius:var(--radius-md);background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);font-size:10px;color:var(--error);display:flex;align-items:center;gap:6px">
+            <span style="font-size:12px">&#128308;</span>
+            <span id="trial-survival-alert-text"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Impacto del Coach -->
+      <div class="section-title">&#128222; Impacto de la llamada con el coach</div>
+      <div class="chart-row">
+        <!-- Block A: Conversion by interaction level -->
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Conversion a pago por nivel de interaccion</div>
+          <div class="chart-area" id="coach-interaction-chart"></div>
+        </div>
+        <!-- Block B: Call vs No Call table -->
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Comparativa: Llamada Si vs No</div>
+          <table class="dash-table" id="coach-comparison-table">
+            <thead><tr><th>Metrica</th><th style="color:var(--success)">Con llamada</th><th style="color:var(--error)">Sin llamada</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 4: Engagement -->
+      <div class="section-title">&#128170; Metricas de engagement durante el trial</div>
+      <div class="kpi-row" id="trial-kpis-engagement" style="grid-template-columns:repeat(6,1fr)"></div>
+      <!-- Coach messaging detail -->
+      <div class="chart-row single" style="margin-top:16px">
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Detalle de comunicacion con el entrenador</div>
+          <table class="dash-table" id="coach-messaging-table">
+            <thead><tr><th>Tramo</th><th>Msgs coach &rarr; usuario</th><th>Msgs usuario &rarr; coach</th><th>Tasa respuesta</th><th>Tiempo respuesta (h)</th><th>Conv. a pago</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 5: Conversion -->
+      <div class="section-title">&#128176; Conversion: cuando pagan, que eligen, impacto del descuento</div>
+      <div class="chart-row triple">
+        <!-- Block A: Payment day -->
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Dia de pago dentro del trial</div>
+          <div class="chart-area" id="trial-payment-day-chart"></div>
+        </div>
+        <!-- Block B: Plan chosen -->
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Plan elegido tras trial</div>
+          <div class="chart-area">
+            <div class="donut-container" id="trial-plan-donut"></div>
+          </div>
+        </div>
+        <!-- Block C: Discount impact -->
+        <div class="chart-box" style="min-height:auto">
+          <div class="chart-box-title">Impacto del descuento</div>
+          <div id="trial-discount-impact"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA (demo/mock - would connect to real DB)
+// ═══════════════════════════════════════════
+
+const CHANNELS = [
+  { name: 'Organico Cristobal', trials: 42, conv: 38, cac: 0, ltv: 310, churn: 8, color: '#529CCA' },
+  { name: 'Organico RunnerPro', trials: 28, conv: 32, cac: 0, ltv: 280, churn: 10, color: '#2ecc71' },
+  { name: 'Meta Ads', trials: 35, conv: 22, cac: 89, ltv: 245, churn: 13, color: '#3742FA' },
+  { name: 'TikTok Ads', trials: 22, conv: 18, cac: 105, ltv: 200, churn: 15, color: '#00f2ea' },
+  { name: 'Apple Search Ads', trials: 18, conv: 28, cac: 72, ltv: 290, churn: 9, color: '#f39c12' },
+  { name: 'Retargeting churned', trials: 12, conv: 35, cac: 45, ltv: 220, churn: 7, color: '#e74c3c' },
+  { name: 'ASO Organico', trials: 15, conv: 20, cac: 0, ltv: 260, churn: 11, color: '#8e44ad' },
+  { name: 'Partnerships', trials: 8, conv: 25, cac: 30, ltv: 300, churn: 6, color: '#27ae60' },
+  { name: 'Referidos', trials: 5, conv: 45, cac: 15, ltv: 350, churn: 5, color: '#e67e22' },
+  { name: 'Sin atribucion', trials: 2, conv: 10, cac: 0, ltv: 180, churn: 18, color: '#6b7280' },
+];
+
+const COHORT_DATA = [
+  { month: 'Sep 2023', newClients: 45, pct: [100,91,83,76,70,65,61,57,54,51,48,46,44,42,40,38,37,35,34,33,32,31,30,29,28,27,26,25,24] },
+  { month: 'Oct 2023', newClients: 48, pct: [100,89,80,73,67,62,58,54,51,48,45,43,41,39,37,36,34,33,32,31,30,29,28,27,26,25,24] },
+  { month: 'Nov 2023', newClients: 42, pct: [100,90,82,75,69,64,60,56,53,50,47,45,43,41,39,37,36,34,33,32,31,30,29,28,27,26] },
+  { month: 'Dic 2023', newClients: 38, pct: [100,88,79,72,66,61,57,53,50,47,44,42,40,38,36,35,33,32,31,30,29,28,27,26] },
+  { month: 'Ene 2024', newClients: 52, pct: [100,87,78,71,65,60,56,52,49,46,44,41,39,37,36,34,33,31,30,29,28,27,26] },
+  { month: 'Feb 2024', newClients: 55, pct: [100,88,80,73,67,62,58,54,51,48,45,43,41,39,37,36,34,33,32,31,30,29] },
+  { month: 'Mar 2024', newClients: 58, pct: [100,89,81,74,68,63,59,55,52,49,46,44,42,40,38,36,35,33,32,31,30] },
+  { month: 'Abr 2024', newClients: 50, pct: [100,87,79,72,66,61,57,53,50,47,45,42,40,38,37,35,34,32,31,30] },
+  { month: 'May 2024', newClients: 62, pct: [100,88,80,74,68,63,59,56,53,50,47,45,43,41,39,37,36,34,33] },
+  { month: 'Jun 2024', newClients: 60, pct: [100,89,82,76,70,65,61,58,55,52,49,47,45,43,41,39,38,36] },
+  { month: 'Jul 2024', newClients: 55, pct: [100,87,79,73,67,62,58,55,52,49,47,44,42,40,39,37,36] },
+  { month: 'Ago 2024', newClients: 58, pct: [100,86,78,71,65,60,56,53,50,47,45,43,41,39,37,36] },
+  { month: 'Sep 2024', newClients: 65, pct: [100,88,81,75,69,64,60,57,54,51,48,46,44,42,40] },
+  { month: 'Oct 2024', newClients: 68, pct: [100,87,80,74,68,63,59,56,53,50,48,45,43,41] },
+  { month: 'Nov 2024', newClients: 72, pct: [100,89,82,76,70,65,61,58,55,52,49,47,45] },
+  { month: 'Dic 2024', newClients: 65, pct: [100,86,78,72,66,61,57,54,51,48,46,44] },
+  { month: 'Ene 2025', newClients: 70, pct: [100,88,81,75,69,64,60,57,54,51,49] },
+  { month: 'Feb 2025', newClients: 75, pct: [100,89,82,76,70,66,62,58,55,52] },
+  { month: 'Mar 2025', newClients: 78, pct: [100,90,83,77,71,67,63,59,56] },
+  { month: 'Abr 2025', newClients: 72, pct: [100,88,81,75,69,65,61,58] },
+  { month: 'May 2025', newClients: 80, pct: [100,89,82,76,71,66,62] },
+  { month: 'Jun 2025', newClients: 85, pct: [100,90,84,78,72,68] },
+  { month: 'Jul 2025', newClients: 82, pct: [100,88,81,75,70] },
+  { month: 'Ago 2025', newClients: 78, pct: [100,87,80,74] },
+  { month: 'Sep 2025', newClients: 88, pct: [100,89,82] },
+  { month: 'Oct 2025', newClients: 90, pct: [100,88] },
+  { month: 'Nov 2025', newClients: 92, pct: [100,90] },
+  { month: 'Dic 2025', newClients: 85, pct: [100,87] },
+  { month: 'Ene 2026', newClients: 95, pct: [100] },
+];
+let cohortMode = 'pct'; // 'pct' or 'abs'
+
+const CHURN_REASONS = [
+  { label: 'Precio', pct: 28, color: '#e74c3c' },
+  { label: 'No tengo tiempo', pct: 22, color: '#f39c12' },
+  { label: 'Lesion', pct: 18, color: '#8e44ad' },
+  { label: 'No veo resultados', pct: 15, color: '#529CCA' },
+  { label: 'Ya no corro', pct: 10, color: '#2ecc71' },
+  { label: 'Otro', pct: 7, color: '#6b7280' },
+];
+
+const UNATTRIBUTED_CLIENTS = [
+  { name: 'Laura Garcia', email: 'laura.g@email.com', date: '02/02/2026' },
+  { name: 'Miguel Torres', email: 'migueltor@email.com', date: '04/02/2026' },
+  { name: 'Ana Ruiz', email: 'anaruiz@email.com', date: '05/02/2026' },
+  { name: 'Carlos Vega', email: 'cvega@email.com', date: '06/02/2026' },
+  { name: 'Sofia Mendez', email: 'sofiamz@email.com', date: '08/02/2026' },
+  { name: 'Pablo Jimenez', email: 'pjimenez@email.com', date: '09/02/2026' },
+];
+
+const SAMPLE_CLIENTS = [
+  { name: 'Cristobal Redondo', email: 'cris@runnerpro.es', plan: 'Anual', product: 'Bundle', date: '15/03/2025', channel: 'Organico Cristobal', gateway: 'Stripe', status: 'Activo' },
+  { name: 'Maria Lopez', email: 'maria.l@email.com', plan: 'Mensual', product: 'Entrenamiento', date: '20/09/2025', channel: 'Meta Ads', gateway: 'App Store', status: 'Activo' },
+  { name: 'Juan Martinez', email: 'juanm@email.com', plan: 'Trimestral', product: 'Bundle', date: '01/11/2025', channel: 'Referidos', gateway: 'Google Play', status: 'Activo' },
+  { name: 'Elena Sanchez', email: 'elena.s@email.com', plan: 'Mensual', product: 'Entrenamiento', date: '15/12/2025', channel: 'TikTok Ads', gateway: 'Stripe', status: 'Activo' },
+  { name: 'David Fernandez', email: 'david.f@email.com', plan: 'Anual', product: 'Entrenamiento', date: '03/01/2026', channel: 'Apple Search Ads', gateway: 'App Store', status: 'Activo' },
+  { name: 'Carmen Diaz', email: 'carmen.d@email.com', plan: 'Mensual', product: 'Nutricion', date: '10/01/2026', channel: 'Organico RunnerPro', gateway: 'Stripe', status: 'Trial' },
+  { name: 'Alejandro Ruiz', email: 'alex.r@email.com', plan: 'Trimestral', product: 'Entrenamiento', date: '20/01/2026', channel: 'Partnerships', gateway: 'Google Play', status: 'Activo' },
+  { name: 'Isabel Moreno', email: 'isa.m@email.com', plan: 'Mensual', product: 'Bundle', date: '28/01/2026', channel: 'ASO Organico', gateway: 'App Store', status: 'Activo' },
+];
+
+const MONTHS_12 = ['Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb'];
+const MRR_12 = [8200, 8900, 9600, 10100, 10800, 11200, 12000, 12800, 13500, 14200, 14800, 15950];
+const CLIENTS_12 = [290, 310, 335, 355, 380, 400, 425, 450, 475, 500, 523, 550];
+const NET_MRR_12 = [400, 700, 700, 500, 700, 400, 800, 800, 700, 700, 600, 1876];
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+
+const DASH_TITLES = {
+  acquisition: 'Adquisicion, Atribucion & Trial Funnel',
+  retention: 'Retencion, Churn & Cohortes',
+  flow: 'Movimientos y Flujo Mensual',
+  clients: 'Base de Clientes y Estado Actual',
+  revenue: 'Revenue y Monetizacion',
+  trial: 'Analisis Detallado del Trial',
+};
+
+function showDash(id) {
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.sidebar-item[data-dash="${id}"]`).classList.add('active');
+  document.querySelectorAll('.dash-view').forEach(el => el.classList.remove('active'));
+  document.getElementById('dash-' + id).classList.add('active');
+  document.getElementById('topbar-title').textContent = DASH_TITLES[id];
+}
+
+// ═══════════════════════════════════════════
+// RENDERING FUNCTIONS
+// ═══════════════════════════════════════════
+
+function renderChannelBars() {
+  const withClients = CHANNELS.map(ch => ({ ...ch, newClients: Math.round(ch.trials * ch.conv / 100) }));
+  const sorted = [...withClients].sort((a, b) => b.newClients - a.newClients);
+  const max = sorted[0].newClients;
+  const container = document.getElementById('channel-bars');
+  container.innerHTML = sorted.map(ch => `
+    <div class="hbar-row">
+      <div class="hbar-label">${ch.name}</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${(ch.newClients/max)*100}%;background:${ch.color}"></div>
+      </div>
+      <div class="hbar-value">${ch.newClients}</div>
+    </div>
+  `).join('');
+}
+
+const FUNNEL_DATA = {
+  appstore: [
+    { label: 'Visitas Store', value: 4200, color: '#529CCA' },
+    { label: 'Descargas', value: 480, color: '#3498db' },
+    { label: 'Trial iniciado', value: 108, color: '#8e44ad' },
+    { label: 'D7 activo', value: 65, color: '#f39c12' },
+    { label: 'D14 activo', value: 40, color: '#e67e22' },
+    { label: 'Conversion a pago', value: 27, color: '#2ecc71' },
+  ],
+  playstore: [
+    { label: 'Visitas Store', value: 3600, color: '#529CCA' },
+    { label: 'Descargas', value: 340, color: '#3498db' },
+    { label: 'Trial iniciado', value: 79, color: '#8e44ad' },
+    { label: 'D7 activo', value: 47, color: '#f39c12' },
+    { label: 'D14 activo', value: 28, color: '#e67e22' },
+    { label: 'Conversion a pago', value: 19, color: '#2ecc71' },
+  ],
+};
+
+let currentFunnelStore = 'both';
+
+function buildFunnelHTML(steps, maxOverride) {
+  const max = maxOverride || steps[0].value;
+  const base = steps[0].value;
+  return `<div class="funnel-container">${steps.map((s, i) => {
+    const pctTotal = i === 0 ? '100%' : (s.value / base * 100).toFixed(1) + '%';
+    const pctPrev = i === 0 ? '-' : (s.value / steps[i-1].value * 100).toFixed(1) + '%';
+    return `<div class="funnel-step">
+      <div class="funnel-step-label">${s.label}</div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar" style="width:${(s.value/max)*100}%;background:${s.color}">${s.value.toLocaleString()}</div>
+      </div>
+      <div class="funnel-pct funnel-pct-total">${pctTotal}</div>
+      <div class="funnel-pct">${pctPrev}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function switchFunnelStore(store) {
+  currentFunnelStore = store;
+  document.querySelectorAll('.funnel-store-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.funnel-store-btn[data-store="${store}"]`).classList.add('active');
+  renderTrialFunnel();
+}
+
+function renderTrialFunnel() {
+  const container = document.getElementById('trial-funnel');
+  if (currentFunnelStore === 'both') {
+    const globalMax = Math.max(FUNNEL_DATA.appstore[0].value, FUNNEL_DATA.playstore[0].value);
+    container.innerHTML = `
+      <div class="funnel-compare">
+        <div class="funnel-compare-col">
+          <div class="funnel-compare-header appstore">&#63743; App Store (iOS)</div>
+          ${buildFunnelHTML(FUNNEL_DATA.appstore, globalMax)}
+        </div>
+        <div class="funnel-compare-col">
+          <div class="funnel-compare-header playstore">&#9654; Google Play (Android)</div>
+          ${buildFunnelHTML(FUNNEL_DATA.playstore, globalMax)}
+        </div>
+      </div>`;
+  } else {
+    const steps = FUNNEL_DATA[currentFunnelStore];
+    container.innerHTML = buildFunnelHTML(steps);
+  }
+}
+
+function renderChannelTable() {
+  const tbody = document.querySelector('#channel-table tbody');
+  tbody.innerHTML = CHANNELS.map(ch => {
+    const convAbs = Math.round(ch.trials * ch.conv / 100);
+    const ltvCac = ch.cac > 0 ? (ch.ltv / ch.cac).toFixed(1) + ':1' : '∞';
+    const ltvClass = ch.cac === 0 || ch.ltv / ch.cac >= 3 ? 'badge-green' : ch.ltv / ch.cac >= 2 ? 'badge-yellow' : 'badge-red';
+    return `<tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${ch.color};margin-right:6px"></span>${ch.name}</td>
+      <td>${ch.trials}</td><td>${convAbs}</td><td>${ch.conv}%</td>
+      <td>${ch.cac > 0 ? ch.cac + '€' : '-'}</td>
+      <td><span class="badge ${ltvClass}">${ltvCac}</span></td>
+      <td>${ch.churn}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAttributionTable() {
+  const channels = CHANNELS.map(c => c.name).filter(n => n !== 'Sin atribucion');
+  const tbody = document.querySelector('#attribution-table tbody');
+  tbody.innerHTML = UNATTRIBUTED_CLIENTS.map((cl, i) => `
+    <tr>
+      <td>${cl.name}</td><td style="color:var(--text-secondary)">${cl.email}</td><td>${cl.date}</td>
+      <td><span class="badge badge-gray">Sin atribucion</span></td>
+      <td>
+        <select class="attr-select" id="attr-sel-${i}">
+          <option value="">Seleccionar...</option>
+          ${channels.map(c => `<option>${c}</option>`).join('')}
+        </select>
+      </td>
+      <td><button class="attr-btn" onclick="assignAttribution(${i})">Asignar</button></td>
+    </tr>
+  `).join('');
+}
+
+function assignAttribution(i) {
+  const sel = document.getElementById('attr-sel-' + i);
+  if (!sel.value) return;
+  const row = sel.closest('tr');
+  row.style.opacity = '0.3';
+  setTimeout(() => row.remove(), 300);
+}
+
+// Cohort table
+function switchCohortMode(mode) {
+  cohortMode = mode;
+  document.querySelectorAll('.cohort-mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.cohort-mode-btn[data-mode="${mode}"]`).classList.add('active');
+  renderCohortTable();
+}
+
+function renderCohortTable() {
+  const thead = document.querySelector('#cohort-table thead');
+  const tbody = document.querySelector('#cohort-table tbody');
+
+  // Generate all month headers dynamically from first cohort month
+  const mNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  // First cohort is Sep 2023 → month index 8, year 2023
+  const startM = 8, startY = 2023;
+  const totalCols = COHORT_DATA.length; // one column per cohort month
+  const allHeaders = [];
+  for (let i = 0; i < totalCols; i++) {
+    const m = (startM + i) % 12;
+    const y = startY + Math.floor((startM + i) / 12);
+    allHeaders.push(mNames[m] + ' ' + String(y).slice(2));
+  }
+
+  thead.innerHTML = '<tr><th>Cohorte</th><th>Nuevos</th>' + allHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+  tbody.innerHTML = COHORT_DATA.map((row, ri) => {
+    const cells = Array.from({length: totalCols}, (_, i) => {
+      const dataIdx = i - ri;
+      if (dataIdx < 0 || dataIdx >= row.pct.length) return '<td></td>';
+      const pctVal = row.pct[dataIdx];
+      let display;
+      if (cohortMode === 'pct') {
+        display = pctVal + '%';
+      } else {
+        display = Math.round(row.newClients * pctVal / 100);
+      }
+      const hue = pctVal >= 80 ? 140 : pctVal >= 60 ? 80 : pctVal >= 40 ? 40 : 0;
+      const sat = pctVal >= 80 ? 40 : 50;
+      const alpha = 0.15 + (pctVal / 100) * 0.35;
+      return `<td><span class="cohort-cell" style="background:hsla(${hue},${sat}%,50%,${alpha});color:hsla(${hue},${sat}%,75%,1)">${display}</span></td>`;
+    }).join('');
+    return '<tr><td class="highlight">' + row.month + '</td><td style="color:var(--accent);font-weight:700">' + row.newClients + '</td>' + cells + '</tr>';
+  }).join('');
+}
+
+// Donut chart (SVG)
+function renderDonut(containerId, data, size = 120) {
+  const container = document.getElementById(containerId);
+  const cx = size / 2, cy = size / 2, r = size / 2 - 8, inner = r * 0.55;
+  let cumPct = 0;
+  const paths = data.map(d => {
+    const startAngle = cumPct * 3.6 * (Math.PI / 180);
+    cumPct += d.pct;
+    const endAngle = cumPct * 3.6 * (Math.PI / 180);
+    const largeArc = d.pct > 50 ? 1 : 0;
+    const x1 = cx + r * Math.sin(startAngle), y1 = cy - r * Math.cos(startAngle);
+    const x2 = cx + r * Math.sin(endAngle), y2 = cy - r * Math.cos(endAngle);
+    const ix1 = cx + inner * Math.sin(startAngle), iy1 = cy - inner * Math.cos(startAngle);
+    const ix2 = cx + inner * Math.sin(endAngle), iy2 = cy - inner * Math.cos(endAngle);
+    return `<path d="M${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2} L${ix2},${iy2} A${inner},${inner} 0 ${largeArc} 0 ${ix1},${iy1} Z" fill="${d.color}" opacity="0.85"/>`;
+  });
+  const legend = data.map(d => `
+    <div class="donut-legend-item">
+      <span class="donut-legend-dot" style="background:${d.color}"></span>
+      ${d.label} <span style="color:var(--text-primary);font-weight:600;margin-left:4px">${d.pct}%</span>
+    </div>
+  `).join('');
+  container.innerHTML = `
+    <svg class="donut-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths.join('')}</svg>
+    <div class="donut-legend">${legend}</div>
+  `;
+}
+
+// SVG Line chart
+function renderLineChart(svgId, data, color = '#529CCA', showDots = true, fillArea = true) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const w = 500, h = 160, pad = 10;
+  const max = Math.max(...data) * 1.1;
+  const min = Math.min(...data) * 0.9;
+  const points = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * (w - pad * 2);
+    const y = pad + (1 - (v - min) / (max - min)) * (h - pad * 2);
+    return { x, y, v };
+  });
+  const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
+  let areaD = '';
+  if (fillArea) {
+    areaD = pathD + ` L${points[points.length-1].x},${h - pad} L${points[0].x},${h - pad} Z`;
+  }
+  const labels = MONTHS_12.map((m, i) => {
+    const x = pad + (i / (MONTHS_12.length - 1)) * (w - pad * 2);
+    return `<text x="${x}" y="${h - 1}" text-anchor="middle" fill="var(--text-placeholder)" font-size="8" font-family="Inter">${m}</text>`;
+  });
+  const dots = showDots ? points.map(p =>
+    `<circle cx="${p.x}" cy="${p.y}" r="3" fill="${color}" stroke="var(--bg-tertiary)" stroke-width="1.5"/>`
+  ).join('') : '';
+
+  svg.innerHTML = `
+    ${fillArea ? `<path d="${areaD}" fill="${color}" opacity="0.08"/>` : ''}
+    <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+    ${labels.join('')}
+  `;
+}
+
+function renderMultiLineChart(svgId, datasets) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const w = 500, h = 160, pad = 10;
+  const allValues = datasets.flatMap(d => d.data);
+  const max = Math.max(...allValues) * 1.05;
+  const min = Math.min(...allValues) * 0.95;
+
+  const lines = datasets.map(ds => {
+    const points = ds.data.map((v, i) => {
+      const x = pad + (i / (ds.data.length - 1)) * (w - pad * 2);
+      const y = pad + (1 - (v - min) / (max - min)) * (h - pad * 2);
+      return `${x},${y}`;
+    });
+    return `<polyline points="${points.join(' ')}" fill="none" stroke="${ds.color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>`;
+  });
+
+  const xLabels = ['M+0','M+1','M+2','M+3','M+4','M+5','M+6','M+7','M+8','M+9','M+10','M+11','M+12'];
+  const labelSvg = xLabels.map((m, i) => {
+    if (i >= 13) return '';
+    const x = pad + (i / 12) * (w - pad * 2);
+    return `<text x="${x}" y="${h - 1}" text-anchor="middle" fill="var(--text-placeholder)" font-size="7" font-family="Inter">${m}</text>`;
+  });
+
+  svg.innerHTML = lines.join('') + labelSvg.join('');
+}
+
+// Waterfall
+function renderWaterfall() {
+  const items = [
+    { label: 'MRR Inicio', value: 15950, type: 'neutral' },
+    { label: 'New MRR', value: 2117, type: 'positive' },
+    { label: 'Expansion', value: 1247, type: 'positive' },
+    { label: 'Reactivation', value: 232, type: 'positive' },
+    { label: 'Churn', value: -1408, type: 'negative' },
+    { label: 'Contraction', value: -312, type: 'negative' },
+    { label: 'MRR Final', value: 17826, type: 'neutral' },
+  ];
+  const maxVal = Math.max(...items.map(i => Math.abs(i.value)));
+  const scale = 180 / maxVal;
+  const container = document.getElementById('waterfall-chart');
+  container.innerHTML = `<div class="waterfall-container">${items.map(item => {
+    const h = Math.abs(item.value) * scale;
+    const bgColor = item.type === 'positive' ? 'var(--success)' : item.type === 'negative' ? 'var(--error)' : 'var(--accent)';
+    const valClass = 'wf-' + item.type;
+    const sign = item.type === 'positive' ? '+' : item.type === 'negative' ? '' : '';
+    return `<div class="waterfall-col">
+      <div class="waterfall-value ${valClass}">${sign}${item.value.toLocaleString()}€</div>
+      <div class="waterfall-bar" style="height:${h}px;background:${bgColor};opacity:0.75"></div>
+      <div class="waterfall-label">${item.label}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// Migration flows table
+function renderMigrationFlows() {
+  const base = 550;
+  const flows = [
+    { from: 'Mensual', to: 'Trimestral', n: 8, mrr: '+347€', cls: 'flow-up' },
+    { from: 'Mensual', to: 'Anual', n: 5, mrr: '+510€', cls: 'flow-up' },
+    { from: 'Trimestral', to: 'Anual', n: 5, mrr: '+390€', cls: 'flow-up' },
+    { from: 'Pausa', to: 'Mensual', n: 4, mrr: '+116€', cls: 'flow-up' },
+    { from: 'Pausa', to: 'Trimestral', n: 2, mrr: '+53€', cls: 'flow-up' },
+    { from: 'Anual', to: 'Trimestral', n: 3, mrr: '-132€', cls: 'flow-down' },
+    { from: 'Trimestral', to: 'Mensual', n: 2, mrr: '-84€', cls: 'flow-down' },
+    { from: 'Anual', to: 'Mensual', n: 2, mrr: '-96€', cls: 'flow-down' },
+    { from: 'Mensual', to: 'Pausa', n: 5, mrr: '-145€', cls: 'flow-down' },
+    { from: 'Trimestral', to: 'Pausa', n: 3, mrr: '-79€', cls: 'flow-down' },
+  ];
+  document.getElementById('migration-flows').innerHTML = flows.map(f => {
+    const pct = ((f.n / base) * 100).toFixed(1) + '%';
+    return `<tr><td>${f.from}</td><td class="flow-arrow">&rarr;</td><td>${f.to}</td><td>${f.n}</td><td style="color:var(--text-tertiary)">${pct}</td><td class="${f.cls}">${f.mrr}</td></tr>`;
+  }).join('');
+}
+
+// Clients table
+function renderClientsTable() {
+  const tbody = document.querySelector('#clients-table tbody');
+  tbody.innerHTML = SAMPLE_CLIENTS.map(c => {
+    const statusClass = c.status === 'Activo' ? 'badge-green' : c.status === 'Trial' ? 'badge-blue' : 'badge-red';
+    return `<tr>
+      <td>${c.name}</td><td style="color:var(--text-secondary)">${c.email}</td>
+      <td>${c.plan}</td><td>${c.product}</td><td>${c.date}</td>
+      <td>${c.channel}</td><td>${c.gateway}</td>
+      <td><span class="badge ${statusClass}">${c.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// LTV table
+function renderLTVTable() {
+  const tbody = document.querySelector('#ltv-table tbody');
+  tbody.innerHTML = CHANNELS.filter(c => c.name !== 'Sin atribucion').map(ch => {
+    const ratio = ch.cac > 0 ? (ch.ltv / ch.cac) : Infinity;
+    const ratioStr = ratio === Infinity ? '∞' : ratio.toFixed(1) + ':1';
+    const statusClass = ratio >= 3 || ratio === Infinity ? 'badge-green' : ratio >= 2 ? 'badge-yellow' : 'badge-red';
+    const statusLabel = ratio >= 3 || ratio === Infinity ? 'Excelente' : ratio >= 2 ? 'Aceptable' : 'Riesgo';
+    return `<tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${ch.color};margin-right:6px"></span>${ch.name}</td>
+      <td>${ch.ltv}€</td><td>${ch.cac > 0 ? ch.cac + '€' : '-'}</td>
+      <td><span class="badge ${statusClass}">${ratioStr}</span></td>
+      <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// Ticket bars (stacked comparison)
+function renderTicketBars() {
+  const container = document.getElementById('ticket-bars');
+  const bars = [
+    { label: 'Ticket lista', value: 31.5, color: '#529CCA' },
+    { label: 'Ticket final', value: 28.9, color: '#f39c12' },
+    { label: 'ARPU', value: 29.0, color: '#2ecc71' },
+  ];
+  const max = Math.max(...bars.map(b => b.value));
+  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;padding:16px 0">${bars.map(b => `
+    <div class="hbar-row">
+      <div class="hbar-label">${b.label}</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${(b.value/max)*100}%;background:${b.color}"></div>
+      </div>
+      <div class="hbar-value">${b.value}€</div>
+    </div>
+  `).join('')}</div>`;
+}
+
+// Revenue stacked
+function renderRevenueStacked() {
+  const container = document.getElementById('revenue-stacked');
+  const entrenamientoData = [7100,7600,8200,8600,9200,9500,10200,10900,11500,12000,12600,13400];
+  const nutricionData = [900,1050,1150,1200,1300,1400,1500,1600,1700,1800,1900,2100];
+  const otrosData = [200,250,250,300,300,300,300,300,300,400,300,450];
+
+  container.innerHTML = `<div class="sbar-container">${MONTHS_12.map((m, i) => {
+    const total = entrenamientoData[i] + nutricionData[i] + otrosData[i];
+    const maxTotal = 16000;
+    const hE = (entrenamientoData[i] / maxTotal) * 160;
+    const hN = (nutricionData[i] / maxTotal) * 160;
+    const hO = (otrosData[i] / maxTotal) * 160;
+    return `<div class="sbar-col">
+      <div class="sbar-segment" style="height:${hO}px;background:#6b7280;border-radius:var(--radius-sm) var(--radius-sm) 0 0"></div>
+      <div class="sbar-segment" style="height:${hN}px;background:#f39c12"></div>
+      <div class="sbar-segment" style="height:${hE}px;background:#529CCA"></div>
+      <div class="sbar-label">${m}</div>
+    </div>`;
+  }).join('')}</div>
+  <div style="display:flex;gap:16px;margin-top:8px;font-size:10px;padding-left:8px">
+    <span style="color:#529CCA">&#9632; Entrenamiento</span>
+    <span style="color:#f39c12">&#9632; Nutricion</span>
+    <span style="color:#6b7280">&#9632; Otros</span>
+  </div>`;
+}
+
+// Trial survival curve
+// Churn dual chart: monthly + rolling annual average
+function renderChurnDualChart() {
+  const monthly = [14, 13.5, 13, 12.5, 12, 12.2, 11.8, 11.5, 11, 10.8, 10.4, 11.2];
+  const rolling = monthly.map((_, i) => {
+    const slice = monthly.slice(0, i + 1);
+    return +(slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(1);
+  });
+  const svg = document.getElementById('churn-timeline-svg');
+  if (!svg) return;
+  const w = 500, h = 140, pad = 10;
+  const allVals = [...monthly, ...rolling];
+  const max = Math.max(...allVals) * 1.06;
+  const min = Math.min(...allVals) * 0.94;
+  function toPoints(data) {
+    return data.map((v, i) => {
+      const x = pad + (i / (data.length - 1)) * (w - pad * 2);
+      const y = pad + (1 - (v - min) / (max - min)) * (h - pad * 2 - 8);
+      return { x, y, v };
+    });
+  }
+  const ptsM = toPoints(monthly), ptsR = toPoints(rolling);
+  const pathM = ptsM.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
+  const pathR = ptsR.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
+  const areaM = pathM + ` L${ptsM[ptsM.length-1].x},${h-pad-8} L${ptsM[0].x},${h-pad-8} Z`;
+  const labels = MONTHS_12.map((m, i) => {
+    const x = pad + (i / (MONTHS_12.length - 1)) * (w - pad * 2);
+    return `<text x="${x}" y="${h-1}" text-anchor="middle" fill="var(--text-placeholder)" font-size="7" font-family="Inter">${m}</text>`;
+  });
+  const dotsM = ptsM.map(p =>
+    `<circle cx="${p.x}" cy="${p.y}" r="2.5" fill="#e74c3c" stroke="var(--bg-tertiary)" stroke-width="1"/>
+     <text x="${p.x}" y="${p.y-6}" text-anchor="middle" fill="#e74c3c" font-size="6" font-weight="600" font-family="Inter">${p.v}%</text>`
+  ).join('');
+  const dotsR = ptsR.map(p =>
+    `<circle cx="${p.x}" cy="${p.y}" r="2" fill="#529CCA" stroke="var(--bg-tertiary)" stroke-width="0.8"/>`
+  ).join('');
+  svg.innerHTML = `
+    <path d="${areaM}" fill="#e74c3c" opacity="0.05"/>
+    <path d="${pathM}" fill="none" stroke="#e74c3c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${pathR}" fill="none" stroke="#529CCA" stroke-width="1.5" stroke-dasharray="5,3" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+    ${dotsM}${dotsR}${labels.join('')}
+  `;
+}
+
+// Web Analytics chart (horizontal bars)
+function renderWebAnalytics() {
+  const container = document.getElementById('web-analytics-chart');
+  const metrics = [
+    { label: 'Sesiones', value: 12400, display: '12.4K', max: 12400, color: '#529CCA' },
+    { label: 'Bounce rate', value: 42, display: '42%', max: 100, color: '#e74c3c' },
+    { label: 'Tiempo medio', value: 185, display: '3:05 min', max: 300, color: '#2ecc71' },
+    { label: 'Paginas/sesion', value: 3.8, display: '3.8', max: 6, color: '#f39c12' },
+  ];
+  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;padding:8px 0">${metrics.map(m => `
+    <div class="hbar-row">
+      <div class="hbar-label">${m.label}</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${(m.value/m.max)*100}%;background:${m.color}"></div>
+      </div>
+      <div class="hbar-value">${m.display}</div>
+    </div>
+  `).join('')}</div>`;
+}
+
+// Trial vs Web donut
+function renderTrialVsWeb() {
+  renderDonut('trial-vs-web-donut', [
+    { label: 'Trial (App)', pct: 72, color: '#529CCA' },
+    { label: 'Web directa', pct: 28, color: '#2ecc71' },
+  ]);
+}
+
+// ═══════════════════════════════════════════
+// TRIAL DASHBOARD — Full Spec + Comparison
+// ═══════════════════════════════════════════
+
+// --- Comparison data sets ---
+const TRIAL_DATA = {
+  current: {
+    kpis: [
+      { label: 'Trials iniciados', value: '187', raw: 187, sub: '' },
+      { label: 'Conversion Trial → Pago', value: '24.6%', raw: 24.6, sub: '<span style="color:var(--warning)">Objetivo: &gt;30%</span>', suffix: '%' },
+      { label: '% Llamada coach realizada', value: '58%', raw: 58, sub: 'De los que agendan: 82% la completa', suffix: '%' },
+      { label: 'Media entrenos en trial', value: '4.2', raw: 4.2, sub: 'Convierten: <b>6.8</b> | No: <b>2.1</b>' },
+      { label: 'Dia medio de pago', value: 'D8.3', raw: 8.3, sub: 'Pico: D10-D13 (42%)', inverted: true },
+    ],
+    engagement: [
+      { label: 'Dias apertura /15', value: '8.4', raw: 8.4, sub: 'Mediana: 9' },
+      { label: 'Tiempo medio/sesion', value: '6.2 min', raw: 6.2, sub: 'Convierten: 8.5 min' },
+      { label: 'Sesiones/dia', value: '1.8', raw: 1.8, sub: 'Activos: 2.3 | Inact: 0.4' },
+      { label: 'Entrenos completados', value: '4.2', raw: 4.2, sub: '<span style="color:var(--warning)">Aha moment: ≥3 entrenos</span>', accent: 'var(--warning)' },
+      { label: 'Msgs coach respondidos', value: '5.7', raw: 5.7, sub: 'Conv: 8.2 | No: 3.1' },
+      { label: 'Notificaciones activadas', value: '72%', raw: 72, sub: 'Conv con push: 31% vs 14%' },
+    ],
+    funnel: [
+      { label: 'Impresiones App Store', value: 52000, color: '#529CCA', base: 'self' },
+      { label: 'Descargas app', value: 7800, color: '#3498db', base: 'prev' },
+      { label: 'Registro completado', value: 1420, color: '#6c5ce7', base: 'prev' },
+      { label: 'Trial 15d iniciado', value: 820, color: '#8e44ad', base: 'prev' },
+      { label: 'Llamada coach agendada', value: 492, color: '#f39c12', base: 4 },
+      { label: 'Llamada coach realizada', value: 403, color: '#e67e22', base: 'prev' },
+      { label: 'Primer entreno completado', value: 615, color: '#2ecc71', base: 4 },
+      { label: '3+ entrenos en 15 dias', value: 345, color: '#27ae60', base: 4 },
+      { label: 'Conversion a pago', value: 202, color: '#00b894', base: 4 },
+    ],
+    survivalByChannel: {
+      all:     { days: [100,92,85,78,72,68,64,60,55,50,47,44,40,37,35,24.6], abs: [820,754,697,640,590,558,525,492,451,410,385,361,328,303,287,202] },
+      organic: { days: [100,95,90,86,80,76,72,68,63,58,55,52,48,45,42,32],   abs: [42,40,38,36,34,32,30,29,26,24,23,22,20,19,18,13] },
+      meta:    { days: [100,88,78,70,63,58,54,50,45,40,37,34,30,27,25,18],   abs: [35,31,27,25,22,20,19,18,16,14,13,12,11,9,9,6] },
+      tiktok:  { days: [100,82,70,60,52,46,42,38,34,30,27,24,21,18,16,12],   abs: [22,18,15,13,11,10,9,8,7,7,6,5,5,4,4,3] },
+    },
+    coachSegments: [
+      { label: 'Llamada + 3 entrenos + msgs', conv: 52, n: 145, color: '#2ecc71' },
+      { label: 'Llamada + <3 entrenos', conv: 28, n: 258, color: '#f39c12' },
+      { label: 'Sin llamada pero activo', conv: 12, n: 285, color: '#e67e22' },
+      { label: 'Sin llamada ni activo', conv: 3, n: 132, color: '#e74c3c' },
+    ],
+    messaging: [
+      { tramo: 'D0-D2 (primeros 3 dias)', coachMsgs: 4.2, userMsgs: 2.8, tasaResp: 67, tiempoResp: 3.2, conv: null },
+      { tramo: 'D3-D7 (primera semana)', coachMsgs: 3.5, userMsgs: 2.1, tasaResp: 60, tiempoResp: 4.8, conv: null },
+      { tramo: 'D8-D14 (segunda semana)', coachMsgs: 2.8, userMsgs: 1.5, tasaResp: 54, tiempoResp: 6.1, conv: null },
+      { tramo: 'Total trial', coachMsgs: 10.5, userMsgs: 6.4, tasaResp: 61, tiempoResp: 4.5, conv: 24.6 },
+    ],
+    paymentDay: [
+      { label: 'D1-D3', n: 18, pct: 9, why: 'Conversion rapida' },
+      { label: 'D4-D7', n: 34, pct: 17, why: 'Tras primeros entrenos' },
+      { label: 'D8-D10', n: 48, pct: 24, why: 'Oferta D10' },
+      { label: 'D11-D13', n: 56, pct: 28, why: 'Seguimiento D12' },
+      { label: 'D14', n: 32, pct: 16, why: 'Urgencia ultimo dia' },
+      { label: 'D15+', n: 14, pct: 7, why: 'Win-back post-trial' },
+    ],
+    planDonut: [
+      { label: 'Mensual (29€)', pct: 55, color: '#e74c3c' },
+      { label: 'Trimestral (79€)', pct: 30, color: '#f39c12' },
+      { label: 'Anual (179€)', pct: 15, color: '#529CCA' },
+    ],
+    discount: [
+      { label: 'Sin descuento', pctConv: 35, retM1: 88, retM2: 82, color: '#2ecc71' },
+      { label: 'Oferta D10 (19€)', pctConv: 42, retM1: 78, retM2: 68, color: '#f39c12' },
+      { label: 'Urgencia D13-14', pctConv: 23, retM1: 62, retM2: 48, color: '#e74c3c' },
+    ],
+  },
+  prev: {
+    kpis: [
+      { raw: 164 }, { raw: 21.8 }, { raw: 52 }, { raw: 3.8 }, { raw: 9.1 },
+    ],
+    engagement: [
+      { raw: 7.6 }, { raw: 5.5 }, { raw: 1.5 }, { raw: 3.6 }, { raw: 4.8 }, { raw: 65 },
+    ],
+    funnel: [
+      { value: 47000 }, { value: 6900 }, { value: 1250 }, { value: 710 },
+      { value: 405 }, { value: 330 }, { value: 520 }, { value: 285 }, { value: 155 },
+    ],
+    survivalByChannel: {
+      all:     { days: [100,89,81,74,67,63,59,55,50,45,42,39,35,32,30,21.8] },
+      organic: { days: [100,92,87,82,76,72,68,64,59,54,51,48,44,41,38,28] },
+      meta:    { days: [100,84,74,65,58,53,49,45,40,35,32,29,26,23,21,15] },
+      tiktok:  { days: [100,78,66,55,47,41,37,33,29,25,22,20,17,15,13,9] },
+    },
+    coachSegments: [
+      { conv: 45, n: 128 }, { conv: 24, n: 230 }, { conv: 9, n: 248 }, { conv: 2, n: 104 },
+    ],
+    messaging: [
+      { coachMsgs: 3.8, userMsgs: 2.3, tasaResp: 61, tiempoResp: 3.8, conv: null },
+      { coachMsgs: 3.0, userMsgs: 1.7, tasaResp: 54, tiempoResp: 5.5, conv: null },
+      { coachMsgs: 2.3, userMsgs: 1.2, tasaResp: 48, tiempoResp: 7.0, conv: null },
+      { coachMsgs: 9.1, userMsgs: 5.2, tasaResp: 55, tiempoResp: 5.2, conv: 21.8 },
+    ],
+    paymentDay: [
+      { n: 14, pct: 9 }, { n: 26, pct: 17 }, { n: 35, pct: 23 }, { n: 42, pct: 27 }, { n: 25, pct: 16 }, { n: 13, pct: 8 },
+    ],
+    planDonut: [
+      { pct: 60 }, { pct: 27 }, { pct: 13 },
+    ],
+    discount: [
+      { pctConv: 32, retM1: 85, retM2: 79 }, { pctConv: 38, retM1: 74, retM2: 63 }, { pctConv: 20, retM1: 58, retM2: 44 },
+    ],
+  },
+  year: {
+    kpis: [
+      { raw: 125 }, { raw: 18.2 }, { raw: 42 }, { raw: 3.1 }, { raw: 10.5 },
+    ],
+    engagement: [
+      { raw: 6.2 }, { raw: 4.5 }, { raw: 1.2 }, { raw: 2.8 }, { raw: 3.5 }, { raw: 55 },
+    ],
+    funnel: [
+      { value: 35000 }, { value: 4800 }, { value: 920 }, { value: 540 },
+      { value: 290 }, { value: 235 }, { value: 380 }, { value: 195 }, { value: 98 },
+    ],
+    survivalByChannel: {
+      all:     { days: [100,86,77,69,62,57,52,48,43,38,35,32,28,25,23,18.2] },
+      organic: { days: [100,90,84,78,72,68,63,58,53,48,44,41,37,34,31,24] },
+      meta:    { days: [100,80,70,61,54,48,43,39,34,30,27,24,21,18,16,12] },
+      tiktok:  { days: [100,74,62,51,43,37,32,28,24,21,18,16,14,12,10,7] },
+    },
+    coachSegments: [
+      { conv: 38, n: 95 }, { conv: 20, n: 175 }, { conv: 7, n: 190 }, { conv: 1, n: 80 },
+    ],
+    messaging: [
+      { coachMsgs: 3.0, userMsgs: 1.8, tasaResp: 52, tiempoResp: 4.8, conv: null },
+      { coachMsgs: 2.4, userMsgs: 1.3, tasaResp: 45, tiempoResp: 6.5, conv: null },
+      { coachMsgs: 1.8, userMsgs: 0.9, tasaResp: 40, tiempoResp: 8.2, conv: null },
+      { coachMsgs: 7.2, userMsgs: 4.0, tasaResp: 46, tiempoResp: 6.3, conv: 18.2 },
+    ],
+    paymentDay: [
+      { n: 8, pct: 8 }, { n: 16, pct: 16 }, { n: 22, pct: 22 }, { n: 28, pct: 29 }, { n: 16, pct: 16 }, { n: 8, pct: 8 },
+    ],
+    planDonut: [
+      { pct: 68 }, { pct: 22 }, { pct: 10 },
+    ],
+    discount: [
+      { pctConv: 28, retM1: 82, retM2: 76 }, { pctConv: 34, retM1: 70, retM2: 58 }, { pctConv: 18, retM1: 55, retM2: 40 },
+    ],
+  },
+};
+
+// --- Helpers ---
+function getTrialCompareMode() {
+  const sel = document.getElementById('trial-compare');
+  return sel ? sel.value : 'none';
+}
+function getCompareData() {
+  const mode = getTrialCompareMode();
+  if (mode === 'none') return null;
+  return TRIAL_DATA[mode] || null;
+}
+function deltaHTML(current, previous, suffix, inverted) {
+  if (previous == null) return '';
+  const diff = current - previous;
+  const pctChange = previous !== 0 ? ((diff / Math.abs(previous)) * 100).toFixed(0) : 0;
+  const isGood = inverted ? diff < 0 : diff > 0;
+  const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '=';
+  const color = diff === 0 ? 'var(--text-tertiary)' : isGood ? 'var(--success)' : 'var(--error)';
+  const label = getTrialCompareMode() === 'year' ? 'vs. año ant.' : 'vs. periodo ant.';
+  return `<div style="font-size:9px;margin-top:2px"><span style="color:${color};font-weight:600">${arrow} ${Math.abs(pctChange)}%</span> <span style="color:var(--text-tertiary)">${label}</span></div>`;
+}
+
+function renderAllTrialCharts() {
+  renderTrialKPIs();
+  renderTrialEngagementKPIs();
+  renderTrialFullFunnel();
+  renderTrialSurvivalBars();
+  renderCoachInteraction();
+  renderCoachComparisonTable();
+  renderCoachMessagingTable();
+  renderTrialPaymentDay();
+  renderTrialPlanDonut();
+  renderTrialDiscountImpact();
+}
+
+// --- KPIs (5 main) ---
+function renderTrialKPIs() {
+  const d = TRIAL_DATA.current.kpis;
+  const cmp = getCompareData();
+  const container = document.getElementById('trial-kpis-main');
+  container.innerHTML = d.map((k, i) => {
+    const cmpVal = cmp ? cmp.kpis[i].raw : null;
+    return `<div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      ${cmpVal != null ? deltaHTML(k.raw, cmpVal, k.suffix, k.inverted) : ''}
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`;
+  }).join('');
+}
+
+// --- Engagement KPIs (6 cards) ---
+function renderTrialEngagementKPIs() {
+  const d = TRIAL_DATA.current.engagement;
+  const cmp = getCompareData();
+  const container = document.getElementById('trial-kpis-engagement');
+  container.innerHTML = d.map((k, i) => {
+    const cmpVal = cmp ? cmp.engagement[i].raw : null;
+    const accentStyle = k.accent ? `color:${k.accent}` : '';
+    return `<div class="kpi-card" style="padding:12px 14px">
+      <div class="kpi-label" style="font-size:9px">${k.label}</div>
+      <div class="kpi-value" style="font-size:22px;${accentStyle}">${k.value}</div>
+      ${cmpVal != null ? deltaHTML(k.raw, cmpVal) : ''}
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`;
+  }).join('');
+}
+
+// --- Funnel (9 steps with comparison) ---
+function renderTrialFullFunnel() {
+  const steps = TRIAL_DATA.current.funnel;
+  const cmp = getCompareData();
+  const maxVal = steps[0].value;
+  const container = document.getElementById('trial-full-funnel');
+
+  let html = '<div style="display:flex;flex-direction:column;gap:5px;padding:8px 0">';
+  let maxDrop = 0, dropStep = '';
+  steps.forEach((s, i) => {
+    let pctTotal = ((s.value / steps[0].value) * 100).toFixed(1);
+    let pctPrev = '-';
+    if (i > 0) {
+      let baseVal;
+      if (s.base === 'prev') baseVal = steps[i-1].value;
+      else if (typeof s.base === 'number') baseVal = steps[s.base - 1].value;
+      else baseVal = steps[0].value;
+      pctPrev = ((s.value / baseVal) * 100).toFixed(1) + '%';
+      const drop = 100 - (s.value / baseVal) * 100;
+      if (drop > maxDrop) { maxDrop = drop; dropStep = steps[i-1 >= 0 ? (s.base === 'prev' ? i-1 : (typeof s.base === 'number' ? s.base - 1 : 0)) : 0].label + ' → ' + s.label; }
+    }
+    const isParallel = i >= 4 && i <= 7;
+    const indent = isParallel ? 'padding-left:20px;' : '';
+    const branchLabel = i === 4 ? '<div style="font-size:9px;color:var(--text-tertiary);margin:6px 0 2px 0;font-style:italic;padding-left:20px">↳ Ramas paralelas (base: Trial iniciado)</div>' : '';
+
+    // Comparison badge
+    let cmpBadge = '';
+    if (cmp) {
+      const prevVal = cmp.funnel[i].value;
+      const diff = s.value - prevVal;
+      const pctDiff = prevVal ? ((diff / prevVal) * 100).toFixed(0) : 0;
+      const isUp = diff > 0;
+      const col = isUp ? 'var(--success)' : 'var(--error)';
+      const arrow = isUp ? '▲' : '▼';
+      cmpBadge = `<span style="font-size:8px;color:${col};margin-left:6px;font-weight:600">${arrow}${Math.abs(pctDiff)}% <span style="color:var(--text-placeholder)">(${prevVal.toLocaleString()})</span></span>`;
+    }
+
+    html += branchLabel;
+    html += `<div class="funnel-step" style="${indent}">
+      <div class="funnel-step-label">${s.label}</div>
+      <div class="funnel-bar-wrap" style="position:relative">
+        ${cmp ? `<div style="position:absolute;top:0;left:0;width:${(cmp.funnel[i].value/maxVal)*100}%;height:100%;border:1.5px dashed var(--text-placeholder);border-radius:var(--radius-sm);opacity:0.5;pointer-events:none"></div>` : ''}
+        <div class="funnel-bar" style="width:${(s.value/maxVal)*100}%;background:${s.color}">${s.value.toLocaleString()}${cmpBadge}</div>
+      </div>
+      <div class="funnel-pct funnel-pct-total">${pctTotal}%</div>
+      <div class="funnel-pct">${pctPrev}</div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+
+  document.getElementById('trial-funnel-alert-text').innerHTML =
+    `<b>Punto critico:</b> la mayor caida esta entre <b>${dropStep}</b> (solo ${(100 - maxDrop).toFixed(0)}% avanza). Empujar la agenda de llamada en D0 podria mejorar la conversion global.`;
+}
+
+// --- Survival Bars with ghost overlay ---
+function renderTrialSurvivalBars() {
+  const chSelect = document.getElementById('trial-canal');
+  const chMap = { 'Organico Cristobal': 'organic', 'Meta Ads': 'meta', 'TikTok Ads': 'tiktok' };
+  const ch = chSelect ? chMap[chSelect.value] || 'all' : 'all';
+  const data = TRIAL_DATA.current.survivalByChannel[ch] || TRIAL_DATA.current.survivalByChannel.all;
+  const cmp = getCompareData();
+  const cmpData = cmp ? (cmp.survivalByChannel[ch] || cmp.survivalByChannel.all) : null;
+  const dayLabels = ['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','D14','D15'];
+  const container = document.getElementById('trial-survival-bars');
+
+  let maxDrop = 0, dropFrom = '', dropTo = '';
+  for (let i = 1; i < data.days.length; i++) {
+    const drop = data.days[i-1] - data.days[i];
+    if (drop > maxDrop) { maxDrop = drop; dropFrom = dayLabels[i-1]; dropTo = dayLabels[i]; }
+  }
+
+  container.innerHTML = `<div style="display:flex;align-items:flex-end;gap:3px;height:220px;padding:0 4px">${data.days.map((pct, i) => {
+    const h = (pct / 100) * 170;
+    const isLast = i === data.days.length - 1;
+    let bg;
+    if (isLast) bg = '#2ecc71';
+    else if (pct > 60) bg = '#529CCA';
+    else if (pct > 30) bg = '#f39c12';
+    else bg = '#e74c3c';
+    const ghostH = cmpData ? (cmpData.days[i] / 100) * 170 : 0;
+    const ghostBar = cmpData ? `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:30px;height:${ghostH}px;border:1.5px dashed var(--text-placeholder);border-radius:var(--radius-sm) var(--radius-sm) 0 0;opacity:0.4;pointer-events:none"></div>` : '';
+    const cmpLabel = cmpData ? `<div style="font-size:7px;color:var(--text-placeholder);margin-top:0px">${cmpData.days[i]}%</div>` : '';
+    return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;justify-content:flex-end;height:100%">
+      <div style="font-size:8px;font-weight:700;color:${isLast ? '#2ecc71' : 'var(--text-secondary)'};margin-bottom:2px">${pct}%</div>
+      <div style="position:relative;width:100%;display:flex;justify-content:center">
+        ${ghostBar}
+        <div style="width:100%;max-width:30px;height:${h}px;background:${bg};border-radius:var(--radius-sm) var(--radius-sm) 0 0;opacity:${isLast ? 1 : 0.8};position:relative;z-index:1"></div>
+      </div>
+      <div style="font-size:7px;color:var(--text-placeholder);margin-top:2px">${data.abs[i]}</div>
+      ${cmpLabel}
+      <div style="font-size:8px;color:var(--text-tertiary);margin-top:1px">${dayLabels[i]}</div>
+    </div>`;
+  }).join('')}</div>`;
+
+  if (cmpData) {
+    const label = getTrialCompareMode() === 'year' ? 'año anterior' : 'periodo anterior';
+    container.innerHTML += `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:9px;color:var(--text-tertiary)"><span style="display:inline-block;width:20px;height:0;border-top:1.5px dashed var(--text-placeholder)"></span> ${label}</div>`;
+  }
+
+  document.getElementById('trial-survival-alert-text').textContent =
+    `Mayor caida: ${dropFrom} → ${dropTo} (${maxDrop.toFixed(0)}pp). Intervenir con push/coach en ese tramo.`;
+}
+
+// --- Coach Interaction with comparison ---
+function renderCoachInteraction() {
+  const segments = TRIAL_DATA.current.coachSegments;
+  const cmp = getCompareData();
+  const container = document.getElementById('coach-interaction-chart');
+  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;padding:12px 0">${segments.map((s, i) => {
+    const cmpConv = cmp ? cmp.coachSegments[i].conv : null;
+    let cmpTag = '';
+    if (cmpConv != null) {
+      const diff = s.conv - cmpConv;
+      const col = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-tertiary)';
+      const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '=';
+      cmpTag = `<span style="font-size:9px;color:${col};font-weight:600;margin-left:6px">${arrow}${Math.abs(diff)}pp <span style="color:var(--text-placeholder)">(ant: ${cmpConv}%)</span></span>`;
+    }
+    return `<div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:11px;color:var(--text-secondary)">${s.label}</span>
+        <span style="font-size:10px;color:var(--text-tertiary)">${s.n} usuarios${cmp ? ` <span style="color:var(--text-placeholder)">(ant: ${cmp.coachSegments[i].n})</span>` : ''}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="hbar-track" style="height:24px;position:relative">
+          ${cmpConv != null ? `<div style="position:absolute;top:0;left:0;width:${cmpConv}%;height:100%;border:1.5px dashed var(--text-placeholder);border-radius:var(--radius-sm);opacity:0.4"></div>` : ''}
+          <div class="hbar-fill" style="width:${s.conv}%;background:${s.color};display:flex;align-items:center;padding-left:8px">
+            <span style="font-size:11px;font-weight:700;color:#fff">${s.conv}%</span>${cmpTag}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}</div>
+  <div style="margin-top:8px;padding:8px 12px;border-radius:var(--radius-md);background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);font-size:10px;color:var(--success)">
+    &#128161; La combinacion llamada + entrenos + mensajes genera <b>17x</b> mas conversion que ningun engagement.
+  </div>`;
+}
+
+// --- Coach Comparison Table (no period comparison — already compares call vs no call) ---
+function renderCoachComparisonTable() {
+  const rows = [
+    { metric: 'Entrenos completados (media)', yes: '6.8', no: '2.1' },
+    { metric: 'Tasa cumplimiento plan', yes: '72%', no: '28%' },
+    { metric: 'Mensajes respondidos al coach', yes: '8.2', no: '3.1' },
+    { metric: 'Dias apertura app /15', yes: '11.2', no: '5.8' },
+    { metric: 'Tiempo medio por sesion', yes: '8.5 min', no: '4.1 min' },
+    { metric: 'Notificaciones push activas', yes: '85%', no: '54%' },
+    { metric: 'Conversion a pago', yes: '38%', no: '8%' },
+  ];
+  document.querySelector('#coach-comparison-table tbody').innerHTML = rows.map(r =>
+    `<tr><td>${r.metric}</td><td style="color:var(--success);font-weight:600">${r.yes}</td><td style="color:var(--error);font-weight:600">${r.no}</td></tr>`
+  ).join('');
+}
+
+// --- Messaging Table with comparison ---
+function renderCoachMessagingTable() {
+  const rows = TRIAL_DATA.current.messaging;
+  const cmp = getCompareData();
+  const fmtDelta = (cur, prev, suffix) => {
+    if (prev == null) return '';
+    const diff = cur - prev;
+    const col = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-tertiary)';
+    const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '';
+    return `<div style="font-size:8px;color:${col}">${arrow}${Math.abs(diff).toFixed(1)}${suffix || ''}</div>`;
+  };
+  document.querySelector('#coach-messaging-table tbody').innerHTML = rows.map((r, i) => {
+    const isTot = i === rows.length - 1;
+    const s = isTot ? 'font-weight:700;background:var(--bg-active)' : '';
+    const p = cmp ? cmp.messaging[i] : null;
+    return `<tr style="${s}">
+      <td>${r.tramo}</td>
+      <td>${r.coachMsgs}${p ? fmtDelta(r.coachMsgs, p.coachMsgs) : ''}</td>
+      <td>${r.userMsgs}${p ? fmtDelta(r.userMsgs, p.userMsgs) : ''}</td>
+      <td>${r.tasaResp}%${p ? fmtDelta(r.tasaResp, p.tasaResp, 'pp') : ''}</td>
+      <td>${r.tiempoResp}h${p ? fmtDelta(r.tiempoResp, p.tiempoResp, 'h') : ''}</td>
+      <td>${r.conv != null ? r.conv + '%' : '—'}${p && r.conv != null && p.conv != null ? fmtDelta(r.conv, p.conv, 'pp') : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// --- Payment Day with ghost bars ---
+function renderTrialPaymentDay() {
+  const tramos = TRIAL_DATA.current.paymentDay;
+  const cmp = getCompareData();
+  const maxN = Math.max(...tramos.map(t => t.n), ...(cmp ? cmp.paymentDay.map(t => t.n) : [0]));
+  const container = document.getElementById('trial-payment-day-chart');
+  const peakIdx = tramos.reduce((pi, t, i, a) => t.n > a[pi].n ? i : pi, 0);
+  container.innerHTML = `<div style="display:flex;align-items:flex-end;gap:6px;height:180px;padding:0 4px">${tramos.map((t, i) => {
+    const h = (t.n / maxN) * 140;
+    const isPeak = i === peakIdx;
+    const bg = isPeak ? '#2ecc71' : '#529CCA';
+    const ghostH = cmp ? (cmp.paymentDay[i].n / maxN) * 140 : 0;
+    const ghostBar = cmp ? `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:40px;height:${ghostH}px;border:1.5px dashed var(--text-placeholder);border-radius:var(--radius-sm) var(--radius-sm) 0 0;opacity:0.4;pointer-events:none"></div>` : '';
+    return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;justify-content:flex-end;height:100%">
+      <div style="font-size:8px;font-weight:700;color:${isPeak ? '#2ecc71' : 'var(--text-secondary)'};margin-bottom:2px">${t.pct}%</div>
+      <div style="font-size:7px;color:var(--text-placeholder);margin-bottom:1px">${t.n}</div>
+      <div style="position:relative;width:100%;display:flex;justify-content:center">
+        ${ghostBar}
+        <div style="width:100%;max-width:40px;height:${h}px;background:${bg};border-radius:var(--radius-sm) var(--radius-sm) 0 0;opacity:${isPeak ? 1 : 0.75};position:relative;z-index:1"></div>
+      </div>
+      <div style="font-size:8px;color:var(--text-tertiary);margin-top:4px;font-weight:600">${t.label}</div>
+      <div style="font-size:7px;color:var(--text-placeholder);text-align:center;line-height:1.2;max-width:60px">${t.why}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// --- Plan Donut with comparison ---
+function renderTrialPlanDonut() {
+  const data = TRIAL_DATA.current.planDonut;
+  const cmp = getCompareData();
+  const donutData = cmp ? data.map((d, i) => ({
+    ...d,
+    label: `${d.label} <span style="font-size:9px;color:var(--text-placeholder)">(ant: ${cmp.planDonut[i].pct}%)</span>`
+  })) : data;
+  const donutEl = document.getElementById('trial-plan-donut');
+  donutEl.innerHTML = '';
+  // Remove old note if exists
+  const oldNote = donutEl.parentElement.querySelector('.donut-compare-note');
+  if (oldNote) oldNote.remove();
+
+  renderDonut('trial-plan-donut', donutData, 100);
+  const note = document.createElement('div');
+  note.className = 'donut-compare-note';
+  note.style.cssText = 'margin-top:8px;font-size:9px;color:var(--warning);padding:6px 8px;background:rgba(243,156,18,0.06);border-radius:var(--radius-sm);border:1px solid rgba(243,156,18,0.15)';
+  note.innerHTML = '&#128161; Solo 15% elige anual. Oportunidad: mostrar ahorro del plan anual en momento de pago.';
+  donutEl.parentElement.appendChild(note);
+}
+
+// --- Discount Impact with comparison ---
+function renderTrialDiscountImpact() {
+  const types = TRIAL_DATA.current.discount;
+  const cmp = getCompareData();
+  const container = document.getElementById('trial-discount-impact');
+  container.innerHTML = types.map((t, i) => {
+    const p = cmp ? cmp.discount[i] : null;
+    const retColor = (v) => v >= 75 ? 'var(--success)' : v >= 60 ? 'var(--warning)' : 'var(--error)';
+    const deltaBadge = (cur, prev, suf) => {
+      if (prev == null) return '';
+      const diff = cur - prev;
+      const col = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-tertiary)';
+      const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '';
+      return ` <span style="font-size:8px;color:${col}">${arrow}${Math.abs(diff)}${suf}</span>`;
+    };
+    return `<div style="padding:10px 12px;border:1px solid var(--border-default);border-radius:var(--radius-md);margin-bottom:8px;background:var(--bg-primary)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;font-weight:700;color:var(--text-primary)">${t.label}</span>
+        <span class="badge" style="background:${t.color}22;color:${t.color}">${t.pctConv}% de conv.${p ? deltaBadge(t.pctConv, p.pctConv, 'pp') : ''}</span>
+      </div>
+      <div style="display:flex;gap:12px;font-size:10px;color:var(--text-secondary)">
+        <span>Ret. M+1: <b style="color:${retColor(t.retM1)}">${t.retM1}%</b>${p ? deltaBadge(t.retM1, p.retM1, 'pp') : ''}</span>
+        <span>Ret. M+2: <b style="color:${retColor(t.retM2)}">${t.retM2}%</b>${p ? deltaBadge(t.retM2, p.retM2, 'pp') : ''}</span>
+      </div>
+    </div>`;
+  }).join('') + `<div style="font-size:9px;color:var(--error);padding:6px 8px;background:rgba(231,76,60,0.06);border-radius:var(--radius-sm);border:1px solid rgba(231,76,60,0.15)">
+    &#9888; Los descuentos de urgencia D13-14 retienen un 40% peor en M+2. Volumen sin calidad.
+  </div>`;
+}
+
+// Date filter
+function applyDateFilter() {
+  const from = document.getElementById('date-from').value;
+  const to = document.getElementById('date-to').value;
+  const btn = event.target.closest('button');
+  btn.innerHTML = '<span class="btn-icon">&#10003;</span> Aplicado';
+  btn.style.borderColor = 'var(--success)';
+  btn.style.color = 'var(--success)';
+  setTimeout(() => {
+    btn.innerHTML = '<span class="btn-icon">&#128197;</span> Aplicar';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }, 1500);
+}
+
+// Export CSV mock
+function exportCSV() {
+  alert('Exportacion CSV: funcionalidad lista para conectar con la base de datos real.');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+
+function init() {
+  // Dashboard 3 (Acquisition)
+  renderChannelBars();
+  renderTrialFunnel();
+  renderWebAnalytics();
+  renderTrialVsWeb();
+  renderChannelTable();
+  renderAttributionTable();
+
+  // Dashboard 6 (Trial) — Full spec + comparison
+  renderTrialKPIs();
+  renderTrialEngagementKPIs();
+  renderAllTrialCharts();
+
+  // Dashboard 2 (Retention)
+  renderCohortTable();
+  renderMigrationFlows();
+  renderChurnDualChart();
+
+  // Dashboard 5 (Flow)
+  renderWaterfall();
+  renderLineChart('net-mrr-timeline-svg', NET_MRR_12, '#2ecc71');
+
+  // Dashboard 1 (Clients)
+  renderDonut('plan-donut', [
+    { label: 'Mensual', pct: 52, color: '#e74c3c' },
+    { label: 'Trimestral', pct: 28, color: '#f39c12' },
+    { label: 'Semestral', pct: 5, color: '#8e44ad' },
+    { label: 'Anual', pct: 15, color: '#529CCA' },
+  ]);
+  renderDonut('product-donut', [
+    { label: 'Solo Entrenamiento', pct: 62, color: '#529CCA' },
+    { label: 'Entrenamiento + Nutricion', pct: 18, color: '#2ecc71' },
+    { label: 'Solo Nutricion', pct: 5, color: '#f39c12' },
+    { label: 'Bundle completo', pct: 15, color: '#8e44ad' },
+  ]);
+  renderLineChart('clients-timeline-svg', CLIENTS_12, '#529CCA');
+  renderClientsTable();
+
+  // Dashboard 4 (Revenue)
+  renderLineChart('mrr-timeline-svg', MRR_12, '#2ecc71');
+  renderDonut('gateway-donut', [
+    { label: 'App Store', pct: 42, color: '#529CCA' },
+    { label: 'Google Play', pct: 28, color: '#2ecc71' },
+    { label: 'Stripe', pct: 22, color: '#8e44ad' },
+    { label: 'Shopify', pct: 5, color: '#f39c12' },
+    { label: 'Otros', pct: 3, color: '#6b7280' },
+  ]);
+  renderLTVTable();
+  renderTicketBars();
+  renderRevenueStacked();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// ═══════════════════════════════════════════
+// EMBED MODE (when loaded inside iframe)
+// ═══════════════════════════════════════════
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('embed') === '1') {
+    document.documentElement.classList.add('embed-mode');
+    // Show requested dashboard if specified
+    const dash = params.get('dash');
+    if (dash) showDash(dash);
+  }
+  // Listen for postMessage from parent
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'setView' && e.data.view) {
+      showDash(e.data.view);
+    }
+    if (e.data && e.data.type === 'setTheme') {
+      document.body.classList.toggle('light', !e.data.dark);
+    }
+  });
+})();
+</script>
+</body>
+</html>

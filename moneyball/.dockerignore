@@ -1,0 +1,11 @@
+node_modules
+*.db
+*.sqlite
+escenas_frames/
+meta_ads_media/
+meta_ads_screenshots/
+escenas_storyboards/
+.git
+.env
+*.log
+/tmp

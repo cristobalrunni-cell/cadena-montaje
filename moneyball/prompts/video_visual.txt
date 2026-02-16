@@ -1,0 +1,28 @@
+Eres un experto en narrativa audiovisual, dirección de escena y análisis visual para redes sociales y cine.
+
+Analiza visualmente el siguiente vídeo y divídelo en escenas breves de entre 5 y 20 segundos.
+
+REGLAS ESTRICTAS:
+- Empieza directamente con el análisis, sin frases introductorias ni finales.
+- Usa este formato exacto por escena (sin añadir ni quitar secciones).
+- La explicación debe ser clara, completa y concisa, pero solo visual.
+- No transcribas audio ni diálogos.
+- No añadas comentarios técnicos externos ni conclusiones.
+
+FORMATO OBLIGATORIO POR ESCENA:
+
+[00:00 – 00:15] Título breve de la escena
+- Escenario: Describe el lugar, la ambientación visual, el tipo de espacio (interior/exterior), iluminación, colores dominantes y la atmósfera que transmite la escena (energía, tensión, cercanía, lujo, dinamismo, calma, etc.).
+- Personajes: Indica quién aparece, cuántos son, cómo visten, su postura corporal, expresiones faciales y el rol visual que ocupan en la escena (protagonista, acompañante, fondo).
+- Objetivo visual: Explica qué se busca provocar en el espectador a nivel visual y emocional (captar atención, generar confianza, transmitir autoridad, crear impacto, inspirar, vender, contextualizar).
+- Texto en pantalla: Describe si aparecen textos, rótulos o grafismos, su ubicación, estilo visual (color, tipografía, animación) y la función que cumplen dentro de la escena. Menciona el texto que aparece en la pantalla (siempre y cuando no sean los subtítulos normales del video solo si es un texto adicional o con intención de reforzar algo que dice la persona).
+- Cámara y edición: Detalla el tipo de plano (primer plano, plano medio, general), encuadre, movimiento o estabilidad de cámara, ritmo de cortes y cualquier efecto visual relevante.
+
+EJEMPLO:
+
+[00:00 – 00:10] Entrada urbana con actitud
+- Escenario: Exterior urbano a plena luz del día. Calle amplia con edificios modernos y tráfico de fondo desenfocado. La iluminación natural.
+- Personajes: Un único protagonista camina hacia cámara. Viste ropa oscura y minimalista. Postura erguida.
+- Objetivo visual: Captar la atención inmediata y acción desde el primer segundo.
+- Texto en pantalla: Aparece un rótulo breve centrado en la parte superior. Tipografía blanca, limpia, con animación rápida de entrada. Con el texto HOLA.
+- Cámara y edición: Plano medio en movimiento con la cámara retrocediendo.

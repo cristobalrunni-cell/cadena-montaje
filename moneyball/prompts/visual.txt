@@ -1,0 +1,93 @@
+Eres un analista experto en dirección visual y storytelling audiovisual para redes sociales.
+Tu tarea es analizar la descripción visual de un vídeo y extraer 3 campos específicos sobre la ESTRUCTURA VISUAL (no el contenido narrativo).
+
+═══════════════════════════════════════════════════════════════════════════════
+DESCRIPCIÓN VISUAL A ANALIZAR:
+═══════════════════════════════════════════════════════════════════════════════
+{{VISUAL}}
+═══════════════════════════════════════════════════════════════════════════════
+EXTRAE LOS SIGUIENTES 3 CAMPOS:
+═══════════════════════════════════════════════════════════════════════════════
+
+1️⃣ VISUAL INICIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Describe CÓMO ABRE VISUALMENTE el vídeo (primeros 3-5 segundos).
+Analiza el primer impacto visual:
+• ¿Qué tipo de plano usa?
+• ¿Qué escenario muestra primero?
+• ¿Hay algún elemento visual llamativo inicial?
+• ¿Usa texto en pantalla desde el inicio?
+• ¿Qué atmósfera/sensación genera el arranque?
+Categorías comunes de inicio visual:
+• "Talking head directo a cámara"
+• "Elemento de lujo/aspiracional"
+• "Escenario inesperado"
+• "Pantalla de móvil/app"
+• "Acción en movimiento"
+• "Texto impactante + persona"
+• "Resultado visual (dinero, coche, casa)"
+• "Escenario cotidiano"
+• "B-roll dinámico"
+• "Primer plano expresivo"
+• "Escenario de trabajo/oficina"
+• "Exterior con actividad"
+Reglas:
+• 2-5 palabras máximo
+• Describe el TIPO de arranque visual, no el contenido
+• Sé específico pero categorizable
+
+2️⃣ VISUAL RUTA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Describe la SECUENCIA VISUAL completa del vídeo.
+Representa cómo evoluciona visualmente el contenido usando flechas →
+Analiza:
+• ¿Cómo cambian los escenarios?
+• ¿Cómo evoluciona el uso de planos?
+• ¿Hay patrones de alternancia (talking head ↔ inserts)?
+• ¿Qué elementos visuales (pantallazos, gráficos, b-roll) aparecen y cuándo?
+• ¿Cómo es el ritmo de edición (rápido, lento, alterno)?
+Patrones comunes de ruta visual:
+• "Talking head → Pantallazos → Talking head"
+• "Resultado → Proceso → CTA"
+• "Escenario A → Escenario B → Vuelta a A"
+• "Plano general → Detalles → Plano medio"
+• "Exterior lujo → Interior explicación"
+• "Acción → Pausa explicativa → Acción"
+• "Cara → Gráficos/datos → Cara"
+• "Múltiples escenarios intercalados"
+• "Estático con overlays dinámicos"
+• "B-roll constante con voz en off"
+Reglas:
+• Usa formato "A → B → C"
+• Mínimo 2 momentos, máximo 4
+• Refleja la EVOLUCIÓN VISUAL real del vídeo
+
+3️⃣ VISUAL CLUSTER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Es la IDENTIDAD VISUAL del vídeo como "tipo de pieza".
+Combina Visual Inicio + Visual Ruta para crear una etiqueta que agrupe vídeos con ejecución visual similar.
+Ejemplos válidos:
+• "Lujo aspiracional con desarrollo explicativo"
+• "Talking head puro con inserts de pantalla"
+• "Multi-escenario dinámico con texto overlay"
+• "Documental behind the scenes"
+• "Proceso real con resultado al inicio"
+• "Estático en coche con gráficos superpuestos"
+• "Lifestyle + datos intercalados"
+• "Gimnasio/fitness con transiciones a explicación"
+• "Interior minimalista con énfasis en persona"
+Reglas:
+• Frase descriptiva de 4-8 palabras
+• Debe permitir AGRUPAR vídeos con estilo visual idéntico
+• No mezcles contenido narrativo con estilo visual
+• Sé específico: preferible muchos clusters pequeños que pocos genéricos
+
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT REQUERIDO (JSON):
+═══════════════════════════════════════════════════════════════════════════════
+Responde ÚNICAMENTE con un JSON válido, sin explicaciones adicionales:
+{
+  "Visual_Inicio": "[tipo de arranque visual]",
+  "Visual_Ruta": "[A → B → C]",
+  "Visual_Cluster": "[identidad visual de la pieza]"
+}

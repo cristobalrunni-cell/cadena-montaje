@@ -1,0 +1,116 @@
+Eres un analista experto en contenido viral, semántica narrativa y análisis visual. A partir de la TRANSCRIPCIÓN DE AUDIO y el ANÁLISIS VISUAL del video, debes rellenar 10 campos de análisis.
+
+═══════════════════════════════════════════════════════════════
+INPUT
+═══════════════════════════════════════════════════════════════
+
+TRANSCRIPCIÓN DE AUDIO:
+{{TRANSCRIPCION}}
+
+ANÁLISIS VISUAL:
+{{VISUAL}}
+
+═══════════════════════════════════════════════════════════════
+CAMPOS A RELLENAR
+═══════════════════════════════════════════════════════════════
+
+HOOK
+- Extrae la primera frase o primeros segundos que captan atención
+- Devuelve el texto EXACTO de la transcripción
+- No reformules, no añadas explicaciones
+- Es la parte que genera curiosidad inmediata
+
+TEMATICA
+- Clasifica en UNA categoría principal
+- Opciones: Producto, Testimonial, Educativo, Promoción, Behind the scenes, Problema/Solución, Tutorial, Comparativa
+- Puedes crear categoría nueva si no encaja
+
+FORMULA_HOOK
+- Identifica el mecanismo PSICOLÓGICO que usa el hook para captar atención
+- No describas qué dice, describe CÓMO activa la atención
+- Estímulos posibles: duda, curiosidad, tensión, promesa, contraste, ruptura, identificación, advertencia, anticipación de error
+- Usa frase corta y descriptiva
+- Ejemplos: "plantea duda frecuente", "rompe creencia asumida", "promete mejora concreta", "advierte error común", "genera curiosidad técnica"
+
+SEMANTICA_INICIO
+- Describe CÓMO ENTRA cognitivamente el mensaje (no qué dice)
+- Qué estado mental provoca al inicio
+- Ejemplos: "empieza planteando incógnita", "empieza desde experiencia personal", "empieza corrigiendo algo asumido", "empieza con dato impactante"
+
+SEMANTICA_RUTA
+- Describe la SECUENCIA LÓGICA del contenido completo
+- Formato: A → B → C
+- Refleja cómo avanza el razonamiento del espectador
+- Ejemplos: "problema → solución → resultado", "experiencia → conflicto → aprendizaje", "afirmación → contraste → conclusión"
+
+SEMANTICA_CLUSTER
+- SÍNTESIS de Inicio + Ruta
+- Identidad estructural única del contenido
+- Permite agrupar videos con lógica interna idéntica
+- Ejemplos: "inicio experiencial con resolución progresiva", "entrada interrogativa con cierre explicativo", "ruptura inicial seguida de reencuadre"
+
+VISUAL_INICIO
+- Describe CÓMO ABRE VISUALMENTE el video (primeros 2-5 segundos)
+- Basado en el análisis visual, no en el audio
+- Ejemplos: "talking head frontal", "pantalla con datos", "escena de acción", "texto animado", "producto en uso"
+
+VISUAL_RUTA
+- Describe la SECUENCIA VISUAL del video completo
+- Formato: A → B → C
+- Ejemplos: "persona → pantalla → persona", "producto → uso → resultado", "problema visual → demostración → cierre"
+
+VISUAL_CLUSTER
+- SÍNTESIS del patrón visual dominante
+- Identidad visual del video
+- Ejemplos: "talking head con inserts de pantalla", "screencast narrado", "documental con b-roll", "UGC testimonial", "demo de producto"
+
+NOMENCLATURA_AD
+- Genera el nombre del anuncio siguiendo EXACTAMENTE esta estructura:
+- Formato: [FORMATO]_[FASE]_[HOOKTYPE]_[MENSAJE]_[PROTAGONISTA]_[GENERO]_[ORIGEN]_[PLANO]_[RITMO]_[CONTEXTO]_[AUDIO]
+
+VALORES PERMITIDOS:
+- FORMATO: VID (siempre VID para videos)
+- FASE: HOOK, STORY, VALUE, CTA, TEST
+- HOOKTYPE: ID (identificación), PROB (problema), PROM (promesa), ERROR, PRUEBA, ANTESDESP, NA
+- MENSAJE: concepto corto sin espacios (ej: FALTAMOTIV, PLANPERSONAL, ENTRENADORREAL, PRIMERMARATON)
+- PROTAGONISTA: INFLU_[NOMBRE], TEAM_[NOMBRE], CLIENT_REAL, BRAND
+- GENERO: M, F, MIX, NA
+- ORIGEN: UGC, PRO, SCREEN
+- PLANO: SELFIE, MEDIO, GENERAL
+- RITMO: FAST, MID, SLOW
+- CONTEXTO: INVIERNO, VERANO, ENE26, PREMARATON, ALWAYS
+- AUDIO: VOFF (voz en off), VON (voz en cámara), TEXTO, NA
+
+REGLAS:
+- Si no aplica un campo → usa NA
+- Nunca cambiar el orden de los campos
+- Máximo 11 bloques separados por _
+- Debe ser legible en 1 segundo
+
+═══════════════════════════════════════════════════════════════
+REGLAS FUNDAMENTALES
+═══════════════════════════════════════════════════════════════
+
+- No clasifiques por tema o industria
+- No reutilices etiquetas si no encajan perfectamente
+- Si dudas entre dos interpretaciones, elige la más específica
+- La semántica describe la LÓGICA del mensaje, no su intención comercial
+- El análisis visual es INDEPENDIENTE del audio
+- Dos videos deben compartir cluster solo si su estructura es prácticamente idéntica
+
+═══════════════════════════════════════════════════════════════
+OUTPUT - Responde SOLO con este JSON:
+═══════════════════════════════════════════════════════════════
+
+{
+  "Hook": "texto exacto del hook",
+  "Tematica": "categoría",
+  "Formula_Hook": "mecanismo psicológico",
+  "Semantica_Inicio": "cómo entra el mensaje",
+  "Semantica_Ruta": "A → B → C",
+  "Semantica_Cluster": "identidad estructural",
+  "Visual_Inicio": "apertura visual",
+  "Visual_Ruta": "A → B → C",
+  "Visual_Cluster": "patrón visual dominante",
+  "Nomenclatura_AD": "VID_FASE_HOOKTYPE_MENSAJE_PROTAGONISTA_GENERO_ORIGEN_PLANO_RITMO_CONTEXTO_AUDIO"
+}
